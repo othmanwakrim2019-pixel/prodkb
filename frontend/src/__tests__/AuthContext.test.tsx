@@ -10,7 +10,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 // Mock axios
 vi.mock('../utils/axios', () => ({
     default: {
-        get: vi.fn(),
+        get: vi.fn().mockResolvedValue({ data: {} }),
         post: vi.fn(),
         put: vi.fn(),
         delete: vi.fn(),
