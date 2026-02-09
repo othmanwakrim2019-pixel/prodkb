@@ -109,7 +109,7 @@ export const CreateProcedure = () => {
             };
             fetchProcedure();
         }
-    }, [isEditMode, id, setValue, navigate]);
+    }, [id, setValue, navigate]);
 
     // Auto-fill title from selected job
     useEffect(() => {

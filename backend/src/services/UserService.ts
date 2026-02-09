@@ -63,6 +63,18 @@ export class UserService {
             }
         }
 
+
+        // Validate team if provided
+        if (data.teamId) {
+            logger.info('Team ID provided, validating...', { teamId: data.teamId });
+            const team = await prisma.team.findUnique({ where: { id: data.teamId } });
+            if (!team) {
+                logger.error('Team validation failed - team not found', { teamId: data.teamId });
+                throw new ValidationError('Invalid team ID');
+            }
+            logger.info('Team validated successfully', { teamId: data.teamId, teamName: team.name });
+        }
+
         // Create user
         const user = await prisma.user.create({
             data: {
@@ -70,13 +82,53 @@ export class UserService {
                 email: data.email,
                 password: hashedPassword,
                 roleId,
+                isActive: data.isActive !== undefined ? data.isActive : true,
             },
             include: {
                 role: { select: { id: true, name: true } },
             },
         });
 
-        logger.info('User registered', { userId: user.id, email: user.email });
+        logger.info('User created successfully', { userId: user.id, email: user.email });
+
+        // Create team membership if teamId provided
+        if (data.teamId) {
+            try {
+                logger.info('Creating TeamMember record...', {
+                    userId: user.id,
+                    teamId: data.teamId,
+                    teamRole: data.teamRole || 'MEMBER'
+                });
+
+                const teamMember = await prisma.teamMember.create({
+                    data: {
+                        userId: user.id,
+                        teamId: data.teamId,
+                        role: data.teamRole || 'MEMBER',
+                    },
+                });
+
+                logger.info('TeamMember created successfully', {
+                    teamMemberId: teamMember.id,
+                    userId: user.id,
+                    teamId: data.teamId,
+                    role: teamMember.role
+                });
+            } catch (teamMemberError) {
+                logger.error('Failed to create TeamMember', {
+                    error: teamMemberError,
+                    userId: user.id,
+                    teamId: data.teamId,
+                    teamRole: data.teamRole
+                });
+                // Don't fail the whole registration, but log the error
+                // This ensures user is created even if team assignment fails
+            }
+        } else {
+            logger.info('No team ID provided, skipping TeamMember creation');
+        }
+
+        logger.info('User registered', { userId: user.id, email: user.email, teamId: data.teamId, teamRole: data.teamRole, isActive: user.isActive });
 
         return this.toPublicUser(user);
     }
@@ -211,6 +263,7 @@ export class UserService {
                 createdAt: true,
                 teamMemberships: {
                     select: {
+                        role: true,
                         team: {
                             select: {
                                 id: true,

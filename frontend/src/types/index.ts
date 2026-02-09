@@ -8,6 +8,15 @@ export interface User {
     role?: Role | string;
     isActive?: boolean;
     team?: string; // or Team if it represents the relation, but usage suggests string name or ID
+    teamMemberships?: TeamMembership[];
+}
+
+export interface TeamMembership {
+    role: string;
+    team: {
+        id: string;
+        name: string;
+    };
 }
 
 export interface Role {
@@ -30,7 +39,16 @@ export interface Team {
     description?: string;
     emailDistribution?: string;
     sendEmail?: boolean;
-    teamMembers?: string; // serialized JSON
+    teamMembers?: string; // legacy serialized JSON
+    members?: Array<{
+        role: string;
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            role?: Role | string;
+        };
+    }>;
     jobs?: Job[];
 }
 
@@ -47,6 +65,16 @@ export interface Job {
     code: string;
     systemId: string;
     teamId?: string;
+}
+
+export interface TeamMember {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        role?: Role | string;
+    };
+    role: string;
 }
 
 export interface SLA {

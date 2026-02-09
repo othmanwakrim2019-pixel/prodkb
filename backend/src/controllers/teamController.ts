@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
+import { logAudit } from '../services/auditService';
+import { AuthRequest } from '../middleware/auth';
 
 // Validation schemas
 const createTeamSchema = z.object({
@@ -22,12 +24,13 @@ const updateTeamSchema = z.object({
 
 const addMemberSchema = z.object({
     userId: z.string().uuid(),
-    role: z.enum(['LEAD', 'MEMBER']),
+    role: z.string().min(1).max(50),
 });
 
-export const createTeam = async (req: Request, res: Response) => {
+export const createTeam = async (req: AuthRequest, res: Response) => {
     try {
         const data = createTeamSchema.parse(req.body);
+        const userId = req.user?.id;
 
         const team = await prisma.team.create({
             data,
@@ -46,6 +49,18 @@ export const createTeam = async (req: Request, res: Response) => {
                 },
             },
         });
+
+        // Audit log
+        if (userId) {
+            await logAudit({
+                userId,
+                actionType: 'CREATE',
+                entityType: 'TEAM',
+                entityId: team.id,
+                details: `Created team: ${team.name}`,
+                req
+            });
+        }
 
         res.status(201).json(team);
     } catch (error) {
@@ -73,6 +88,17 @@ export const listTeams = async (req: Request, res: Response) => {
                         },
                     },
                 },
+                jobs: {
+                    select: {
+                        systemId: true,
+                        system: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
                 _count: {
                     select: {
                         jobs: true,
@@ -85,7 +111,19 @@ export const listTeams = async (req: Request, res: Response) => {
             },
         });
 
-        res.json(teams);
+        // Calculate unique system count per team
+        const teamsWithSystemCount = teams.map(team => {
+            const uniqueSystemIds = new Set(team.jobs.map(j => j.systemId));
+            return {
+                ...team,
+                systemCount: uniqueSystemIds.size,
+                systems: Array.from(uniqueSystemIds).map(sysId =>
+                    team.jobs.find(j => j.systemId === sysId)?.system
+                ).filter(Boolean),
+            };
+        });
+
+        res.json(teamsWithSystemCount);
     } catch (error) {
         console.error('Error listing teams:', error);
         res.status(500).json({ error: 'Failed to list teams' });
@@ -135,9 +173,10 @@ export const getTeam = async (req: Request, res: Response) => {
     }
 };
 
-export const updateTeam = async (req: Request, res: Response) => {
+export const updateTeam = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const userId = req.user?.id;
         console.log('📝 Update team request:', { id, body: req.body });
         const data = updateTeamSchema.parse(req.body);
 
@@ -160,6 +199,18 @@ export const updateTeam = async (req: Request, res: Response) => {
             },
         });
 
+        // Audit log
+        if (userId) {
+            await logAudit({
+                userId,
+                actionType: 'UPDATE',
+                entityType: 'TEAM',
+                entityId: team.id,
+                details: `Updated team: ${team.name}`,
+                req
+            });
+        }
+
         res.json(team);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -170,13 +221,29 @@ export const updateTeam = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteTeam = async (req: Request, res: Response) => {
+export const deleteTeam = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const userId = req.user?.id;
+
+        // Get team name before deleting for audit
+        const teamToDelete = await prisma.team.findUnique({ where: { id } });
 
         await prisma.team.delete({
             where: { id },
         });
+
+        // Audit log
+        if (userId && teamToDelete) {
+            await logAudit({
+                userId,
+                actionType: 'DELETE',
+                entityType: 'TEAM',
+                entityId: id,
+                details: `Deleted team: ${teamToDelete.name}`,
+                req
+            });
+        }
 
         res.status(204).send();
     } catch (error) {

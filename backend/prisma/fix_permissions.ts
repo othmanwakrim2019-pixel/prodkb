@@ -40,9 +40,9 @@ async function main() {
                 }
             }
         });
-        console.log('✅ ADMIN role updated.');
+        console.log(' ADMIN role updated.');
     } else {
-        console.warn('⚠️ ADMIN role not found.');
+        console.warn(' ADMIN role not found.');
     }
 
     // 3. Assign to 'SuperUser' or custom roles if needed?

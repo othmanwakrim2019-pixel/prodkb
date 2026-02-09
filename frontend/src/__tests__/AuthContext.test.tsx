@@ -134,7 +134,7 @@ describe('Permission Helpers', () => {
                     role: 'OPERATOR',
                     permissions: ['INCIDENT_CREATE', 'INCIDENT_EDIT']
                 });
-            }, []);
+            }, [login]);
 
             return (
                 <div>

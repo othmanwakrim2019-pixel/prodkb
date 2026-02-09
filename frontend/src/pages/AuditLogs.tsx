@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 import { Filter, Clock, User, Shield } from 'lucide-react';
 import { format } from 'date-fns';
@@ -25,11 +25,7 @@ const AuditLogs = () => {
     const [actionType, setActionType] = useState('');
     const [entityType, setEntityType] = useState('');
 
-    useEffect(() => {
-        fetchLogs();
-    }, [actionType, entityType]);
-
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         setLoading(true);
         try {
             const params: { action?: string; entityType?: string } = {};
@@ -43,7 +39,11 @@ const AuditLogs = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [actionType, entityType]);
+
+    useEffect(() => {
+        fetchLogs();
+    }, [fetchLogs]);
 
     return (
         <div className="space-y-6">

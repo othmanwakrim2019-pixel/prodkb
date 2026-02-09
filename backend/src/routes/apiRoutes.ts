@@ -11,6 +11,7 @@ import {
     addIncidentLog,
     linkProcedure,
     uploadIncidentFile,
+    downloadFile,
     upload,
     getIncidentStats,
     searchSimilarIncidents,
@@ -60,6 +61,7 @@ router.put('/incidents/:id', authenticate, checkPermission('INCIDENT_EDIT'), upd
 router.put('/incidents/:id/status', authenticate, checkPermission('INCIDENT_EDIT'), updateIncidentStatus);
 router.post('/incidents/:id/logs', authenticate, checkPermission('INCIDENT_EDIT'), addIncidentLog);
 router.post('/incidents/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), uploadIncidentFile);
+router.get('/incidents/:id/files/:filename', authenticate, downloadFile);
 router.post('/incidents/:id/link-procedure/:procedureId', authenticate, checkPermission('INCIDENT_EDIT'), linkProcedure);
 router.delete('/incidents/:id', authenticate, checkPermission('INCIDENT_DELETE'), deleteIncident);
 
@@ -86,10 +88,13 @@ import * as configController from '../controllers/systemConfigController';
 
 // ... existing imports ...
 
-// System Config (SMTP)
+// System Config (SMTP & Generic)
 router.get('/config/smtp', authenticate, checkPermission('SYSTEM_MANAGE'), configController.getSmtpConfig);
 router.put('/config/smtp', authenticate, checkPermission('SYSTEM_MANAGE'), configController.updateSmtpConfig);
 router.post('/config/smtp/test', authenticate, checkPermission('SYSTEM_MANAGE'), configController.testSmtpConfig);
+router.put('/config/:key', authenticate, checkPermission('SYSTEM_MANAGE'), configController.updateConfig);
+router.get('/config/params', authenticate, checkPermission('SYSTEM_MANAGE'), configController.getConfigs);
+
 
 // Audit Logs
 router.get('/audit-logs', authenticate, checkPermission('AUDIT_VIEW'), auditController.getAuditLogs);

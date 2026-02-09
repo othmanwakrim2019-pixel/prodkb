@@ -132,7 +132,9 @@ export function errorHandler(
             stack: err.stack,
             path: req.path,
             method: req.method,
+            raw: err // Add raw error object
         });
+        console.error('Unhandled Error Details:', err); // Force console log for debugging
     }
 
     // Build response

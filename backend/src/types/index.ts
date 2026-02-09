@@ -228,6 +228,9 @@ export interface CreateUserDTO {
     password: string;
     role?: string;
     team?: string;
+    teamId?: string;
+    teamRole?: string;
+    isActive?: boolean;
 }
 
 /**

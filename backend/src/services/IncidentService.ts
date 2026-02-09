@@ -238,6 +238,27 @@ export class IncidentService {
     }
 
     /**
+     * Get file log by incident ID and filename
+     * @param incidentId - Incident ID
+     * @param fileName - File name
+     */
+    async getFileLog(incidentId: string, fileName: string): Promise<IIncidentLog> {
+        const log = await prisma.incidentLog.findFirst({
+            where: {
+                incidentId,
+                fileName,
+                logType: 'file'
+            }
+        });
+
+        if (!log) {
+            throw new NotFoundError('File');
+        }
+
+        return log as unknown as IIncidentLog;
+    }
+
+    /**
      * Add a file log to an incident
      * @param incidentId - Incident ID
      * @param fileData - File metadata

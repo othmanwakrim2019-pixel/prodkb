@@ -265,20 +265,22 @@ export const SystemManagement = () => {
                                     <form onSubmit={(e) => handleCreateJob(e, system.id)} className="bg-slate-50 p-4 rounded-md mb-4 border border-slate-200">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-700 mb-1">Name</label>
+                                                <label className="block text-xs font-medium text-slate-700 mb-1">Name (Description)</label>
                                                 <input
                                                     type="text"
                                                     required
+                                                    placeholder="e.g., Daily Payment Processing"
                                                     value={newJob.name}
                                                     onChange={(e) => setNewJob({ ...newJob, name: e.target.value })}
                                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-700 mb-1">Code</label>
+                                                <label className="block text-xs font-medium text-slate-700 mb-1">Code (Technical ID)</label>
                                                 <input
                                                     type="text"
                                                     required
+                                                    placeholder="e.g., PAY_BATCH_001"
                                                     value={newJob.code}
                                                     onChange={(e) => setNewJob({ ...newJob, code: e.target.value })}
                                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
@@ -411,18 +413,20 @@ export const SystemManagement = () => {
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Edit Uproc</h3>
                         <div className="grid grid-cols-1 gap-4 mb-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Name (Description)</label>
                                 <input
                                     type="text"
+                                    placeholder="e.g., Daily Payment Processing"
                                     value={editingJob.name}
                                     onChange={(e) => setEditingJob({ ...editingJob, name: e.target.value })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Code</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Code (Technical ID)</label>
                                 <input
                                     type="text"
+                                    placeholder="e.g., PAY_BATCH_001"
                                     value={editingJob.code}
                                     onChange={(e) => setEditingJob({ ...editingJob, code: e.target.value })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
