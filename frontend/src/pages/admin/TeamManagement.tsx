@@ -1,0 +1,340 @@
+import React, { useState, useEffect } from 'react';
+import axios from '../../utils/axios';
+import { useAuth } from '../../context/AuthContext';
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
+import { EditTeamModal } from '../../components/EditTeamModal';
+
+export const TeamManagement = () => {
+    const { canManageTeams } = useAuth();
+    const [teams, setTeams] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+    const [showTeamForm, setShowTeamForm] = useState(false);
+    const [showMemberForm, setShowMemberForm] = useState<string | null>(null);
+    const [newTeam, setNewTeam] = useState({ name: '', description: '', emailDistribution: '', sendEmail: true });
+    const [newMember, setNewMember] = useState({ userId: '', role: 'MEMBER' });
+    const [editingTeam, setEditingTeam] = useState<any | null>(null);
+
+    useEffect(() => {
+        fetchTeams();
+        fetchUsers();
+    }, []);
+
+    const fetchTeams = async () => {
+        try {
+            const response = await axios.get('/api/teams');
+            setTeams(response.data);
+        } catch (error) {
+            console.error('Failed to fetch teams', error);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get('/api/users');
+            setUsers(response.data);
+        } catch (error) {
+            console.error('Failed to fetch users', error);
+        }
+    };
+
+    const handleCreateTeam = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/teams', newTeam);
+            setNewTeam({ name: '', description: '', emailDistribution: '', sendEmail: true });
+            setShowTeamForm(false);
+            await fetchTeams();
+            alert('Team created successfully!');
+        } catch (error: any) {
+            console.error('Failed to create team', error);
+            alert(error.response?.data?.error || 'Failed to create team');
+        }
+    };
+
+    const handleUpdateTeam = async (updatedTeam: any) => {
+        if (!updatedTeam) return;
+        try {
+            await axios.put(`/api/teams/${updatedTeam.id}`, {
+                name: updatedTeam.name,
+                description: updatedTeam.description,
+                emailDistribution: updatedTeam.emailDistribution
+            });
+            setEditingTeam(null);
+            await fetchTeams();
+            alert('Team updated successfully!');
+        } catch (error: any) {
+            console.error('Failed to update team', error);
+            alert(error.response?.data?.error || 'Failed to update team');
+        }
+    };
+
+    const handleDeleteTeam = async (teamId: string, teamName: string) => {
+        if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
+        try {
+            await axios.delete(`/api/teams/${teamId}`);
+            await fetchTeams();
+            alert('Team deleted successfully!');
+        } catch (error: any) {
+            console.error('Failed to delete team', error);
+            alert(error.response?.data?.error || 'Failed to delete team');
+        }
+    };
+
+    const handleAddTeamMember = async (e: React.FormEvent, teamId: string) => {
+        e.preventDefault();
+        try {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+
+            const currentMembers = team.teamMembers ? JSON.parse(team.teamMembers) : [];
+            const newMemberName = newMember.userId.trim();
+            const newMemberRole = newMember.role.trim();
+
+            const memberObject = {
+                name: newMemberName,
+                role: newMemberRole || null
+            };
+            const updatedMembers = [...currentMembers, memberObject];
+
+            await axios.put(`/api/teams/${teamId}`, {
+                teamMembers: JSON.stringify(updatedMembers)
+            });
+
+            setNewMember({ userId: '', role: '' });
+            setShowMemberForm(null);
+            await fetchTeams();
+            alert('Member added successfully!');
+        } catch (error: any) {
+            console.error('Failed to add team member', error);
+            const errorMsg = error.response?.data?.details
+                ? `Validation error: ${JSON.stringify(error.response.data.details, null, 2)}`
+                : error.response?.data?.error || error.response?.data?.message || 'Failed to add team member';
+            alert(errorMsg);
+        }
+    };
+
+    const handleRemoveTeamMember = async (teamId: string, userId: string) => {
+        if (!confirm('Are you sure you want to remove this team member?')) return;
+        try {
+            await axios.delete(`/api/teams/${teamId}/members/${userId}`);
+            await fetchTeams();
+            alert('Team member removed successfully!');
+        } catch (error: any) {
+            console.error('Failed to remove team member', error);
+            alert(error.response?.data?.error || 'Failed to remove team member');
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-slate-900">Team Management</h2>
+                {canManageTeams() && (
+                    <button
+                        onClick={() => setShowTeamForm(!showTeamForm)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                    >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Team
+                    </button>
+                )}
+            </div>
+
+            {showTeamForm && (
+                <form onSubmit={handleCreateTeam} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                    <h3 className="font-medium text-slate-900">Create New Team</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Team Name</label>
+                            <input
+                                type="text"
+                                required
+                                value={newTeam.name}
+                                onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Email Distribution</label>
+                            <input
+                                type="email"
+                                // required currently optional in backend logic seen before but better to be strict? Backend validation handles it.
+                                value={newTeam.emailDistribution}
+                                onChange={(e) => setNewTeam({ ...newTeam, emailDistribution: e.target.value })}
+                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                placeholder="team@company.com"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                            <textarea
+                                value={newTeam.description}
+                                onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
+                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowTeamForm(false)}
+                            className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                        >
+                            Create Team
+                        </button>
+                    </div>
+                </form>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+                {teams.map((team) => (
+                    <div key={team.id} className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 flex items-center justify-between bg-slate-50">
+                            <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedTeamId(expandedTeamId === team.id ? null : team.id)}>
+                                {expandedTeamId === team.id ? <ChevronUp className="h-5 w-5 text-slate-500" /> : <ChevronDown className="h-5 w-5 text-slate-500" />}
+                                <div>
+                                    <h3 className="text-lg font-medium text-slate-900">{team.name}</h3>
+                                    <div className="text-sm text-slate-500 flex gap-4">
+                                        <span>{team.emailDistribution}</span>
+                                        <span>•</span>
+                                        <span>{JSON.parse(team.teamMembers || '[]').length} members</span>
+                                        <span>•</span>
+                                        <span>{team.jobs?.length || 0} systems</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {canManageTeams() && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setEditingTeam(team)}
+                                        className="text-slate-400 hover:text-accent"
+                                        title="Edit team"
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteTeam(team.id, team.name)}
+                                        className="text-slate-400 hover:text-red-600"
+                                        title="Delete team"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {expandedTeamId === team.id && (
+                            <div className="px-6 py-4 border-t border-slate-200">
+                                <div className="mb-6">
+                                    <h4 className="font-medium text-slate-900 mb-2">Description</h4>
+                                    <p className="text-sm text-slate-600">{team.description || 'No description provided.'}</p>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="font-medium text-slate-900">Team Members</h4>
+                                        {canManageTeams() && (
+                                            <button
+                                                onClick={() => setShowMemberForm(team.id)}
+                                                className="text-sm text-accent hover:text-blue-800 font-medium flex items-center"
+                                            >
+                                                <UserPlus className="h-4 w-4 mr-1" />
+                                                Add Member
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {showMemberForm === team.id && (
+                                        <form onSubmit={(e) => handleAddTeamMember(e, team.id)} className="bg-slate-50 p-4 rounded-md mb-4 border border-slate-200">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 mb-1">User</label>
+                                                    <select
+                                                        value={newMember.userId}
+                                                        onChange={(e) => setNewMember({ ...newMember, userId: e.target.value })}
+                                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
+                                                    >
+                                                        <option value="">Select User</option>
+                                                        {users.map(u => (
+                                                            <option key={u.id} value={u.name}>{u.name} ({u.email})</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 mb-1">Role</label>
+                                                    <select
+                                                        value={newMember.role}
+                                                        onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+                                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
+                                                    >
+                                                        <option value="MEMBER">Member</option>
+                                                        <option value="LEAD">Lead</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowMemberForm(null)}
+                                                    className="px-3 py-1 border border-slate-300 rounded-md text-xs font-medium text-slate-700 hover:bg-white"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="px-3 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-primary hover:bg-slate-800"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+
+                                    {team.teamMembers && JSON.parse(team.teamMembers).length > 0 ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {JSON.parse(team.teamMembers).map((member: any, idx: number) => (
+                                                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
+                                                    <div>
+                                                        <p className="font-medium text-sm text-slate-900">{member.name}</p>
+                                                        <p className="text-xs text-slate-500">{member.role || 'Member'}</p>
+                                                    </div>
+                                                    {canManageTeams() && (
+                                                        <button
+                                                            onClick={() => handleRemoveTeamMember(team.id, member.name)}
+                                                            className="text-slate-400 hover:text-red-600"
+                                                            title="Remove member"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-slate-500 italic">No members assigned to this team.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {editingTeam && (
+                <EditTeamModal
+                    team={editingTeam}
+                    onClose={() => setEditingTeam(null)}
+                    onSave={handleUpdateTeam}
+                />
+            )}
+        </div>
+    );
+};
