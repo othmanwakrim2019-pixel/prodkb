@@ -134,6 +134,7 @@ export const UserManagement = () => {
             }
 
             alert('Team assigned successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
             alert(error.response?.data?.error || 'Failed to assign team');
@@ -153,6 +154,7 @@ export const UserManagement = () => {
 
             await fetchUsers();
             alert('Team removed successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
             alert(error.response?.data?.error || 'Failed to remove team');
