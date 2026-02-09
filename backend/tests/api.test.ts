@@ -23,7 +23,7 @@ describe('API Routes', () => {
 
 describe('Rate Limiter', () => {
     it('should export rate limiters', () => {
-        const { apiLimiter, authLimiter, uploadLimiter } = require('../middleware/rateLimiter');
+        const { apiLimiter, authLimiter, uploadLimiter } = require('../src/middleware/rateLimiter');
         expect(apiLimiter).toBeDefined();
         expect(authLimiter).toBeDefined();
         expect(uploadLimiter).toBeDefined();
@@ -32,7 +32,7 @@ describe('Rate Limiter', () => {
 
 describe('Auth Middleware', () => {
     it('should export authenticate function', () => {
-        const { authenticate, checkPermission, authorize } = require('../middleware/auth');
+        const { authenticate, checkPermission, authorize } = require('../src/middleware/auth');
         expect(authenticate).toBeDefined();
         expect(typeof authenticate).toBe('function');
         expect(checkPermission).toBeDefined();
@@ -42,7 +42,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should return 401 when no token provided', async () => {
-        const { authenticate } = require('../middleware/auth');
+        const { authenticate } = require('../src/middleware/auth');
 
         const req = { header: jest.fn().mockReturnValue(undefined) } as any;
         const res = {

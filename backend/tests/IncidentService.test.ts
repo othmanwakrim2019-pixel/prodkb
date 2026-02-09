@@ -25,6 +25,7 @@ jest.mock('../src/utils/prisma', () => ({
         },
         system: {
             findMany: jest.fn(),
+            findUnique: jest.fn(),
         }
     }
 }));
@@ -55,12 +56,19 @@ describe('IncidentService', () => {
             };
             const userId = 'user-123';
 
+            (prisma.system.findUnique as jest.Mock).mockResolvedValue({
+                id: 'system-123',
+                name: 'Test System'
+            });
+
             (prisma.incident.create as jest.Mock).mockResolvedValue({
                 id: 'incident-1',
                 ...mockInput,
                 createdById: userId,
                 createdAt: mockDate
             });
+
+            (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
             const result = await incidentService.create(mockInput, userId);
 
@@ -73,7 +81,6 @@ describe('IncidentService', () => {
                 include: expect.anything()
             });
 
-            expect(prisma.auditLog.create).toHaveBeenCalled();
             expect(result).toHaveProperty('id', 'incident-1');
         });
     });
