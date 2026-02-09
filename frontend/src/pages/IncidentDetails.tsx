@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from '../utils/axios';
 import { FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 } from 'lucide-react';
@@ -18,11 +18,7 @@ export const IncidentDetails = () => {
     const [noteForm, setNoteForm] = useState({ logType: 'investigation', content: '' });
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
-    useEffect(() => {
-        fetchIncident();
-    }, [id]);
-
-    const fetchIncident = async () => {
+    const fetchIncident = useCallback(async () => {
         try {
             const response = await axios.get(`/api/incidents/${id}`);
             setIncident(response.data);
@@ -31,7 +27,11 @@ export const IncidentDetails = () => {
             console.error('Failed to fetch incident', error);
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        fetchIncident();
+    }, [fetchIncident]);
 
     const handleStatusChange = async (newStatus: string) => {
         try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2 } from 'lucide-react';
-import { User } from '../../types';
+import { User, TeamMembership } from '../../types';
 
 interface Team {
     id: string;
@@ -129,7 +129,7 @@ export const UserManagement = () => {
                 };
                 setEditingUser({
                     ...editingUser,
-                    teamMemberships: [...(editingUser.teamMemberships || []), newMembership]
+                    teamMemberships: [...(editingUser.teamMemberships || []), newMembership as unknown as TeamMembership]
                 });
             }
 
@@ -330,7 +330,7 @@ export const UserManagement = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                     {u.teamMemberships && u.teamMemberships.length > 0
-                                        ? u.teamMemberships.map((tm: any) => `${tm.team.name} (${tm.role})`).join(', ')
+                                        ? u.teamMemberships.map((tm: TeamMembership) => `${tm.team.name} (${tm.role})`).join(', ')
                                         : '-'}
                                 </td>
                                 {canManageUsers() && (

@@ -3,7 +3,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { EditTeamModal } from '../../components/EditTeamModal';
-import { Team, User } from '../../types';
+import { Team, User, TeamMember } from '../../types';
 
 export const TeamManagement = () => {
     const { canManageTeams } = useAuth();
@@ -219,8 +219,8 @@ export const TeamManagement = () => {
                                         <span>•</span>
                                         <span>{team.members?.length || 0} members</span>
                                         <span>•</span>
-                                        <span>{(team as any).systemCount || 0} systems</span>
-                                        {!(team as any).sendEmail && (
+                                        <span>{(team as Team & { systemCount?: number }).systemCount || 0} systems</span>
+                                        {!(team as Team & { sendEmail?: boolean }).sendEmail && (
                                             <>
                                                 <span>•</span>
                                                 <span className="text-amber-600 text-xs">📧 Notifications off</span>
@@ -318,8 +318,7 @@ export const TeamManagement = () => {
 
                                     {team.members && team.members.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                            {team.members.map((member: any) => (
+                                            {team.members.map((member: TeamMember) => (
                                                 <div key={member.user.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
                                                     <div>
                                                         <p className="font-medium text-sm text-slate-900">{member.user.name}</p>
