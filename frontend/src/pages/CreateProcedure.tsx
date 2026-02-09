@@ -109,7 +109,7 @@ export const CreateProcedure = () => {
             };
             fetchProcedure();
         }
-    }, [id, setValue, navigate]);
+    }, [isEditMode, id, setValue, navigate]);
 
     // Auto-fill title from selected job
     useEffect(() => {
@@ -158,7 +158,7 @@ export const CreateProcedure = () => {
             };
             fetchIncident();
         }
-    }, [fromIncidentId, setValue]);
+    }, [isEditMode, fromIncidentId, setValue]);
 
     const onSubmit = async (data: CreateProcedureFormValues) => {
         try {
