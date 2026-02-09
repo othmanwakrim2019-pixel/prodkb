@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Lock, User } from 'lucide-react';
 
 export const Login = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState('');
@@ -21,7 +21,12 @@ export const Login = () => {
         }
     }, []);
 
-    const onSubmit = async (data: any) => {
+    interface LoginFormData {
+        email: string;
+        password: string;
+    }
+
+    const onSubmit = async (data: LoginFormData) => {
         setError(''); // Clear previous errors
         sessionStorage.removeItem('loginError'); // Clear persisted errors
         setIsLoading(true);
@@ -29,6 +34,7 @@ export const Login = () => {
             const response = await axios.post('/auth/login', data);
             login(response.data.token, response.data.user);
             navigate('/');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             // Display the specific error message from backend (works for 401 and 403)
             const errorMessage = err.response?.data?.error || err.message || 'Login failed. Please try again.';

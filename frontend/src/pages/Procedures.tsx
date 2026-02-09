@@ -3,10 +3,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import { Plus, Search as SearchIcon, Link as LinkIcon, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Procedure } from '../types';
 
 export const Procedures = () => {
     const { hasPermission } = useAuth();
-    const [procedures, setProcedures] = useState<any[]>([]);
+    const [procedures, setProcedures] = useState<Procedure[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [searchParams] = useSearchParams();
@@ -130,7 +131,7 @@ export const Procedures = () => {
                                     )}
                                     <div className="flex justify-between">
                                         <span>Used in:</span>
-                                        <span className="font-medium text-slate-700">{procedure._count.incidents} incidents</span>
+                                        <span className="font-medium text-slate-700">{procedure._count?.incidents || 0} incidents</span>
                                     </div>
                                 </div>
 
@@ -166,7 +167,7 @@ export const Procedures = () => {
                                         )}
                                         <div className="flex justify-between">
                                             <span>Used in:</span>
-                                            <span className="font-medium text-slate-700">{procedure._count.incidents} incidents</span>
+                                            <span className="font-medium text-slate-700">{procedure._count?.incidents || 0} incidents</span>
                                         </div>
                                     </div>
 

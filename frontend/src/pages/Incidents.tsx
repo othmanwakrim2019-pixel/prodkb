@@ -4,9 +4,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IncidentFilters } from '../components/IncidentFilters';
+import { Incident } from '../types';
 
 export const Incidents = () => {
-    const [incidents, setIncidents] = useState<any[]>([]);
+    const [incidents, setIncidents] = useState<Incident[]>([]);
     const [loading, setLoading] = useState(true);
     const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
     const { canCreate, canDelete } = useAuth();
@@ -123,7 +124,7 @@ export const Incidents = () => {
                                         </Link>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-slate-900">{incident.system.name}</div>
+                                        <div className="text-sm text-slate-900">{incident.system?.name || '-'}</div>
                                         <div className="text-xs text-slate-500">{incident.job?.name || '-'}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">

@@ -3,12 +3,13 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { ArrowLeft, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Procedure, Incident } from '../types';
 
 export const ProcedureDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { hasPermission } = useAuth();
-    const [procedure, setProcedure] = useState<any>(null);
+    const [procedure, setProcedure] = useState<Procedure | null>(null);
     const [loading, setLoading] = useState(true);
 
     const handleDelete = async () => {
@@ -60,8 +61,8 @@ export const ProcedureDetails = () => {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <div className="text-right text-sm text-slate-500">
-                            <p>Created by {procedure.createdBy.name}</p>
-                            <p>{new Date(procedure.createdAt).toLocaleDateString()}</p>
+                            <p>Created by {procedure.createdBy?.name || 'Unknown'}</p>
+                            <p>{procedure.createdAt ? new Date(procedure.createdAt).toLocaleDateString() : '-'}</p>
                         </div>
                         <div className="flex gap-2 mt-2">
                             {hasPermission('PROCEDURE_EDIT') && (
@@ -133,9 +134,9 @@ export const ProcedureDetails = () => {
 
             {/* Linked Incidents */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Linked Incidents ({procedure.incidents.length})</h2>
+                <h2 className="text-lg font-bold text-slate-900 mb-4">Linked Incidents ({(procedure.incidents || []).length})</h2>
                 <div className="space-y-4">
-                    {procedure.incidents.map((incident: any) => (
+                    {procedure.incidents && procedure.incidents.map((incident: Incident) => (
                         <div key={incident.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-md border border-slate-200">
                             <div>
                                 <Link to={`/incidents/${incident.id}`} className="font-medium text-primary hover:text-accent">
@@ -149,7 +150,7 @@ export const ProcedureDetails = () => {
                             </span>
                         </div>
                     ))}
-                    {procedure.incidents.length === 0 && (
+                    {(!procedure.incidents || procedure.incidents.length === 0) && (
                         <p className="text-slate-500 text-sm">No incidents linked to this procedure yet.</p>
                     )}
                 </div>

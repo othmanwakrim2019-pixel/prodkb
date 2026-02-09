@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { SLA, Severity } from '../../types';
 
 export const SLAManagement = () => {
     const { canManageSLAs } = useAuth();
-    const [slas, setSlas] = useState<any[]>([]);
+    const [slas, setSlas] = useState<SLA[]>([]);
     const [showSlaForm, setShowSlaForm] = useState(false);
     const [newSla, setNewSla] = useState({ name: '', description: '', severity: 'Medium', acknowledgeTimeMinutes: 60, resolveTimeMinutes: 480 });
-    const [editingSla, setEditingSla] = useState<any | null>(null);
+    const [editingSla, setEditingSla] = useState<SLA | null>(null);
 
     useEffect(() => {
         fetchSlas();
@@ -31,6 +32,7 @@ export const SLAManagement = () => {
             setShowSlaForm(false);
             await fetchSlas();
             alert('SLA created successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to create SLA', error);
             alert(error.response?.data?.error || 'Failed to create SLA');
@@ -44,12 +46,13 @@ export const SLAManagement = () => {
                 name: editingSla.name,
                 description: editingSla.description,
                 severity: editingSla.severity,
-                acknowledgeTimeMinutes: parseInt(editingSla.acknowledgeTimeMinutes),
-                resolveTimeMinutes: parseInt(editingSla.resolveTimeMinutes)
+                acknowledgeTimeMinutes: Number(editingSla.acknowledgeTimeMinutes),
+                resolveTimeMinutes: Number(editingSla.resolveTimeMinutes)
             });
             setEditingSla(null);
             await fetchSlas();
             alert('SLA updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to update SLA', error);
             alert(error.response?.data?.error || 'Failed to update SLA');
@@ -62,6 +65,7 @@ export const SLAManagement = () => {
             await axios.delete(`/api/slas/${slaId}`);
             await fetchSlas();
             alert('SLA deleted successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to delete SLA', error);
             alert(error.response?.data?.error || 'Failed to delete SLA');
@@ -110,7 +114,7 @@ export const SLAManagement = () => {
                             <label className="block text-sm font-medium text-slate-700 mb-1">Severity Level</label>
                             <select
                                 value={newSla.severity}
-                                onChange={(e) => setNewSla({ ...newSla, severity: e.target.value })}
+                                onChange={(e) => setNewSla({ ...newSla, severity: e.target.value as Severity })}
                                 className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                             >
                                 <option value="Critical">Critical</option>
@@ -127,7 +131,7 @@ export const SLAManagement = () => {
                                     required
                                     min="1"
                                     value={newSla.acknowledgeTimeMinutes}
-                                    onChange={(e) => setNewSla({ ...newSla, acknowledgeTimeMinutes: parseInt(e.target.value) })}
+                                    onChange={(e) => setNewSla({ ...newSla, acknowledgeTimeMinutes: parseInt(e.target.value) || 0 })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 />
                             </div>
@@ -138,7 +142,7 @@ export const SLAManagement = () => {
                                     required
                                     min="1"
                                     value={newSla.resolveTimeMinutes}
-                                    onChange={(e) => setNewSla({ ...newSla, resolveTimeMinutes: parseInt(e.target.value) })}
+                                    onChange={(e) => setNewSla({ ...newSla, resolveTimeMinutes: parseInt(e.target.value) || 0 })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 />
                             </div>
@@ -242,7 +246,7 @@ export const SLAManagement = () => {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Severity Level</label>
                                 <select
                                     value={editingSla.severity}
-                                    onChange={(e) => setEditingSla({ ...editingSla, severity: e.target.value })}
+                                    onChange={(e) => setEditingSla({ ...editingSla, severity: e.target.value as Severity })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 >
                                     <option value="Critical">Critical</option>
@@ -258,7 +262,7 @@ export const SLAManagement = () => {
                                         type="number"
                                         min="1"
                                         value={editingSla.acknowledgeTimeMinutes}
-                                        onChange={(e) => setEditingSla({ ...editingSla, acknowledgeTimeMinutes: e.target.value })}
+                                        onChange={(e) => setEditingSla({ ...editingSla, acknowledgeTimeMinutes: parseInt(e.target.value) || 0 })}
                                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                     />
                                 </div>
@@ -268,7 +272,7 @@ export const SLAManagement = () => {
                                         type="number"
                                         min="1"
                                         value={editingSla.resolveTimeMinutes}
-                                        onChange={(e) => setEditingSla({ ...editingSla, resolveTimeMinutes: e.target.value })}
+                                        onChange={(e) => setEditingSla({ ...editingSla, resolveTimeMinutes: parseInt(e.target.value) || 0 })}
                                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                     />
                                 </div>

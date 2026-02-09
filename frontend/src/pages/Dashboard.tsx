@@ -24,26 +24,14 @@ interface DashboardStats {
 }
 
 import { useAuth } from '../context/AuthContext';
+import { System, Team } from '../types';
 
 const Dashboard = () => {
     const { hasPermission } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Permission check
-    if (!hasPermission('DASHBOARD_VIEW')) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="bg-red-50 p-6 rounded-full mb-4">
-                    <ShieldAlert className="h-12 w-12 text-red-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
-                <p className="text-slate-600 mt-2 max-w-md">
-                    You do not have permission to view the dashboard. Please contact your administrator if you believe this is an error.
-                </p>
-            </div>
-        );
-    }
+
 
     // ... existing state ...
     const [period, setPeriod] = useState('today'); // today, week, month
@@ -51,8 +39,8 @@ const Dashboard = () => {
     const [selectedTeam, setSelectedTeam] = useState('');
 
     // Options
-    const [systems, setSystems] = useState<any[]>([]);
-    const [teams, setTeams] = useState<any[]>([]);
+    const [systems, setSystems] = useState<System[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
 
     useEffect(() => {
         const fetchFilters = async () => {
@@ -76,8 +64,8 @@ const Dashboard = () => {
             try {
                 // Calculate Query Params
                 const now = new Date();
-                let startDate = new Date();
-                let endDate = new Date();
+                const startDate = new Date();
+                const endDate = new Date();
 
                 startDate.setHours(0, 0, 0, 0);
                 endDate.setHours(23, 59, 59, 999);
@@ -88,6 +76,7 @@ const Dashboard = () => {
                     startDate.setDate(now.getDate() - 30);
                 }
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const params: any = {
                     startDate: startDate.toISOString(),
                     endDate: endDate.toISOString(),
@@ -110,6 +99,21 @@ const Dashboard = () => {
         const interval = setInterval(fetchStats, 60000);
         return () => clearInterval(interval);
     }, [period, selectedSystem, selectedTeam]); // Re-fetch when filters change
+
+    // Permission check
+    if (!hasPermission('DASHBOARD_VIEW')) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="bg-red-50 p-6 rounded-full mb-4">
+                    <ShieldAlert className="h-12 w-12 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <p className="text-slate-600 mt-2 max-w-md">
+                    You do not have permission to view the dashboard. Please contact your administrator if you believe this is an error.
+                </p>
+            </div>
+        );
+    }
 
     if (loading && !stats) {
         return <div className="p-8">Loading dashboard...</div>;
@@ -159,7 +163,7 @@ const Dashboard = () => {
                         className="rounded-md border-slate-300 text-sm focus:ring-accent focus:border-accent p-1.5 border min-w-[150px]"
                     >
                         <option value="">All Applications</option>
-                        {systems.map((s: any) => (
+                        {systems.map((s: System) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                     </select>
@@ -173,7 +177,7 @@ const Dashboard = () => {
                         className="rounded-md border-slate-300 text-sm focus:ring-accent focus:border-accent p-1.5 border min-w-[150px]"
                     >
                         <option value="">All Teams</option>
-                        {teams.map((t: any) => (
+                        {teams.map((t: Team) => (
                             <option key={t.id} value={t.id}>{t.name}</option>
                         ))}
                     </select>

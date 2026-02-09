@@ -3,14 +3,16 @@ import { Search, BookOpen, CheckCircle, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api';
 import { Link } from 'react-router-dom';
 
+import { Incident } from '../types';
+
 interface SmartSearchProps {
     query: string;
     systemId?: string;
-    onSelectSolution?: (solution: any) => void;
+    onSelectSolution?: (solution: Incident) => void;
 }
 
 export const SmartSolutionSearch = ({ query, systemId }: SmartSearchProps) => {
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<Incident[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {

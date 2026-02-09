@@ -23,9 +23,8 @@
         "noFallthroughCasesInSwitch": true,
         "types": [
             "vite/client",
-            "vitest/globals",
-            "@testing-library/jest-dom",
-            "node"
+            "node",
+            "vitest/globals"
         ]
     },
     "include": [

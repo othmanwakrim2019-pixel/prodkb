@@ -3,15 +3,17 @@ import { useParams, Link } from 'react-router-dom';
 import axios from '../utils/axios';
 import { ArrowLeft, FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Incident, Log } from '../types';
 
 export const IncidentDetails = () => {
     const { id } = useParams();
     const { canEdit, hasPermission } = useAuth();
-    const [incident, setIncident] = useState<any>(null);
+    const [incident, setIncident] = useState<Incident | null>(null);
     const [loading, setLoading] = useState(true);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [showFileUpload, setShowFileUpload] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [editForm, setEditForm] = useState<any>({});
     const [noteForm, setNoteForm] = useState({ logType: 'investigation', content: '' });
     const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -47,8 +49,10 @@ export const IncidentDetails = () => {
             setShowEditModal(false);
             fetchIncident();
             alert('Incident updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to update incident', error);
+            // safe check for response
             alert(error.response?.data?.error || 'Failed to update incident');
         }
     };
@@ -64,8 +68,10 @@ export const IncidentDetails = () => {
             setNoteForm({ logType: 'investigation', content: '' });
             fetchIncident();
             alert('Note added successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to add note', error);
+            // safe check for response
             alert(error.response?.data?.error || 'Failed to add note');
         }
     };
@@ -85,8 +91,10 @@ export const IncidentDetails = () => {
             setUploadFile(null);
             fetchIncident();
             alert('File uploaded successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to upload file', error);
+            // safe check for response
             alert(error.response?.data?.error || 'Failed to upload file');
         }
     };
@@ -97,8 +105,10 @@ export const IncidentDetails = () => {
             await axios.put(`/api/incidents/${id}`, { linkedProcedureId: null });
             fetchIncident();
             alert('Procedure unlinked successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to unlink procedure', error);
+            // safe check for response
             alert(error.response?.data?.error || 'Failed to unlink procedure');
         }
     };
@@ -212,7 +222,7 @@ export const IncidentDetails = () => {
 
                                 {incident.logs && incident.logs.length > 0 ? (
                                     <div className="space-y-3">
-                                        {incident.logs.map((log: any) => (
+                                        {incident.logs.map((log: Log) => (
                                             <div key={log.id} className="bg-slate-50 p-4 rounded-md border border-slate-200">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
@@ -224,7 +234,7 @@ export const IncidentDetails = () => {
                                                     <div className="flex items-center text-sm text-accent mb-2">
                                                         <Paperclip className="h-4 w-4 mr-2" />
                                                         <a href={`/api/incidents/${id}/files/${log.fileName}`} download className="hover:underline">
-                                                            {log.fileName} ({Math.round(log.fileSize / 1024)}KB)
+                                                            {log.fileName} ({Math.round((log.fileSize || 0) / 1024)}KB)
                                                         </a>
                                                         <Download className="h-3 w-3 ml-2" />
                                                     </div>

@@ -2,12 +2,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { Login } from '../pages/Login';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock the API calls
-const mockLogin = vi.fn();
+const mockLogin = vi.fn().mockResolvedValue({
+    data: {
+        token: 'fake-token',
+        user: { id: '1', name: 'Test User', email: 'test@example.com', role: 'VIEWER', permissions: [] }
+    }
+});
 vi.mock('../utils/axios', () => ({
     default: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         post: (...args: any[]) => mockLogin(...args),
         defaults: {
             headers: { common: {} }
