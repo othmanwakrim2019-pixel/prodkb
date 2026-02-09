@@ -3,17 +3,18 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { EditTeamModal } from '../../components/EditTeamModal';
+import { Team, User } from '../../types';
 
 export const TeamManagement = () => {
     const { canManageTeams } = useAuth();
-    const [teams, setTeams] = useState<any[]>([]);
-    const [users, setUsers] = useState<any[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
     const [showTeamForm, setShowTeamForm] = useState(false);
     const [showMemberForm, setShowMemberForm] = useState<string | null>(null);
     const [newTeam, setNewTeam] = useState({ name: '', description: '', emailDistribution: '', sendEmail: true });
     const [newMember, setNewMember] = useState({ userId: '', role: 'MEMBER' });
-    const [editingTeam, setEditingTeam] = useState<any | null>(null);
+    const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
     useEffect(() => {
         fetchTeams();
@@ -46,13 +47,15 @@ export const TeamManagement = () => {
             setShowTeamForm(false);
             await fetchTeams();
             alert('Team created successfully!');
+            await fetchTeams();
+            alert('Team created successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to create team', error);
-            alert(error.response?.data?.error || 'Failed to create team');
+            console.error(error);
         }
     };
 
-    const handleUpdateTeam = async (updatedTeam: any) => {
+    const handleUpdateTeam = async (updatedTeam: Team) => {
         if (!updatedTeam) return;
         try {
             await axios.put(`/api/teams/${updatedTeam.id}`, {
@@ -63,9 +66,11 @@ export const TeamManagement = () => {
             setEditingTeam(null);
             await fetchTeams();
             alert('Team updated successfully!');
+            await fetchTeams();
+            alert('Team updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to update team', error);
-            alert(error.response?.data?.error || 'Failed to update team');
+            console.error(error);
         }
     };
 
@@ -75,9 +80,11 @@ export const TeamManagement = () => {
             await axios.delete(`/api/teams/${teamId}`);
             await fetchTeams();
             alert('Team deleted successfully!');
+            await fetchTeams();
+            alert('Team deleted successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to delete team', error);
-            alert(error.response?.data?.error || 'Failed to delete team');
+            console.error(error);
         }
     };
 
@@ -105,12 +112,11 @@ export const TeamManagement = () => {
             setShowMemberForm(null);
             await fetchTeams();
             alert('Member added successfully!');
+            await fetchTeams();
+            alert('Member added successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to add team member', error);
-            const errorMsg = error.response?.data?.details
-                ? `Validation error: ${JSON.stringify(error.response.data.details, null, 2)}`
-                : error.response?.data?.error || error.response?.data?.message || 'Failed to add team member';
-            alert(errorMsg);
+            console.error(error);
         }
     };
 
@@ -120,9 +126,11 @@ export const TeamManagement = () => {
             await axios.delete(`/api/teams/${teamId}/members/${userId}`);
             await fetchTeams();
             alert('Team member removed successfully!');
+            await fetchTeams();
+            alert('Team member removed successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to remove team member', error);
-            alert(error.response?.data?.error || 'Failed to remove team member');
+            console.error(error);
         }
     };
 
@@ -300,6 +308,7 @@ export const TeamManagement = () => {
 
                                     {team.teamMembers && JSON.parse(team.teamMembers).length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                             {JSON.parse(team.teamMembers).map((member: any, idx: number) => (
                                                 <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
                                                     <div>

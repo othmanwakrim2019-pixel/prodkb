@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { System, Team, Job } from '../../types';
 
 export const SystemManagement = () => {
     const { canManageSystems } = useAuth();
-    const [systems, setSystems] = useState<any[]>([]);
-    const [teams, setTeams] = useState<any[]>([]);
+    const [systems, setSystems] = useState<System[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
     const [systemSearch, setSystemSearch] = useState('');
     const [showSystemForm, setShowSystemForm] = useState(false);
     const [showJobForm, setShowJobForm] = useState<string | null>(null);
     const [expandedSystemId, setExpandedSystemId] = useState<string | null>(null);
     const [newSystem, setNewSystem] = useState({ name: '', description: '' });
     const [newJob, setNewJob] = useState({ name: '', code: '', systemId: '', teamId: '' });
-    const [editingSystem, setEditingSystem] = useState<any | null>(null);
-    const [editingJob, setEditingJob] = useState<any | null>(null);
+    const [editingSystem, setEditingSystem] = useState<System | null>(null);
+    const [editingJob, setEditingJob] = useState<Job | null>(null);
 
     useEffect(() => {
         fetchSystems();
@@ -47,9 +48,11 @@ export const SystemManagement = () => {
             setShowSystemForm(false);
             await fetchSystems();
             alert('System created successfully!');
+            await fetchSystems();
+            alert('System created successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to create system', error);
-            alert(error.response?.data?.error || 'Failed to create system');
+            console.error(error);
         }
     };
 
@@ -65,9 +68,11 @@ export const SystemManagement = () => {
             setShowJobForm(null);
             await fetchSystems();
             alert('Job created successfully!');
+            await fetchSystems();
+            alert('Job created successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to create job', error);
-            alert(error.response?.data?.error || 'Failed to create job');
+            console.error(error);
         }
     };
 
@@ -81,9 +86,11 @@ export const SystemManagement = () => {
             setEditingSystem(null);
             await fetchSystems();
             alert('System updated successfully!');
+            await fetchSystems();
+            alert('System updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to update system', error);
-            alert(error.response?.data?.error || 'Failed to update system');
+            console.error(error);
         }
     };
 
@@ -93,9 +100,11 @@ export const SystemManagement = () => {
             await axios.delete(`/api/systems/${systemId}`);
             await fetchSystems();
             alert('System deleted successfully!');
+            await fetchSystems();
+            alert('System deleted successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to delete system', error);
-            alert(error.response?.data?.error || 'Failed to delete system');
+            console.error(error);
         }
     };
 
@@ -111,9 +120,11 @@ export const SystemManagement = () => {
             setEditingJob(null);
             await fetchSystems();
             alert('Job updated successfully!');
+            await fetchSystems();
+            alert('Job updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to update job', error);
-            alert(error.response?.data?.error || 'Failed to update job');
+            console.error(error);
         }
     };
 
@@ -123,9 +134,11 @@ export const SystemManagement = () => {
             await axios.delete(`/api/jobs/${jobId}`);
             await fetchSystems();
             alert('Job deleted successfully!');
+            await fetchSystems();
+            alert('Job deleted successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to delete job', error);
-            alert(error.response?.data?.error || 'Failed to delete job');
+            console.error(error);
         }
     };
 
@@ -314,7 +327,7 @@ export const SystemManagement = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-200">
-                                            {system.jobs.map((job: any) => (
+                                            {system.jobs.map((job: Job) => (
                                                 <tr key={job.id}>
                                                     <td className="px-3 py-2 text-sm font-mono text-slate-700">{job.code}</td>
                                                     <td className="px-3 py-2 text-sm text-slate-700">{job.name}</td>

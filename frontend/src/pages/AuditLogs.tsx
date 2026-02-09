@@ -32,7 +32,7 @@ const AuditLogs = () => {
     const fetchLogs = async () => {
         setLoading(true);
         try {
-            const params: any = {};
+            const params: { action?: string; entityType?: string } = {};
             if (actionType) params.action = actionType;
             if (entityType) params.entityType = entityType;
 

@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock axios
 vi.mock('../utils/axios', () => ({
@@ -34,7 +34,7 @@ describe('AuthContext', () => {
 
     it('should start with no user when not authenticated', async () => {
         const TestComponent = () => {
-            const { useAuth } = require('../context/AuthContext');
+
             const { user, isAuthenticated } = useAuth();
             return (
                 <div>
@@ -59,7 +59,7 @@ describe('AuthContext', () => {
 
     it('should store token in localStorage on login', async () => {
         const TestComponent = () => {
-            const { useAuth } = require('../context/AuthContext');
+
             const { login, token } = useAuth();
 
             return (
@@ -92,7 +92,7 @@ describe('AuthContext', () => {
         localStorage.setItem('token', 'existing-token');
 
         const TestComponent = () => {
-            const { useAuth } = require('../context/AuthContext');
+
             const { logout, token } = useAuth();
 
             return (
@@ -123,7 +123,7 @@ describe('AuthContext', () => {
 describe('Permission Helpers', () => {
     it('should check permissions correctly', async () => {
         const TestComponent = () => {
-            const { useAuth } = require('../context/AuthContext');
+
             const { login, canCreate, canEdit, canDelete } = useAuth();
 
             React.useEffect(() => {

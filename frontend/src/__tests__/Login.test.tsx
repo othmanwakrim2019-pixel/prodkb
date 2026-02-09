@@ -8,6 +8,7 @@ import { vi } from 'vitest';
 const mockLogin = vi.fn();
 vi.mock('../utils/axios', () => ({
     default: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         post: (...args: any[]) => mockLogin(...args),
         defaults: {
             headers: { common: {} }

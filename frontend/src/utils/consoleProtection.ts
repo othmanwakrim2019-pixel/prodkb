@@ -14,7 +14,9 @@ if (isProduction) {
     console.warn = noop;
 
     // Keep console.error for critical errors but sanitize output
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const originalError = console.error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     console.error = (...args: any[]) => {
         // Filter out any objects that might contain tokens
         const sanitized = args.map(arg => {
@@ -62,6 +64,7 @@ if (isProduction) {
 }
 
 // Sanitize any error objects to remove sensitive headers
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sanitizeError = (error: any) => {
     if (error?.config?.headers) {
         const sanitized = { ...error };

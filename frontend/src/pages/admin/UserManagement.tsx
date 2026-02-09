@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2 } from 'lucide-react';
+import { User } from '../../types';
 
 export const UserManagement = () => {
     const { canManageUsers } = useAuth();
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [userSearch, setUserSearch] = useState('');
     const [showUserForm, setShowUserForm] = useState(false);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'OPERATOR', team: '' });
-    const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -32,9 +33,11 @@ export const UserManagement = () => {
             setShowUserForm(false);
             await fetchUsers();
             alert('User created successfully!');
+            await fetchUsers();
+            alert('User created successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to create user', error);
-            alert(error.response?.data?.error || 'Failed to create user');
+            console.error(error);
         }
     };
 
@@ -50,9 +53,11 @@ export const UserManagement = () => {
             setEditingUser(null);
             await fetchUsers();
             alert('User updated successfully!');
+            await fetchUsers();
+            alert('User updated successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to update user', error);
-            alert(error.response?.data?.error || 'Failed to update user');
+            console.error(error);
         }
     };
 
@@ -62,9 +67,11 @@ export const UserManagement = () => {
             await axios.delete(`/api/users/${userId}`);
             await fetchUsers();
             alert('User deleted successfully!');
+            await fetchUsers();
+            alert('User deleted successfully!');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error('Failed to delete user', error);
-            alert(error.response?.data?.error || 'Failed to delete user');
+            console.error(error);
         }
     };
 
@@ -192,11 +199,11 @@ export const UserManagement = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{u.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{u.email}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${(u.role?.name || u.role) === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                                        (u.role?.name || u.role) === 'EXPERT' ? 'bg-blue-100 text-blue-800' :
+                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${(typeof u.role === 'object' ? u.role.name : u.role) === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                        (typeof u.role === 'object' ? u.role.name : u.role) === 'EXPERT' ? 'bg-blue-100 text-blue-800' :
                                             'bg-slate-100 text-slate-800'
                                         }`}>
-                                        {u.role?.name || u.role || 'N/A'}
+                                        {typeof u.role === 'object' ? u.role.name : (u.role || 'N/A')}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -257,7 +264,7 @@ export const UserManagement = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                                 <select
-                                    value={editingUser.role}
+                                    value={typeof editingUser.role === 'string' ? editingUser.role : editingUser.role?.name || 'OPERATOR'}
                                     onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                                     className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 >

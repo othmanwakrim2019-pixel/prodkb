@@ -3,11 +3,12 @@ import axios from '../utils/axios';
 import { Link } from 'react-router-dom';
 import { Search as SearchIcon, FileText, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { SearchResults } from '../types';
 
 export const Search = () => {
     const { hasPermission } = useAuth();
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<{ procedures: any[], incidents: any[] } | null>(null);
+    const [results, setResults] = useState<SearchResults | null>(null);
     const [loading, setLoading] = useState(false);
 
     if (!hasPermission('SEARCH_VIEW')) {

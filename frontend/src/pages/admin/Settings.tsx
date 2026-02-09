@@ -65,6 +65,7 @@ export const Settings = () => {
         try {
             await axios.post("/api/config/smtp/test", { email: testEmail });
             setMessage({ type: 'success', text: 'Test email sent successfully! Check your inbox.' });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error("Test email failed", error);
             const errorMsg = error.response?.data?.error || 'Failed to send test email. Check server logs.';

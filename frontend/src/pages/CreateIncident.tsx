@@ -5,10 +5,25 @@ import axios from '../utils/axios';
 import { Plus, Trash2, Upload, X, ShieldAlert } from 'lucide-react';
 import { SmartSolutionSearch } from '../components/SmartSolutionSearch';
 import { useAuth } from '../context/AuthContext';
+import { System, Job, Team, SLA } from '../types';
+
+interface CreateIncidentFormValues {
+    title: string;
+    description: string;
+    environment: string;
+    severity: string;
+    impact: string;
+    detectionSource: string;
+    systemId: string;
+    jobId: string;
+    assignedTeamId: string;
+    slaId: string;
+    logs: { logType: string; rawLog: string; errorMessage: string }[];
+}
 
 export const CreateIncident = () => {
     const { hasPermission } = useAuth();
-    const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateIncidentFormValues>({
         defaultValues: {
             title: '',
             description: '',
@@ -24,29 +39,15 @@ export const CreateIncident = () => {
         }
     });
 
-    if (!hasPermission('INCIDENT_CREATE')) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="bg-red-50 p-6 rounded-full mb-4">
-                    <ShieldAlert className="h-12 w-12 text-red-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
-                <p className="text-slate-600 mt-2 max-w-md">
-                    You do not have permission to declare new incidents.
-                </p>
-            </div>
-        );
-    }
-
     const { fields, append, remove } = useFieldArray({
         control,
         name: "logs"
     });
     const navigate = useNavigate();
-    const [systems, setSystems] = useState<any[]>([]);
-    const [jobs, setJobs] = useState<any[]>([]);
-    const [teams, setTeams] = useState<any[]>([]);
-    const [slas, setSlas] = useState<any[]>([]);
+    const [systems, setSystems] = useState<System[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [slas, setSlas] = useState<SLA[]>([]);
     const [attachments, setAttachments] = useState<File[]>([]);
 
     const selectedSystemId = watch('systemId');
@@ -102,6 +103,20 @@ export const CreateIncident = () => {
         }
     }, [selectedJobId, jobs, setValue]);
 
+    if (!hasPermission('INCIDENT_CREATE')) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="bg-red-50 p-6 rounded-full mb-4">
+                    <ShieldAlert className="h-12 w-12 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <p className="text-slate-600 mt-2 max-w-md">
+                    You do not have permission to declare new incidents.
+                </p>
+            </div>
+        );
+    }
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
@@ -113,7 +128,7 @@ export const CreateIncident = () => {
         setAttachments(attachments.filter((_, i) => i !== index));
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: CreateIncidentFormValues) => {
         try {
             // Clean up the data before sending
             const payload = {
@@ -121,6 +136,7 @@ export const CreateIncident = () => {
                 jobId: data.jobId || undefined,
                 assignedTeamId: data.assignedTeamId || undefined,
                 slaId: data.slaId || undefined,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 logs: data.logs.filter((log: any) => log.rawLog || log.errorMessage),
             };
 
@@ -140,13 +156,30 @@ export const CreateIncident = () => {
             }
 
             navigate('/incidents');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to create incident', error);
-            console.error('Error response:', error.response?.data);
-            const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create incident';
+            // safe check for response
+            const responseData = error.response?.data;
+            console.error('Error response:', responseData);
+            const errorMsg = responseData?.error || responseData?.message || error.message || 'Failed to create incident';
             alert(`Error: ${errorMsg}`);
         }
     };
+
+    if (!hasPermission('INCIDENT_CREATE')) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="bg-red-50 p-6 rounded-full mb-4">
+                    <ShieldAlert className="h-12 w-12 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <p className="text-slate-600 mt-2 max-w-md">
+                    You do not have permission to declare new incidents.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">

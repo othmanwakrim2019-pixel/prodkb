@@ -4,10 +4,24 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import { useAuth } from '../context/AuthContext';
 import { ShieldAlert } from 'lucide-react';
+import { System, Job } from '../types';
+
+interface CreateProcedureFormValues {
+    title: string;
+    description: string;
+    rootCause: string;
+    resolutionSteps: string;
+    workaround: string;
+    commands: string;
+    errorCode: string;
+    tags: string;
+    systemId: string;
+    jobId: string;
+}
 
 export const CreateProcedure = () => {
     const { hasPermission } = useAuth();
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProcedureFormValues>({
         defaultValues: {
             title: '',
             description: '',
@@ -22,27 +36,12 @@ export const CreateProcedure = () => {
         }
     });
     const navigate = useNavigate();
-    const [systems, setSystems] = useState<any[]>([]);
-    const [jobs, setJobs] = useState<any[]>([]);
+    const [systems, setSystems] = useState<System[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
     const [targetJobId, setTargetJobId] = useState<string | null>(null);
 
     const { id } = useParams();
     const isEditMode = !!id;
-
-    // Permission check
-    if (!hasPermission(isEditMode ? 'PROCEDURE_EDIT' : 'PROCEDURE_CREATE')) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="bg-red-50 p-6 rounded-full mb-4">
-                    <ShieldAlert className="h-12 w-12 text-red-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
-                <p className="text-slate-600 mt-2 max-w-md">
-                    You do not have permission to {isEditMode ? 'edit' : 'create'} procedures. Please contact your administrator if you believe this is an error.
-                </p>
-            </div>
-        );
-    }
 
     const selectedSystemId = watch('systemId');
     const selectedJobId = watch('jobId');
@@ -140,11 +139,14 @@ export const CreateProcedure = () => {
                     if (incident.jobId) setTargetJobId(incident.jobId);
 
                     // Compile resolution steps from logs and find error code
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const resolutionLogs = incident.logs?.filter((l: any) => l.logType === 'resolution' || l.logType === 'investigation') || [];
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const steps = resolutionLogs.map((l: any) => `[${l.logType.toUpperCase()}] ${l.rawLog}`).join('\n\n');
                     setValue('resolutionSteps', steps || 'No resolution logs found in incident.');
 
                     // Find first error code
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const logWithErrorCode = incident.logs?.find((l: any) => l.errorCode);
                     if (logWithErrorCode) {
                         setValue('errorCode', logWithErrorCode.errorCode);
@@ -158,7 +160,7 @@ export const CreateProcedure = () => {
         }
     }, [fromIncidentId, setValue]);
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: CreateProcedureFormValues) => {
         try {
             const payload = {
                 ...data,
@@ -181,11 +183,28 @@ export const CreateProcedure = () => {
             }
 
             navigate('/procedures');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to create procedure', error);
-            alert(error.response?.data?.error || 'Failed to create procedure');
+            // safe check for response
+            const responseData = error.response?.data;
+            alert(responseData?.error || 'Failed to create procedure');
         }
     };
+
+    if (!hasPermission(isEditMode ? 'PROCEDURE_EDIT' : 'PROCEDURE_CREATE')) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="bg-red-50 p-6 rounded-full mb-4">
+                    <ShieldAlert className="h-12 w-12 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <p className="text-slate-600 mt-2 max-w-md">
+                    You do not have permission to {isEditMode ? 'edit' : 'create'} procedures. Please contact your administrator if you believe this is an error.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
