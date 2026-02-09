@@ -1,10 +1,12 @@
+import fs from 'fs';
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { incidentService } from '../services/IncidentService';
 import { fileUploadService } from '../services/fileUploadService';
 import { z } from 'zod';
 import multer from 'multer';
-import { ValidationError } from '../errors/AppError';
+import { NotFoundError, ValidationError } from '../errors/AppError';
+import { logAudit } from '../services/auditService';
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -119,6 +121,17 @@ export const createIncident = async (req: AuthRequest, res: Response) => {
     };
 
     const incident = await incidentService.create(serviceData, userId);
+
+    // Audit log
+    await logAudit({
+        userId,
+        actionType: 'CREATE',
+        entityType: 'INCIDENT',
+        entityId: incident.id,
+        details: `Created incident: ${incident.title}`,
+        req
+    });
+
     res.status(201).json(incident);
 };
 
@@ -132,6 +145,17 @@ export const updateIncident = async (req: AuthRequest, res: Response) => {
     }
 
     const incident = await incidentService.update(req.params.id, req.body, userId);
+
+    // Audit log
+    await logAudit({
+        userId,
+        actionType: 'UPDATE',
+        entityType: 'INCIDENT',
+        entityId: req.params.id,
+        details: `Updated incident: ${incident.title}`,
+        req
+    });
+
     res.json(incident);
 };
 
@@ -169,6 +193,64 @@ export const uploadIncidentFile = async (req: AuthRequest, res: Response) => {
     });
 
     res.status(201).json(log);
+};
+
+/**
+ * Download a file attached to an incident
+ */
+export const downloadFile = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) throw new ValidationError('User not authenticated');
+
+        const { id, filename } = req.params;
+        console.log(`[DEBUG] downloadFile called for incidentId=${id}, filename=${filename}`);
+
+        const fileLog = await incidentService.getFileLog(id, filename);
+        console.log(`[DEBUG] fileLog found:`, fileLog);
+
+        if (!fileLog.filePath) {
+            console.error('[DEBUG] fileLog has no filePath');
+            throw new NotFoundError('File path missing in log');
+        }
+
+        // Check if file exists on disk
+        const exists = fileUploadService.fileExists(fileLog.filePath);
+        console.log(`[DEBUG] file exists check: ${exists} for path ${fileLog.filePath}`);
+
+        if (!exists) {
+            console.error(`[DEBUG] File not found on disk: ${fileLog.filePath}`);
+            throw new NotFoundError('File on disk');
+        }
+
+        const absolutePath = fileUploadService.getAbsolutePath(fileLog.filePath);
+        console.log(`[DEBUG] Serving file from: ${absolutePath}`);
+
+        // Use streams to avoid Express/Send path resolution issues on Windows
+        res.setHeader('Content-Disposition', `attachment; filename="${fileLog.fileName || 'download'}"`);
+        res.setHeader('Content-Type', fileLog.mimeType || 'application/octet-stream');
+
+        if (fileLog.fileSize) {
+            res.setHeader('Content-Length', fileLog.fileSize);
+        }
+
+        const fileStream = fs.createReadStream(absolutePath);
+
+        fileStream.on('error', (error) => {
+            console.error(`[DEBUG] Stream error:`, error);
+            if (!res.headersSent) {
+                res.status(500).send('Could not download file');
+            }
+        });
+
+        fileStream.pipe(res);
+    } catch (error) {
+        console.error(`[DEBUG] Caught error in downloadFile:`, error);
+        // Pass to error handler if headers not sent
+        if (!res.headersSent) {
+            throw error;
+        }
+    }
 };
 
 /**

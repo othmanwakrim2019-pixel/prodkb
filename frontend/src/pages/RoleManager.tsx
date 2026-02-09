@@ -202,11 +202,16 @@ export const RoleManager = () => {
 
             <div className="grid gap-6">
                 {roles.map(role => (
-                    <div key={role.id} className="bg-white p-6 rounded-lg border shadow-sm flex flex-col md:flex-row gap-6">
+                    <div key={role.id} className={`bg-white p-6 rounded-lg border shadow-sm flex flex-col md:flex-row gap-6 ${role.name === 'ADMIN' ? 'border-blue-300 bg-blue-50/30' : ''}`}>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                                <Shield className="w-5 h-5 text-blue-600" />
+                                <Shield className={`w-5 h-5 ${role.name === 'ADMIN' ? 'text-amber-500' : 'text-blue-600'}`} />
                                 <h3 className="tex-lg font-bold">{role.name}</h3>
+                                {role.name === 'ADMIN' && (
+                                    <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                                        System Protected
+                                    </span>
+                                )}
                                 <span className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full">
                                     {role.permissions.length} permissions
                                 </span>
@@ -226,19 +231,23 @@ export const RoleManager = () => {
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-2 justify-start md:justify-center border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
-                            <button
-                                onClick={() => handleEdit(role)}
-                                className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600"
-                            >
-                                <Edit className="w-4 h-4" /> Edit
-                            </button>
-                            {role.name !== 'ADMIN' && (
-                                <button
-                                    onClick={() => handleDelete(role.id)}
-                                    className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
-                                >
-                                    <Trash2 className="w-4 h-4" /> Delete
-                                </button>
+                            {role.name === 'ADMIN' ? (
+                                <span className="text-sm text-slate-400 italic">Read-only</span>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => handleEdit(role)}
+                                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600"
+                                    >
+                                        <Edit className="w-4 h-4" /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(role.id)}
+                                        className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+                                    >
+                                        <Trash2 className="w-4 h-4" /> Delete
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>

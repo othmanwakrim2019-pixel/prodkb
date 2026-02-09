@@ -115,9 +115,26 @@ export const EmailTemplates = () => {
                                     />
                                 </div>
 
-                                {/* Helper Variables */}
-                                <div className="bg-slate-50 p-3 rounded text-xs text-slate-600">
-                                    <span className="font-semibold">Available Variables:</span> {template.variables || '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{appUrl}}'}
+                                {/* Helper Variables - Clickable to insert */}
+                                <div className="bg-slate-50 p-3 rounded">
+                                    <div className="text-xs font-semibold text-slate-600 mb-2">Available Variables (click to insert):</div>
+                                    <div className="flex flex-wrap gap-1">
+                                        {(template.variables || '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.createdBy.name}}, {{incident.assignedTeam.name}}, {{incident.system.name}}, {{appUrl}}')
+                                            .split(',')
+                                            .map(v => v.trim())
+                                            .map((variable, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => setEditForm(prev => ({ ...prev, body: prev.body + ' ' + variable }))}
+                                                    className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-mono hover:bg-blue-200 transition-colors"
+                                                    title={`Click to insert ${variable}`}
+                                                >
+                                                    {variable}
+                                                </button>
+                                            ))
+                                        }
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-2 pt-2">

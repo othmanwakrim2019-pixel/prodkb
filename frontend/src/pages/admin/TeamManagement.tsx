@@ -13,7 +13,7 @@ export const TeamManagement = () => {
     const [showTeamForm, setShowTeamForm] = useState(false);
     const [showMemberForm, setShowMemberForm] = useState<string | null>(null);
     const [newTeam, setNewTeam] = useState({ name: '', description: '', emailDistribution: '', sendEmail: true });
-    const [newMember, setNewMember] = useState({ userId: '', role: 'MEMBER' });
+    const [newMember, setNewMember] = useState({ userId: '', role: '' });
     const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
     useEffect(() => {
@@ -61,7 +61,8 @@ export const TeamManagement = () => {
             await axios.put(`/api/teams/${updatedTeam.id}`, {
                 name: updatedTeam.name,
                 description: updatedTeam.description,
-                emailDistribution: updatedTeam.emailDistribution
+                emailDistribution: updatedTeam.emailDistribution,
+                sendEmail: updatedTeam.sendEmail
             });
             setEditingTeam(null);
             await fetchTeams();
@@ -91,32 +92,24 @@ export const TeamManagement = () => {
     const handleAddTeamMember = async (e: React.FormEvent, teamId: string) => {
         e.preventDefault();
         try {
-            const team = teams.find(t => t.id === teamId);
-            if (!team) return;
+            if (!newMember.userId) {
+                alert('Please select a user');
+                return;
+            }
 
-            const currentMembers = team.teamMembers ? JSON.parse(team.teamMembers) : [];
-            const newMemberName = newMember.userId.trim();
-            const newMemberRole = newMember.role.trim();
-
-            const memberObject = {
-                name: newMemberName,
-                role: newMemberRole || null
-            };
-            const updatedMembers = [...currentMembers, memberObject];
-
-            await axios.put(`/api/teams/${teamId}`, {
-                teamMembers: JSON.stringify(updatedMembers)
+            await axios.post(`/api/teams/${teamId}/members`, {
+                userId: newMember.userId,
+                role: newMember.role || 'MEMBER'
             });
 
             setNewMember({ userId: '', role: '' });
             setShowMemberForm(null);
             await fetchTeams();
             alert('Member added successfully!');
-            await fetchTeams();
-            alert('Member added successfully!');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
+            alert(error.response?.data?.error || 'Failed to add member');
         }
     };
 
@@ -126,11 +119,10 @@ export const TeamManagement = () => {
             await axios.delete(`/api/teams/${teamId}/members/${userId}`);
             await fetchTeams();
             alert('Team member removed successfully!');
-            await fetchTeams();
-            alert('Team member removed successfully!');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
+            alert(error.response?.data?.error || 'Failed to remove member');
         }
     };
 
@@ -183,6 +175,18 @@ export const TeamManagement = () => {
                                 rows={3}
                             />
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={newTeam.sendEmail}
+                                    onChange={(e) => setNewTeam({ ...newTeam, sendEmail: e.target.checked })}
+                                    className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent"
+                                />
+                                <span className="text-sm font-medium text-slate-700">Enable email notifications on incident creation</span>
+                            </label>
+                            <p className="text-xs text-slate-500 mt-1 ml-7">When enabled, the team will receive email notifications when incidents are assigned to them.</p>
+                        </div>
                     </div>
                     <div className="flex justify-end gap-2">
                         <button
@@ -213,9 +217,15 @@ export const TeamManagement = () => {
                                     <div className="text-sm text-slate-500 flex gap-4">
                                         <span>{team.emailDistribution}</span>
                                         <span>•</span>
-                                        <span>{JSON.parse(team.teamMembers || '[]').length} members</span>
+                                        <span>{team.members?.length || 0} members</span>
                                         <span>•</span>
-                                        <span>{team.jobs?.length || 0} systems</span>
+                                        <span>{(team as any).systemCount || 0} systems</span>
+                                        {!(team as any).sendEmail && (
+                                            <>
+                                                <span>•</span>
+                                                <span className="text-amber-600 text-xs">📧 Notifications off</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -266,26 +276,26 @@ export const TeamManagement = () => {
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-700 mb-1">User</label>
                                                     <select
+                                                        required
                                                         value={newMember.userId}
                                                         onChange={(e) => setNewMember({ ...newMember, userId: e.target.value })}
                                                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
                                                     >
                                                         <option value="">Select User</option>
                                                         {users.map(u => (
-                                                            <option key={u.id} value={u.name}>{u.name} ({u.email})</option>
+                                                            <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-700 mb-1">Role</label>
-                                                    <select
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., Developer, Lead"
                                                         value={newMember.role}
                                                         onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
                                                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent text-sm p-1 border"
-                                                    >
-                                                        <option value="MEMBER">Member</option>
-                                                        <option value="LEAD">Lead</option>
-                                                    </select>
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="flex justify-end gap-2">
@@ -306,18 +316,18 @@ export const TeamManagement = () => {
                                         </form>
                                     )}
 
-                                    {team.teamMembers && JSON.parse(team.teamMembers).length > 0 ? (
+                                    {team.members && team.members.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                            {JSON.parse(team.teamMembers).map((member: any, idx: number) => (
-                                                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
+                                            {team.members.map((member: any) => (
+                                                <div key={member.user.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
                                                     <div>
-                                                        <p className="font-medium text-sm text-slate-900">{member.name}</p>
+                                                        <p className="font-medium text-sm text-slate-900">{member.user.name}</p>
                                                         <p className="text-xs text-slate-500">{member.role || 'Member'}</p>
                                                     </div>
                                                     {canManageTeams() && (
                                                         <button
-                                                            onClick={() => handleRemoveTeamMember(team.id, member.name)}
+                                                            onClick={() => handleRemoveTeamMember(team.id, member.user.id)}
                                                             className="text-slate-400 hover:text-red-600"
                                                             title="Remove member"
                                                         >

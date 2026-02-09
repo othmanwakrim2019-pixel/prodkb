@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { logAudit } from '../services/auditService';
 
 export const getProcedures = async (req: Request, res: Response) => {
     const { search } = req.query;
@@ -82,6 +83,17 @@ export const createProcedure = async (req: AuthRequest, res: Response) => {
                 createdById: userId,
             },
         });
+
+        // Audit log
+        await logAudit({
+            userId,
+            actionType: 'CREATE',
+            entityType: 'PROCEDURE',
+            entityId: procedure.id,
+            details: JSON.stringify({ title, systemId, jobId }),
+            req
+        });
+
         res.status(201).json(procedure);
     } catch (error) {
         res.status(400).json({ error: 'Failed to create procedure', details: error });
@@ -101,6 +113,17 @@ export const updateProcedure = async (req: AuthRequest, res: Response) => {
                 updatedById: userId,
             },
         });
+
+        // Audit log
+        await logAudit({
+            userId: userId || 'unknown',
+            actionType: 'UPDATE',
+            entityType: 'PROCEDURE',
+            entityId: id,
+            details: JSON.stringify({ title: procedure.title }),
+            req
+        });
+
         res.json(procedure);
     } catch (error) {
         // ... (previous)
@@ -111,9 +134,20 @@ export const updateProcedure = async (req: AuthRequest, res: Response) => {
 export const deleteProcedure = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     try {
-        await prisma.procedure.delete({
+        const procedure = await prisma.procedure.delete({
             where: { id }
         });
+
+        // Audit log
+        await logAudit({
+            userId: req.user?.id || 'unknown',
+            actionType: 'DELETE',
+            entityType: 'PROCEDURE',
+            entityId: id,
+            details: JSON.stringify({ title: procedure.title }),
+            req
+        });
+
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete procedure' });

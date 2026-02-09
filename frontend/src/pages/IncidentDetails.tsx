@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from '../utils/axios';
-import { ArrowLeft, FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 } from 'lucide-react';
+import { FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Incident, Log } from '../types';
 
@@ -113,17 +113,39 @@ export const IncidentDetails = () => {
         }
     };
 
+    const handleDownloadFile = async (fileName: string) => {
+        try {
+            const response = await axios.get(`/api/incidents/${id}/files/${fileName}`, {
+                responseType: 'blob',
+            });
+
+            // Create a blob link to download
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+
+            // Append to html link element page
+            document.body.appendChild(link);
+
+            // Start download
+            link.click();
+
+            // Clean up and remove the link
+            link.parentNode?.removeChild(link);
+        } catch (error) {
+            console.error('Failed to download file', error);
+            alert('Failed to download file');
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (!incident) return <div>Incident not found</div>;
 
     return (
         <div className="space-y-6">
-            <Link to="/incidents" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-700">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Incidents
-            </Link>
+            {/* ... existing code ... */}
 
-            {/* Resolution Info Banner */}
             {(incident.status === 'Resolved' || incident.status === 'Closed') && incident.resolvedBy && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="flex items-start">
@@ -233,9 +255,12 @@ export const IncidentDetails = () => {
                                                 {log.fileName && (
                                                     <div className="flex items-center text-sm text-accent mb-2">
                                                         <Paperclip className="h-4 w-4 mr-2" />
-                                                        <a href={`/api/incidents/${id}/files/${log.fileName}`} download className="hover:underline">
+                                                        <button
+                                                            onClick={() => handleDownloadFile(log.fileName!)}
+                                                            className="hover:underline text-left"
+                                                        >
                                                             {log.fileName} ({Math.round((log.fileSize || 0) / 1024)}KB)
-                                                        </a>
+                                                        </button>
                                                         <Download className="h-3 w-3 ml-2" />
                                                     </div>
                                                 )}

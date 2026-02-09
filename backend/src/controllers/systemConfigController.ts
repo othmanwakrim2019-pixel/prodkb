@@ -78,3 +78,53 @@ export const testSmtpConfig = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error during test' });
     }
 };
+
+
+export const updateConfig = async (req: Request, res: Response) => {
+    try {
+        const { key } = req.params;
+        const { value } = req.body;
+
+        if (!key) {
+            return res.status(400).json({ error: 'Config key required' });
+        }
+
+        await prisma.systemConfig.upsert({
+            where: { key },
+            update: { value: String(value) },
+            create: { key, value: String(value) },
+        });
+
+        res.json({ message: 'Config updated successfully', key, value });
+    } catch (error) {
+        console.error('Failed to update config:', error);
+        res.status(500).json({ error: 'Failed to update config' });
+    }
+};
+
+export const getConfigs = async (req: Request, res: Response) => {
+    try {
+        const { keys } = req.query;
+        if (!keys) {
+            return res.json({});
+        }
+
+        const keyList = (keys as string).split(',');
+        const configs = await prisma.systemConfig.findMany({
+            where: {
+                key: { in: keyList }
+            }
+        });
+
+        const result = configs.reduce((acc, config) => {
+            acc[config.key] = config.value;
+            return acc;
+        }, {} as Record<string, string>);
+
+        res.json(result);
+    } catch (error) {
+        console.error('Failed to get configs:', error);
+        res.status(500).json({ error: 'Failed to get configs' });
+    }
+};
+

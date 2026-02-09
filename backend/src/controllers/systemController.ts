@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
+import { logAudit } from '../services/auditService';
+import { AuthRequest } from '../middleware/auth';
 
 export const getSystems = async (req: Request, res: Response) => {
     try {
@@ -23,12 +25,16 @@ export const getSystems = async (req: Request, res: Response) => {
     }
 };
 
-export const createSystem = async (req: Request, res: Response) => {
+export const createSystem = async (req: AuthRequest, res: Response) => {
     const { name, description } = req.body;
     try {
         const system = await prisma.system.create({
             data: { name, description },
         });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'CREATE', entityType: 'SYSTEM', entityId: system.id, details: JSON.stringify({ name, description }), req });
+
         res.status(201).json(system);
     } catch (error) {
         res.status(400).json({ error: 'Failed to create system' });
@@ -49,7 +55,7 @@ export const getJobs = async (req: Request, res: Response) => {
     }
 };
 
-export const createJob = async (req: Request, res: Response) => {
+export const createJob = async (req: AuthRequest, res: Response) => {
     const { name, code, systemId, teamId } = req.body;
     try {
         const job = await prisma.job.create({
@@ -64,13 +70,17 @@ export const createJob = async (req: Request, res: Response) => {
                 team: true
             }
         });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'CREATE', entityType: 'JOB', entityId: job.id, details: JSON.stringify({ name, code, systemId, teamId }), req });
+
         res.status(201).json(job);
     } catch (error) {
         res.status(400).json({ error: 'Failed to create job' });
     }
 };
 
-export const updateSystem = async (req: Request, res: Response) => {
+export const updateSystem = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
     try {
@@ -82,6 +92,10 @@ export const updateSystem = async (req: Request, res: Response) => {
             },
             include: { jobs: true },
         });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'UPDATE', entityType: 'SYSTEM', entityId: id, details: JSON.stringify({ name, description }), req });
+
         res.json(system);
     } catch (error) {
         console.error('Failed to update system:', error);
@@ -89,7 +103,7 @@ export const updateSystem = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteSystem = async (req: Request, res: Response) => {
+export const deleteSystem = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     try {
         // Check if system has incidents or jobs
@@ -114,6 +128,10 @@ export const deleteSystem = async (req: Request, res: Response) => {
         }
 
         await prisma.system.delete({ where: { id } });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'DELETE', entityType: 'SYSTEM', entityId: id, details: JSON.stringify({ systemName: system.name }), req });
+
         res.status(204).send();
     } catch (error) {
         console.error('Failed to delete system:', error);
@@ -121,7 +139,7 @@ export const deleteSystem = async (req: Request, res: Response) => {
     }
 };
 
-export const updateJob = async (req: Request, res: Response) => {
+export const updateJob = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, code, systemId, teamId } = req.body;
     try {
@@ -138,6 +156,10 @@ export const updateJob = async (req: Request, res: Response) => {
                 team: true,
             },
         });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'UPDATE', entityType: 'JOB', entityId: id, details: JSON.stringify({ name, code, systemId, teamId }), req });
+
         res.json(job);
     } catch (error) {
         console.error('Failed to update job:', error);
@@ -145,7 +167,7 @@ export const updateJob = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteJob = async (req: Request, res: Response) => {
+export const deleteJob = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     try {
         // Check if job has incidents or procedures
@@ -170,6 +192,10 @@ export const deleteJob = async (req: Request, res: Response) => {
         }
 
         await prisma.job.delete({ where: { id } });
+
+        // Audit log
+        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'DELETE', entityType: 'JOB', entityId: id, details: JSON.stringify({ jobName: job.name, jobCode: job.code }), req });
+
         res.status(204).send();
     } catch (error) {
         console.error('Failed to delete job:', error);
