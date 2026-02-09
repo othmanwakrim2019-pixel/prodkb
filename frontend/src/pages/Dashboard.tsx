@@ -163,7 +163,7 @@ const Dashboard = () => {
                         className="rounded-md border-slate-300 text-sm focus:ring-accent focus:border-accent p-1.5 border min-w-[150px]"
                     >
                         <option value="">All Applications</option>
-                        {systems.map((s: System) => (
+                        {Array.isArray(systems) && systems.map((s: System) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                     </select>
@@ -177,7 +177,7 @@ const Dashboard = () => {
                         className="rounded-md border-slate-300 text-sm focus:ring-accent focus:border-accent p-1.5 border min-w-[150px]"
                     >
                         <option value="">All Teams</option>
-                        {teams.map((t: Team) => (
+                        {Array.isArray(teams) && teams.map((t: Team) => (
                             <option key={t.id} value={t.id}>{t.name}</option>
                         ))}
                     </select>
@@ -233,7 +233,7 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {stats.topSystems.map((system) => (
+                            {stats.topSystems?.map((system) => (
                                 <div key={system.systemId} className="flex items-center">
                                     <Server className="mr-2 h-4 w-4 text-muted-foreground" />
                                     <div className="ml-2 space-y-1 flex-1">
@@ -243,7 +243,7 @@ const Dashboard = () => {
                                     <div className="ml-auto font-medium">{system.count} incidents</div>
                                 </div>
                             ))}
-                            {stats.topSystems.length === 0 && (
+                            {stats.topSystems?.length === 0 && (
                                 <p className="text-sm text-muted-foreground">No data available for this period.</p>
                             )}
                         </div>

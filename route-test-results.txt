@@ -1,9 +1,0 @@
-GET     /health                        => 200   SUCCESS
-GET     /api/users                     => 401   Route exists (needs auth)
-PUT     /api/users/test-id             => 401   Route exists (needs auth)
-DELETE  /api/users/test-id             => 401   Route exists (needs auth)
-GET     /api/systems                   => 401   Route exists (needs auth)
-PUT     /api/systems/test-id           => 401   Route exists (needs auth)
-DELETE  /api/systems/test-id           => 401   Route exists (needs auth)
-PUT     /api/jobs/test-id              => 401   Route exists (needs auth)
-DELETE  /api/jobs/test-id              => 401   Route exists (needs auth)

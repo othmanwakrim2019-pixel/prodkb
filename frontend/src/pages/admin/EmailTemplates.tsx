@@ -12,7 +12,6 @@ interface EmailTemplate {
 }
 
 export const EmailTemplates = () => {
-    console.log('🎨 EmailTemplates component rendering');
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -20,21 +19,18 @@ export const EmailTemplates = () => {
     const [preview, setPreview] = useState<{ subject: string; body: string } | null>(null);
 
     useEffect(() => {
-        console.log('📞 EmailTemplates useEffect - fetching templates');
         fetchTemplates();
     }, []);
 
+
     const fetchTemplates = async () => {
         try {
-            console.log('🌐 Fetching email templates from /email-templates');
             const res = await api.get('/email-templates');
-            console.log('✅ Templates fetched:', res.data);
             setTemplates(res.data);
         } catch (error) {
             console.error('❌ Failed to fetch templates:', error);
         } finally {
             setLoading(false);
-            console.log('✔️ Loading complete, templates count:', templates.length);
         }
     };
 
@@ -70,8 +66,6 @@ export const EmailTemplates = () => {
             console.error('Failed to preview template:', error);
         }
     };
-
-    console.log('🖼️ Render state:', { loading, templatesCount: templates.length, templates });
 
     if (loading) return <div>Loading templates...</div>;
 

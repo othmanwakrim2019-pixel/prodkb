@@ -13,6 +13,32 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
 
+// CORS configuration - MUST be first
+const allowedOrigins = [
+    env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:3000', // Swagger UI
+    'http://127.0.0.1:3000'
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        logger.info(`Checking origin: ${origin}`);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            logger.warn(`Blocked by CORS: ${origin}`);
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 // Security headers with Helmet.js
 app.use(helmet({
     contentSecurityPolicy: {
@@ -28,6 +54,7 @@ app.use(helmet({
         includeSubDomains: true,
         preload: true,
     },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Security headers
@@ -38,21 +65,6 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 });
-
-// CORS configuration
-const allowedOrigins = [env.FRONTEND_URL || 'http://localhost:5173'];
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-    },
-    credentials: true,
-}));
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -83,8 +95,8 @@ export { app };
 
 if (require.main === module) {
     app.listen(PORT, () => {
-        logger.info(`🚀 ProdKB server running on port ${PORT}`);
-        logger.info(`📧 Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
-        logger.info('🛡️ Rate limiting: Enabled');
+        logger.info(` ProdKB server running on port ${PORT}`);
+        logger.info(` Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
+        logger.info(' Rate limiting: Enabled');
     });
 }
