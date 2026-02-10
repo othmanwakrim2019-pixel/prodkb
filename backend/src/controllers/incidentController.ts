@@ -6,7 +6,7 @@ import { fileUploadService } from '../services/fileUploadService';
 import { z } from 'zod';
 import multer from 'multer';
 import { NotFoundError, ValidationError } from '../errors/AppError';
-import { logAudit } from '../services/auditService';
+import { logAudit, generateAuditDiff } from '../services/auditService';
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -144,17 +144,21 @@ export const updateIncident = async (req: AuthRequest, res: Response) => {
         throw new ValidationError('User not authenticated');
     }
 
+    const existingIncident = await incidentService.findById(req.params.id);
     const incident = await incidentService.update(req.params.id, req.body, userId);
 
     // Audit log
-    await logAudit({
-        userId,
-        actionType: 'UPDATE',
-        entityType: 'INCIDENT',
-        entityId: req.params.id,
-        details: `Updated incident: ${incident.title}`,
-        req
-    });
+    const changes = generateAuditDiff(existingIncident, incident);
+    if (changes !== 'No changes detected') {
+        await logAudit({
+            userId,
+            actionType: 'UPDATE',
+            entityType: 'INCIDENT',
+            entityId: req.params.id,
+            details: changes,
+            req
+        });
+    }
 
     res.json(incident);
 };

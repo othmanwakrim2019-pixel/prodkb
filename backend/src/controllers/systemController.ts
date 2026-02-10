@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
-import { logAudit } from '../services/auditService';
+import { logAudit, generateAuditDiff } from '../services/auditService';
 import { AuthRequest } from '../middleware/auth';
 
 export const getSystems = async (req: Request, res: Response) => {
@@ -84,6 +84,10 @@ export const updateSystem = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
     try {
+        const existingSystem = await prisma.system.findUnique({
+            where: { id }
+        });
+
         const system = await prisma.system.update({
             where: { id },
             data: {
@@ -93,8 +97,17 @@ export const updateSystem = async (req: AuthRequest, res: Response) => {
             include: { jobs: true },
         });
 
-        // Audit log
-        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'UPDATE', entityType: 'SYSTEM', entityId: id, details: JSON.stringify({ name, description }), req });
+        const changes = generateAuditDiff(existingSystem, system);
+        if (changes !== 'No changes detected') {
+            await logAudit({
+                userId: req.user?.id || 'unknown',
+                actionType: 'UPDATE',
+                entityType: 'SYSTEM',
+                entityId: id,
+                details: changes,
+                req
+            });
+        }
 
         res.json(system);
     } catch (error) {
@@ -143,6 +156,11 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, code, systemId, teamId } = req.body;
     try {
+        const existingJob = await prisma.job.findUnique({
+            where: { id },
+            include: { system: true, team: true }
+        });
+
         const job = await prisma.job.update({
             where: { id },
             data: {
@@ -157,8 +175,17 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
             },
         });
 
-        // Audit log
-        await logAudit({ userId: req.user?.id || 'unknown', actionType: 'UPDATE', entityType: 'JOB', entityId: id, details: JSON.stringify({ name, code, systemId, teamId }), req });
+        const changes = generateAuditDiff(existingJob, job);
+        if (changes !== 'No changes detected') {
+            await logAudit({
+                userId: req.user?.id || 'unknown',
+                actionType: 'UPDATE',
+                entityType: 'JOB',
+                entityId: id,
+                details: changes,
+                req
+            });
+        }
 
         res.json(job);
     } catch (error) {

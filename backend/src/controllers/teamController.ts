@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
-import { logAudit } from '../services/auditService';
+import { logAudit, generateAuditDiff } from '../services/auditService';
 import { AuthRequest } from '../middleware/auth';
 
 // Validation schemas
@@ -180,6 +180,10 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
         console.log('📝 Update team request:', { id, body: req.body });
         const data = updateTeamSchema.parse(req.body);
 
+        const existingTeam = await prisma.team.findUnique({
+            where: { id }
+        });
+
         const team = await prisma.team.update({
             where: { id },
             data,
@@ -201,14 +205,17 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
 
         // Audit log
         if (userId) {
-            await logAudit({
-                userId,
-                actionType: 'UPDATE',
-                entityType: 'TEAM',
-                entityId: team.id,
-                details: `Updated team: ${team.name}`,
-                req
-            });
+            const changes = generateAuditDiff(existingTeam, team);
+            if (changes !== 'No changes detected') {
+                await logAudit({
+                    userId,
+                    actionType: 'UPDATE',
+                    entityType: 'TEAM',
+                    entityId: team.id,
+                    details: changes,
+                    req
+                });
+            }
         }
 
         res.json(team);

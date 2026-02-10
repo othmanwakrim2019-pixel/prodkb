@@ -13,7 +13,12 @@ COPY . .
 
 # Build TypeScript code
 RUN npm run build
+# Compile seed script
+RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --target ES2022 --module commonjs --moduleResolution node --skipLibCheck
 # Generate Prisma Client
+# We need a dummy DATABASE_URL for prisma generate to work if it's referenced in schema
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
 
 # Production Stage
@@ -36,7 +41,11 @@ RUN npm ci --only=production && \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/src/openapi.yaml ./dist/
+COPY --from=builder /app/src/openapi.yaml ./dist/src/
+COPY start.sh ./
+
+# Install OpenSSL (required for Prisma on Alpine)
+RUN apk -U upgrade && apk add --no-cache openssl && chmod +x start.sh
 
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nodejs:nodejs /app
@@ -51,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Start command
-CMD ["node", "dist/server.js"]
+CMD ["./start.sh"]

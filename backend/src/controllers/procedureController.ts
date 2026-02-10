@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { AuthRequest } from '../middleware/auth';
-import { logAudit } from '../services/auditService';
+import { logAudit, generateAuditDiff } from '../services/auditService';
 
 export const getProcedures = async (req: Request, res: Response) => {
     const { search } = req.query;
@@ -106,6 +106,8 @@ export const updateProcedure = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
 
     try {
+        const existingProcedure = await prisma.procedure.findUnique({ where: { id } });
+
         const procedure = await prisma.procedure.update({
             where: { id },
             data: {
@@ -115,14 +117,17 @@ export const updateProcedure = async (req: AuthRequest, res: Response) => {
         });
 
         // Audit log
-        await logAudit({
-            userId: userId || 'unknown',
-            actionType: 'UPDATE',
-            entityType: 'PROCEDURE',
-            entityId: id,
-            details: JSON.stringify({ title: procedure.title }),
-            req
-        });
+        const changes = generateAuditDiff(existingProcedure, procedure);
+        if (changes !== 'No changes detected') {
+            await logAudit({
+                userId: userId || 'unknown',
+                actionType: 'UPDATE',
+                entityType: 'PROCEDURE',
+                entityId: id,
+                details: changes,
+                req
+            });
+        }
 
         res.json(procedure);
     } catch (error) {
