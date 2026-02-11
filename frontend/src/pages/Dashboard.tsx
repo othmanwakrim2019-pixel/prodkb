@@ -34,7 +34,7 @@ const Dashboard = () => {
 
 
     // ... existing state ...
-    const [period, setPeriod] = useState('today'); // today, week, month
+    const [period, setPeriod] = useState('month'); // today, week, month
     const [selectedSystem, setSelectedSystem] = useState('');
     const [selectedTeam, setSelectedTeam] = useState('');
 
@@ -46,8 +46,8 @@ const Dashboard = () => {
         const fetchFilters = async () => {
             try {
                 const [sysRes, teamRes] = await Promise.all([
-                    api.get('/systems'),
-                    api.get('/teams')
+                    api.get('/api/systems'),
+                    api.get('/api/teams')
                 ]);
                 setSystems(sysRes.data);
                 setTeams(teamRes.data);
@@ -85,7 +85,7 @@ const Dashboard = () => {
                 if (selectedSystem) params.systemId = selectedSystem;
                 if (selectedTeam) params.teamId = selectedTeam;
 
-                const response = await api.get('/incidents/stats', { params });
+                const response = await api.get('/api/incidents/stats', { params });
                 setStats(response.data);
             } catch (error) {
                 console.error('Failed to fetch stats:', error);
@@ -258,37 +258,50 @@ const Dashboard = () => {
                     <CardContent className="grid gap-4">
                         {stats.myWork && (
                             <div className="grid grid-cols-2 gap-4">
-                                <Link to="/incidents?status=Open" className="bg-slate-50 p-3 rounded border border-slate-100 text-center hover:bg-slate-100 transition-colors block">
-                                    <div className="text-2xl font-bold text-slate-700">{stats.myWork.myTeamQueue}</div>
-                                    <div className="text-xs text-slate-500">Team Queue</div>
-                                </Link>
+                                {hasPermission('INCIDENT_VIEW') ? (
+                                    <Link to="/incidents?status=Open" className="bg-slate-50 p-3 rounded border border-slate-100 text-center hover:bg-slate-100 transition-colors block">
+                                        <div className="text-2xl font-bold text-slate-700">{stats.myWork.myTeamQueue}</div>
+                                        <div className="text-xs text-slate-500">Team Queue</div>
+                                    </Link>
+                                ) : (
+                                    <div className="bg-slate-50 p-3 rounded border border-slate-100 text-center block opacity-75 cursor-not-allowed">
+                                        <div className="text-2xl font-bold text-slate-700">{stats.myWork.myTeamQueue}</div>
+                                        <div className="text-xs text-slate-500">Team Queue</div>
+                                    </div>
+                                )}
                                 <div className="bg-red-50 p-3 rounded border border-red-100 text-center">
                                     <div className="text-2xl font-bold text-red-600">{stats.myWork.myTeamBreaches}</div>
                                     <div className="text-xs text-red-500">SLA Breaches</div>
                                 </div>
                             </div>
                         )}
-                        <Link to="/incidents?status=Open" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">Open Incidents</p>
-                                <p className="text-xs text-muted-foreground">Jump to active issues</p>
-                            </div>
-                        </Link>
-                        <Link to="/procedures" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
-                            <Search className="h-5 w-5 text-blue-500" />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">Find Procedure</p>
-                                <p className="text-xs text-muted-foreground">Search documented solutions</p>
-                            </div>
-                        </Link>
-                        <Link to="/incidents" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
-                            <Activity className="h-5 w-5 text-slate-500" />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">View All Incidents</p>
-                                <p className="text-xs text-muted-foreground">Browse full history</p>
-                            </div>
-                        </Link>
+                        {hasPermission('INCIDENT_VIEW') && (
+                            <Link to="/incidents?status=Open" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
+                                <AlertTriangle className="h-5 w-5 text-red-500" />
+                                <div className="flex-1 space-y-1">
+                                    <p className="text-sm font-medium leading-none">Open Incidents</p>
+                                    <p className="text-xs text-muted-foreground">Jump to active issues</p>
+                                </div>
+                            </Link>
+                        )}
+                        {hasPermission('PROCEDURE_VIEW') && (
+                            <Link to="/procedures" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
+                                <Search className="h-5 w-5 text-blue-500" />
+                                <div className="flex-1 space-y-1">
+                                    <p className="text-sm font-medium leading-none">Find Procedure</p>
+                                    <p className="text-xs text-muted-foreground">Search documented solutions</p>
+                                </div>
+                            </Link>
+                        )}
+                        {hasPermission('INCIDENT_VIEW') && (
+                            <Link to="/incidents" className="flex items-center gap-4 rounded-md border p-4 hover:bg-muted/50 transition-colors">
+                                <Activity className="h-5 w-5 text-slate-500" />
+                                <div className="flex-1 space-y-1">
+                                    <p className="text-sm font-medium leading-none">View All Incidents</p>
+                                    <p className="text-xs text-muted-foreground">Browse full history</p>
+                                </div>
+                            </Link>
+                        )}
                     </CardContent>
                 </Card>
             </div>

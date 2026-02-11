@@ -10,6 +10,7 @@ import yaml from 'yamljs';
 import path from 'path';
 import { apiLimiter, authLimiter } from './middleware/rateLimiter';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { prisma } from './utils/prisma';
 
 const app = express();
 
@@ -68,9 +69,25 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '10mb' }));
 
-// Health check (no rate limiting)
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check (no rate limiting) — deep check verifies DB connectivity
+app.get('/health', async (req, res) => {
+    const uptime = process.uptime();
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            uptime: Math.round(uptime),
+            database: 'connected',
+        });
+    } catch {
+        res.status(503).json({
+            status: 'degraded',
+            timestamp: new Date().toISOString(),
+            uptime: Math.round(uptime),
+            database: 'disconnected',
+        });
+    }
 });
 
 // Auth routes with strict rate limiting
@@ -94,9 +111,29 @@ const PORT = env.PORT || 3000;
 export { app };
 
 if (require.main === module) {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         logger.info(` ProdKB server running on port ${PORT}`);
         logger.info(` Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
         logger.info(' Rate limiting: Enabled');
     });
+
+    // Graceful shutdown
+    const shutdown = async (signal: string) => {
+        logger.info(`Received ${signal}. Shutting down gracefully...`);
+        server.close(async () => {
+            logger.info('HTTP server closed');
+            await prisma.$disconnect();
+            logger.info('Prisma disconnected');
+            process.exit(0);
+        });
+
+        // Force exit after 10 seconds if graceful shutdown fails
+        setTimeout(() => {
+            logger.error('Forced shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 }

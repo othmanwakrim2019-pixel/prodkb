@@ -1,7 +1,33 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { logAudit, generateAuditDiff } from '../services/auditService';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../utils/logger';
+
+const createSystemSchema = z.object({
+    name: z.string().min(2).max(100),
+    description: z.string().max(500).optional(),
+});
+
+const updateSystemSchema = z.object({
+    name: z.string().min(2).max(100).optional(),
+    description: z.string().max(500).optional().nullable(),
+});
+
+const createJobSchema = z.object({
+    name: z.string().min(2).max(100),
+    code: z.string().min(1).max(50),
+    systemId: z.string().uuid(),
+    teamId: z.string().uuid().optional(),
+});
+
+const updateJobSchema = z.object({
+    name: z.string().min(2).max(100).optional(),
+    code: z.string().min(1).max(50).optional(),
+    systemId: z.string().uuid().optional(),
+    teamId: z.string().uuid().optional().nullable(),
+});
 
 export const getSystems = async (req: Request, res: Response) => {
     try {
@@ -26,7 +52,7 @@ export const getSystems = async (req: Request, res: Response) => {
 };
 
 export const createSystem = async (req: AuthRequest, res: Response) => {
-    const { name, description } = req.body;
+    const { name, description } = createSystemSchema.parse(req.body);
     try {
         const system = await prisma.system.create({
             data: { name, description },
@@ -56,7 +82,7 @@ export const getJobs = async (req: Request, res: Response) => {
 };
 
 export const createJob = async (req: AuthRequest, res: Response) => {
-    const { name, code, systemId, teamId } = req.body;
+    const { name, code, systemId, teamId } = createJobSchema.parse(req.body);
     try {
         const job = await prisma.job.create({
             data: {
@@ -82,7 +108,7 @@ export const createJob = async (req: AuthRequest, res: Response) => {
 
 export const updateSystem = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description } = updateSystemSchema.parse(req.body);
     try {
         const existingSystem = await prisma.system.findUnique({
             where: { id }
@@ -111,7 +137,7 @@ export const updateSystem = async (req: AuthRequest, res: Response) => {
 
         res.json(system);
     } catch (error) {
-        console.error('Failed to update system:', error);
+        logger.error('Failed to update system:', error);
         res.status(400).json({ error: 'Failed to update system' });
     }
 };
@@ -147,14 +173,14 @@ export const deleteSystem = async (req: AuthRequest, res: Response) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error('Failed to delete system:', error);
+        logger.error('Failed to delete system:', error);
         res.status(500).json({ error: 'Failed to delete system' });
     }
 };
 
 export const updateJob = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { name, code, systemId, teamId } = req.body;
+    const { name, code, systemId, teamId } = updateJobSchema.parse(req.body);
     try {
         const existingJob = await prisma.job.findUnique({
             where: { id },
@@ -189,7 +215,7 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
 
         res.json(job);
     } catch (error) {
-        console.error('Failed to update job:', error);
+        logger.error('Failed to update job:', error);
         res.status(400).json({ error: 'Failed to update job' });
     }
 };
@@ -225,7 +251,7 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error('Failed to delete job:', error);
+        logger.error('Failed to delete job:', error);
         res.status(500).json({ error: 'Failed to delete job' });
     }
 };

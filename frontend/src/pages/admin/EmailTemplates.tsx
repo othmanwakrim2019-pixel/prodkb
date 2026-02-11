@@ -8,6 +8,8 @@ interface EmailTemplate {
     subject: string;
     body: string;
     variables: string;
+    enabled: boolean;
+    cc: string | null;
     updatedAt: string;
 }
 
@@ -15,7 +17,9 @@ export const EmailTemplates = () => {
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState<{ subject: string; body: string }>({ subject: '', body: '' });
+    const [editForm, setEditForm] = useState<{ subject: string; body: string; enabled: boolean; cc: string }>({
+        subject: '', body: '', enabled: true, cc: ''
+    });
     const [preview, setPreview] = useState<{ subject: string; body: string } | null>(null);
 
     useEffect(() => {
@@ -25,10 +29,10 @@ export const EmailTemplates = () => {
 
     const fetchTemplates = async () => {
         try {
-            const res = await api.get('/email-templates');
+            const res = await api.get('/api/email-templates');
             setTemplates(res.data);
         } catch (error) {
-            console.error('❌ Failed to fetch templates:', error);
+            console.error(' Failed to fetch templates:', error);
         } finally {
             setLoading(false);
         }
@@ -36,19 +40,24 @@ export const EmailTemplates = () => {
 
     const handleEdit = (template: EmailTemplate) => {
         setEditingId(template.id);
-        setEditForm({ subject: template.subject, body: template.body });
+        setEditForm({
+            subject: template.subject,
+            body: template.body,
+            enabled: template.enabled !== false, // default true
+            cc: template.cc || ''
+        });
         setPreview(null);
     };
 
     const handleCancel = () => {
         setEditingId(null);
-        setEditForm({ subject: '', body: '' });
+        setEditForm({ subject: '', body: '', enabled: true, cc: '' });
         setPreview(null);
     };
 
     const handleSave = async (id: string) => {
         try {
-            await api.put(`/email-templates/${id}`, editForm);
+            await api.put(`/api/email-templates/${id}`, editForm);
             setEditingId(null);
             fetchTemplates();
             setPreview(null);
@@ -60,7 +69,7 @@ export const EmailTemplates = () => {
 
     const handlePreview = async () => {
         try {
-            const res = await api.post('/email-templates/preview', editForm);
+            const res = await api.post('/api/email-templates/preview', editForm);
             setPreview(res.data);
         } catch (error) {
             console.error('Failed to preview template:', error);
@@ -80,10 +89,17 @@ export const EmailTemplates = () => {
 
             <div className="grid gap-6">
                 {templates.map(template => (
-                    <div key={template.id} className="bg-white p-6 rounded-lg border shadow-sm">
+                    <div key={template.id} className={`bg-white p-6 rounded-lg border shadow-sm ${!template.enabled && editingId !== template.id ? 'opacity-60 bg-slate-50' : ''}`}>
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="text-lg font-semibold">{template.name}</h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-semibold">{template.name}</h3>
+                                    {template.enabled === false && (
+                                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            Disabled
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-sm text-slate-500">Last updated: {new Date(template.updatedAt).toLocaleString()}</p>
                             </div>
                             {editingId !== template.id && (
@@ -98,6 +114,21 @@ export const EmailTemplates = () => {
 
                         {editingId === template.id ? (
                             <div className="space-y-4">
+                                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-md border border-slate-200">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id={`enabled-${template.id}`}
+                                            checked={editForm.enabled}
+                                            onChange={e => setEditForm(prev => ({ ...prev, enabled: e.target.checked }))}
+                                            className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded"
+                                        />
+                                        <label htmlFor={`enabled-${template.id}`} className="ml-2 block text-sm font-medium text-slate-900">
+                                            Enable this notification
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Subject</label>
                                     <input
@@ -106,6 +137,18 @@ export const EmailTemplates = () => {
                                         className="w-full p-2 border rounded-md"
                                     />
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">CC Recipients (comma separated)</label>
+                                    <input
+                                        value={editForm.cc}
+                                        onChange={e => setEditForm(prev => ({ ...prev, cc: e.target.value }))}
+                                        className="w-full p-2 border rounded-md"
+                                        placeholder="manager@example.com, audit@example.com"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">These addresses will receive a copy of every email of this type.</p>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Body (HTML)</label>
                                     <textarea
@@ -173,6 +216,11 @@ export const EmailTemplates = () => {
                         ) : (
                             <div className="opacity-75">
                                 <div className="mb-2 font-medium text-sm">Subject: {template.subject}</div>
+                                {template.cc && (
+                                    <div className="mb-2 text-xs text-slate-600">
+                                        <span className="font-semibold">CC:</span> {template.cc}
+                                    </div>
+                                )}
                                 <div className="text-xs text-slate-500 truncate">{template.body.substring(0, 100)}...</div>
                             </div>
                         )}

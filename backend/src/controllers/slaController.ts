@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
+import { logger } from '../utils/logger';
 
 // Validation schemas
 const createSLASchema = z.object({
@@ -33,7 +34,7 @@ export const createSLA = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Error creating SLA:', error);
+        logger.error('Error creating SLA:', error);
         res.status(500).json({ error: 'Failed to create SLA' });
     }
 };
@@ -56,7 +57,7 @@ export const listSLAs = async (req: Request, res: Response) => {
 
         res.json(slas);
     } catch (error) {
-        console.error('Error listing SLAs:', error);
+        logger.error('Error listing SLAs:', error);
         res.status(500).json({ error: 'Failed to list SLAs' });
     }
 };
@@ -82,7 +83,7 @@ export const getSLA = async (req: Request, res: Response) => {
 
         res.json(sla);
     } catch (error) {
-        console.error('Error getting SLA:', error);
+        logger.error('Error getting SLA:', error);
         res.status(500).json({ error: 'Failed to get SLA' });
     }
 };
@@ -102,7 +103,7 @@ export const updateSLA = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Error updating SLA:', error);
+        logger.error('Error updating SLA:', error);
         res.status(500).json({ error: 'Failed to update SLA' });
     }
 };
@@ -117,7 +118,7 @@ export const deleteSLA = async (req: Request, res: Response) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error('Error deleting SLA:', error);
+        logger.error('Error deleting SLA:', error);
         res.status(500).json({ error: 'Failed to delete SLA' });
     }
 };

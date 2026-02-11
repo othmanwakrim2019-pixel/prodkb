@@ -24,6 +24,7 @@ This guide explains how to run the full application (Frontend, Backend, Database
     - Do **NOT** use `localhost:3000` for browsing; that is the Backend API only.
     - **Backend API**: [http://localhost:3000](http://localhost:3000)
     - **API Health Check**: [http://localhost:3000/health](http://localhost:3000/health)
+    - **Swagger Documentation**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
 5.  **Login** with `admin@prodkb.com` / `password123`.
 

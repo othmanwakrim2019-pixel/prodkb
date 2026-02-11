@@ -2,11 +2,13 @@ import fs from 'fs';
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { incidentService } from '../services/IncidentService';
+import type { CreateIncidentDTO, UpdateIncidentDTO } from '../types';
 import { fileUploadService } from '../services/fileUploadService';
 import { z } from 'zod';
 import multer from 'multer';
 import { NotFoundError, ValidationError } from '../errors/AppError';
 import { logAudit, generateAuditDiff } from '../services/auditService';
+import { logger } from '../utils/logger';
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -34,6 +36,18 @@ const createIncidentSchema = z.object({
         rawLog: z.string().optional(),
         errorMessage: z.string().optional(),
     })).optional(),
+});
+
+const updateIncidentSchema = z.object({
+    title: z.string().min(3).max(200).optional(),
+    description: z.string().min(10).optional(),
+    status: z.enum(['Open', 'In Progress', 'Resolved', 'Closed']).optional(),
+    severity: z.enum(['Critical', 'High', 'Medium', 'Low']).optional(),
+    environment: z.enum(['PROD', 'PREPROD', 'RECETTE']).optional(),
+    impact: z.string().optional(),
+    assignedTeamId: z.string().uuid().optional().nullable(),
+    linkedProcedureId: z.string().uuid().optional().nullable(),
+    slaId: z.string().uuid().optional().nullable(),
 });
 
 /**
@@ -78,6 +92,8 @@ export const getIncidents = async (req: Request, res: Response) => {
         systemId: req.query.systemId as string,
         teamId: req.query.teamId as string,
         search: req.query.search as string,
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
     };
 
     const result = await incidentService.findAll(filters, { page, limit });
@@ -114,13 +130,11 @@ export const createIncident = async (req: AuthRequest, res: Response) => {
     const data = createIncidentSchema.parse(req.body);
 
     // Map DTO to service DTO
-    const serviceData: any = {
+    const serviceData = {
         ...data,
-        environment: data.environment as any,
-        severity: data.severity as any,
     };
 
-    const incident = await incidentService.create(serviceData, userId);
+    const incident = await incidentService.create(serviceData as CreateIncidentDTO, userId);
 
     // Audit log
     await logAudit({
@@ -145,10 +159,11 @@ export const updateIncident = async (req: AuthRequest, res: Response) => {
     }
 
     const existingIncident = await incidentService.findById(req.params.id);
-    const incident = await incidentService.update(req.params.id, req.body, userId);
+    const data = updateIncidentSchema.parse(req.body);
+    const incident = await incidentService.update(req.params.id, data as UpdateIncidentDTO, userId);
 
     // Audit log
-    const changes = generateAuditDiff(existingIncident, incident);
+    const changes = generateAuditDiff(existingIncident as unknown as Record<string, unknown>, incident as unknown as Record<string, unknown>);
     if (changes !== 'No changes detected') {
         await logAudit({
             userId,
@@ -208,27 +223,27 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
         if (!userId) throw new ValidationError('User not authenticated');
 
         const { id, filename } = req.params;
-        console.log(`[DEBUG] downloadFile called for incidentId=${id}, filename=${filename}`);
+        logger.debug(`downloadFile called for incidentId=${id}, filename=${filename}`);
 
         const fileLog = await incidentService.getFileLog(id, filename);
-        console.log(`[DEBUG] fileLog found:`, fileLog);
+        logger.debug('fileLog found', { fileLog });
 
         if (!fileLog.filePath) {
-            console.error('[DEBUG] fileLog has no filePath');
+            logger.error('fileLog has no filePath');
             throw new NotFoundError('File path missing in log');
         }
 
         // Check if file exists on disk
         const exists = fileUploadService.fileExists(fileLog.filePath);
-        console.log(`[DEBUG] file exists check: ${exists} for path ${fileLog.filePath}`);
+        logger.debug(`file exists check: ${exists} for path ${fileLog.filePath}`);
 
         if (!exists) {
-            console.error(`[DEBUG] File not found on disk: ${fileLog.filePath}`);
+            logger.error(`File not found on disk: ${fileLog.filePath}`);
             throw new NotFoundError('File on disk');
         }
 
         const absolutePath = fileUploadService.getAbsolutePath(fileLog.filePath);
-        console.log(`[DEBUG] Serving file from: ${absolutePath}`);
+        logger.debug(`Serving file from: ${absolutePath}`);
 
         // Use streams to avoid Express/Send path resolution issues on Windows
         res.setHeader('Content-Disposition', `attachment; filename="${fileLog.fileName || 'download'}"`);
@@ -241,7 +256,7 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
         const fileStream = fs.createReadStream(absolutePath);
 
         fileStream.on('error', (error) => {
-            console.error(`[DEBUG] Stream error:`, error);
+            logger.error('Stream error during file download', { error });
             if (!res.headersSent) {
                 res.status(500).send('Could not download file');
             }
@@ -249,7 +264,7 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
 
         fileStream.pipe(res);
     } catch (error) {
-        console.error(`[DEBUG] Caught error in downloadFile:`, error);
+        logger.error('Caught error in downloadFile', { error });
         // Pass to error handler if headers not sent
         if (!res.headersSent) {
             throw error;

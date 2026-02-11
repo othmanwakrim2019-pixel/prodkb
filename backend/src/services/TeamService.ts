@@ -9,14 +9,6 @@ import { ConflictError, NotFoundError, ValidationError } from '../errors/AppErro
 import type { ITeam } from '../types';
 
 /**
- * Team member structure from JSON
- */
-interface TeamMemberJSON {
-    name: string;
-    role: string | null;
-}
-
-/**
  * Create team DTO
  */
 interface CreateTeamDTO {
@@ -33,7 +25,6 @@ interface UpdateTeamDTO {
     name?: string;
     description?: string;
     emailDistribution?: string;
-    teamMembers?: string;
     sendEmail?: boolean;
 }
 
@@ -150,62 +141,6 @@ export class TeamService {
         await prisma.team.delete({ where: { id } });
 
         logger.info('Team deleted', { teamId: id });
-    }
-
-    /**
-     * Add a member to team's JSON member list
-     * @param teamId - Team ID
-     * @param memberName - Member name
-     * @param memberRole - Member role
-     */
-    async addMember(teamId: string, memberName: string, memberRole?: string): Promise<ITeam> {
-        const team = await this.findById(teamId);
-
-        const currentMembers: TeamMemberJSON[] = JSON.parse(team.teamMembers || '[]');
-
-        // Check if member already exists
-        if (currentMembers.some(m => m.name === memberName)) {
-            throw new ConflictError(`Member "${memberName}" already in team`);
-        }
-
-        currentMembers.push({
-            name: memberName,
-            role: memberRole || null,
-        });
-
-        const updated = await prisma.team.update({
-            where: { id: teamId },
-            data: { teamMembers: JSON.stringify(currentMembers) },
-        });
-
-        logger.info('Team member added', { teamId, memberName, memberRole });
-
-        return updated as unknown as ITeam;
-    }
-
-    /**
-     * Remove a member from team's JSON member list
-     * @param teamId - Team ID
-     * @param memberName - Member name to remove
-     */
-    async removeMember(teamId: string, memberName: string): Promise<ITeam> {
-        const team = await this.findById(teamId);
-
-        const currentMembers: TeamMemberJSON[] = JSON.parse(team.teamMembers || '[]');
-        const updatedMembers = currentMembers.filter(m => m.name !== memberName);
-
-        if (currentMembers.length === updatedMembers.length) {
-            throw new NotFoundError('Team member');
-        }
-
-        const updated = await prisma.team.update({
-            where: { id: teamId },
-            data: { teamMembers: JSON.stringify(updatedMembers) },
-        });
-
-        logger.info('Team member removed', { teamId, memberName });
-
-        return updated as unknown as ITeam;
     }
 
     /**

@@ -35,12 +35,12 @@ export class EmailTemplateController {
     // Update a template
     async updateTemplate(req: Request, res: Response) {
         const { id } = req.params;
-        const { subject, body } = req.body;
+        const { subject, body, enabled, cc } = req.body;
 
         try {
             const template = await (prisma as any).emailTemplate.update({
                 where: { id },
-                data: { subject, body }
+                data: { subject, body, enabled, cc }
             });
             res.json(template);
         } catch (error) {

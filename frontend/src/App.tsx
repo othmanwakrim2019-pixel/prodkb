@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { PermissionRoute } from './components/PermissionRoute';
 
 import Dashboard from './pages/Dashboard';
 import { Incidents } from './pages/Incidents';
@@ -23,13 +24,23 @@ function App() {
                     <Route element={<ProtectedRoute />}>
                         <Route element={<Layout />}>
                             <Route path="/" element={<Dashboard />} />
-                            <Route path="/incidents" element={<Incidents />} />
-                            <Route path="/incidents/new" element={<CreateIncident />} />
-                            <Route path="/incidents/:id" element={<IncidentDetails />} />
-                            <Route path="/procedures" element={<Procedures />} />
-                            <Route path="/procedures/new" element={<CreateProcedure />} />
-                            <Route path="/procedures/:id/edit" element={<CreateProcedure />} />
-                            <Route path="/procedures/:id" element={<ProcedureDetails />} />
+
+                            <Route element={<PermissionRoute permission="INCIDENT_VIEW" />}>
+                                <Route path="/incidents" element={<Incidents />} />
+                                <Route path="/incidents/:id" element={<IncidentDetails />} />
+                            </Route>
+                            <Route element={<PermissionRoute permission="INCIDENT_CREATE" />}>
+                                <Route path="/incidents/new" element={<CreateIncident />} />
+                            </Route>
+
+                            <Route element={<PermissionRoute permission="PROCEDURE_VIEW" />}>
+                                <Route path="/procedures" element={<Procedures />} />
+                                <Route path="/procedures/:id" element={<ProcedureDetails />} />
+                            </Route>
+                            <Route element={<PermissionRoute permission="PROCEDURE_CREATE" />}>
+                                <Route path="/procedures/new" element={<CreateProcedure />} />
+                                <Route path="/procedures/:id/edit" element={<CreateProcedure />} />
+                            </Route>
                             <Route path="/search" element={<Search />} />
                             <Route path="/admin" element={<Admin />} />
                         </Route>

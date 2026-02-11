@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import crypto from 'crypto';
+import { logger } from '../utils/logger';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -41,7 +42,7 @@ export class FileUploadService {
                 await mkdir(this.UPLOAD_BASE_DIR, { recursive: true });
             }
         } catch (error) {
-            console.error('Failed to create upload directory:', error);
+            logger.error('Failed to create upload directory:', error);
         }
     }
 
@@ -134,7 +135,7 @@ export class FileUploadService {
                 await unlink(absolutePath);
             }
         } catch (error) {
-            console.error('Failed to delete file:', error);
+            logger.error('Failed to delete file:', error);
             throw error;
         }
     }

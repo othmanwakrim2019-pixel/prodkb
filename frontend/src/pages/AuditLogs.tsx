@@ -32,7 +32,7 @@ const AuditLogs = () => {
             if (actionType) params.action = actionType;
             if (entityType) params.entityType = entityType;
 
-            const res = await api.get('/audit-logs', { params });
+            const res = await api.get('/api/audit-logs', { params });
             setLogs(res.data);
         } catch (error) {
             console.error('Failed to fetch audit logs', error);

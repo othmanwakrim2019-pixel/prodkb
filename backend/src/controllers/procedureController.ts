@@ -1,12 +1,39 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
+import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
 import { logAudit, generateAuditDiff } from '../services/auditService';
+
+const createProcedureSchema = z.object({
+    title: z.string().min(3).max(200),
+    description: z.string().min(5),
+    resolutionSteps: z.string().min(5),
+    systemId: z.string().uuid(),
+    jobId: z.string().uuid().optional(),
+    rootCause: z.string().optional(),
+    workaround: z.string().optional(),
+    commands: z.string().optional(),
+    errorCode: z.string().optional(),
+    tags: z.string().optional(),
+});
+
+const updateProcedureSchema = z.object({
+    title: z.string().min(3).max(200).optional(),
+    description: z.string().min(5).optional(),
+    resolutionSteps: z.string().min(5).optional(),
+    systemId: z.string().uuid().optional(),
+    jobId: z.string().uuid().optional().nullable(),
+    rootCause: z.string().optional().nullable(),
+    workaround: z.string().optional().nullable(),
+    commands: z.string().optional().nullable(),
+    errorCode: z.string().optional().nullable(),
+    tags: z.string().optional().nullable(),
+});
 
 export const getProcedures = async (req: Request, res: Response) => {
     const { search } = req.query;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (search) {
         where.OR = [
             { title: { contains: String(search) } }, // Removed mode: 'insensitive' for SQLite compatibility if needed, but Prisma usually handles it. 
@@ -59,7 +86,7 @@ export const getProcedureById = async (req: Request, res: Response) => {
 };
 
 export const createProcedure = async (req: AuthRequest, res: Response) => {
-    const { title, description, rootCause, resolutionSteps, workaround, commands, errorCode, tags, systemId, jobId } = req.body;
+    const { title, description, rootCause, resolutionSteps, workaround, commands, errorCode, tags, systemId, jobId } = createProcedureSchema.parse(req.body);
     const userId = req.user?.id;
 
     if (!userId) {
@@ -102,7 +129,7 @@ export const createProcedure = async (req: AuthRequest, res: Response) => {
 
 export const updateProcedure = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const data = req.body;
+    const data = updateProcedureSchema.parse(req.body);
     const userId = req.user?.id;
 
     try {

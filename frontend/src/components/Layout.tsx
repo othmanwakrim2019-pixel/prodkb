@@ -1,19 +1,23 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useState } from 'react';
 import {
     LayoutDashboard,
     LogOut,
     Settings as SettingsIcon,
     AlertCircle,
     BookOpen,
-    Search
+    Search,
+    Key
 } from 'lucide-react';
 import clsx from 'clsx';
+import { ChangePasswordModal } from './ChangePasswordModal';
 
 export const Layout = () => {
     const { user, logout, hasPermission } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -103,6 +107,13 @@ export const Layout = () => {
                         </div>
                     </div>
                     <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors mb-1"
+                    >
+                        <Key className="mr-3 h-5 w-5" />
+                        Change Password
+                    </button>
+                    <button
                         onClick={handleLogout}
                         className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors"
                     >
@@ -116,6 +127,12 @@ export const Layout = () => {
             <main className="flex-1 ml-64 p-8">
                 <Outlet />
             </main>
+
+            {/* Password Change Modal */}
+            <ChangePasswordModal
+                isOpen={showPasswordModal}
+                onClose={() => setShowPasswordModal(false)}
+            />
         </div>
     );
 };

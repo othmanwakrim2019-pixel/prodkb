@@ -3,13 +3,13 @@ import { prisma } from '../utils/prisma';
 import { z } from 'zod';
 import { logAudit, generateAuditDiff } from '../services/auditService';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../utils/logger';
 
 // Validation schemas
 const createTeamSchema = z.object({
     name: z.string().min(2).max(100),
     description: z.string().max(500).optional(),
     emailDistribution: z.string().email(), // Single team email
-    teamMembers: z.string().optional(), // JSON array of member names
     sendEmail: z.boolean().optional(),
 });
 
@@ -17,7 +17,6 @@ const updateTeamSchema = z.object({
     name: z.string().min(2).max(100).optional(),
     description: z.string().max(500).optional().nullable(),
     emailDistribution: z.string().email().optional(), // Single team email
-    teamMembers: z.string().optional(), // JSON array of member names
     isActive: z.boolean().optional(),
     sendEmail: z.boolean().optional(),
 });
@@ -67,7 +66,7 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Error creating team:', error);
+        logger.error('Error creating team:', error);
         res.status(500).json({ error: 'Failed to create team' });
     }
 };
@@ -125,7 +124,7 @@ export const listTeams = async (req: Request, res: Response) => {
 
         res.json(teamsWithSystemCount);
     } catch (error) {
-        console.error('Error listing teams:', error);
+        logger.error('Error listing teams:', error);
         res.status(500).json({ error: 'Failed to list teams' });
     }
 };
@@ -168,7 +167,7 @@ export const getTeam = async (req: Request, res: Response) => {
 
         res.json(team);
     } catch (error) {
-        console.error('Error getting team:', error);
+        logger.error('Error getting team:', error);
         res.status(500).json({ error: 'Failed to get team' });
     }
 };
@@ -177,7 +176,7 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const userId = req.user?.id;
-        console.log('📝 Update team request:', { id, body: req.body });
+        logger.debug('Update team request', { id, body: req.body });
         const data = updateTeamSchema.parse(req.body);
 
         const existingTeam = await prisma.team.findUnique({
@@ -223,7 +222,7 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Error updating team:', error);
+        logger.error('Error updating team:', error);
         res.status(500).json({ error: 'Failed to update team' });
     }
 };
@@ -254,7 +253,7 @@ export const deleteTeam = async (req: AuthRequest, res: Response) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error('Error deleting team:', error);
+        logger.error('Error deleting team:', error);
         res.status(500).json({ error: 'Failed to delete team' });
     }
 };
@@ -287,7 +286,7 @@ export const addTeamMember = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Error adding team member:', error);
+        logger.error('Error adding team member:', error);
         res.status(500).json({ error: 'Failed to add team member' });
     }
 };
@@ -307,7 +306,7 @@ export const removeTeamMember = async (req: Request, res: Response) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error('Error removing team member:', error);
+        logger.error('Error removing team member:', error);
         res.status(500).json({ error: 'Failed to remove team member' });
     }
 };
