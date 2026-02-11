@@ -39,7 +39,6 @@ export interface Team {
     description?: string;
     emailDistribution?: string;
     sendEmail?: boolean;
-    teamMembers?: string; // legacy serialized JSON
     members?: Array<{
         role: string;
         user: {

@@ -75,32 +75,32 @@ export class UserService {
             logger.info('Team validated successfully', { teamId: data.teamId, teamName: team.name });
         }
 
-        // Create user
-        const user = await prisma.user.create({
-            data: {
-                name: data.name,
-                email: data.email,
-                password: hashedPassword,
-                roleId,
-                isActive: data.isActive !== undefined ? data.isActive : true,
-            },
-            include: {
-                role: { select: { id: true, name: true } },
-            },
-        });
+        // Create user and team membership atomically
+        const result = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.create({
+                data: {
+                    name: data.name,
+                    email: data.email,
+                    password: hashedPassword,
+                    roleId,
+                    isActive: data.isActive !== undefined ? data.isActive : true,
+                },
+                include: {
+                    role: { select: { id: true, name: true } },
+                },
+            });
 
-        logger.info('User created successfully', { userId: user.id, email: user.email });
+            logger.info('User created successfully', { userId: user.id, email: user.email });
 
-        // Create team membership if teamId provided
-        if (data.teamId) {
-            try {
+            // Create team membership if teamId provided
+            if (data.teamId) {
                 logger.info('Creating TeamMember record...', {
                     userId: user.id,
                     teamId: data.teamId,
                     teamRole: data.teamRole || 'MEMBER'
                 });
 
-                const teamMember = await prisma.teamMember.create({
+                const teamMember = await tx.teamMember.create({
                     data: {
                         userId: user.id,
                         teamId: data.teamId,
@@ -114,23 +114,16 @@ export class UserService {
                     teamId: data.teamId,
                     role: teamMember.role
                 });
-            } catch (teamMemberError) {
-                logger.error('Failed to create TeamMember', {
-                    error: teamMemberError,
-                    userId: user.id,
-                    teamId: data.teamId,
-                    teamRole: data.teamRole
-                });
-                // Don't fail the whole registration, but log the error
-                // This ensures user is created even if team assignment fails
+            } else {
+                logger.info('No team ID provided, skipping TeamMember creation');
             }
-        } else {
-            logger.info('No team ID provided, skipping TeamMember creation');
-        }
 
-        logger.info('User registered', { userId: user.id, email: user.email, teamId: data.teamId, teamRole: data.teamRole, isActive: user.isActive });
+            return user;
+        });
 
-        return this.toPublicUser(user);
+        logger.info('User registered', { userId: result.id, email: result.email, teamId: data.teamId, teamRole: data.teamRole, isActive: result.isActive });
+
+        return this.toPublicUser(result);
     }
 
     async login(email: string, password: string): Promise<LoginResponse> {
@@ -186,6 +179,39 @@ export class UserService {
                 permissions,
             },
         };
+    }
+
+    /**
+     * Change a user's password
+     * @param userId - Authenticated user's ID
+     * @param currentPassword - Current password for verification
+     * @param newPassword - New password to set
+     */
+    async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            throw new NotFoundError('User');
+        }
+
+        // Verify current password
+        const isValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isValid) {
+            throw new AuthenticationError('Current password is incorrect');
+        }
+
+        // Validate new password strength
+        if (newPassword.length < 8) {
+            throw new ValidationError('New password must be at least 8 characters');
+        }
+
+        // Hash and update
+        const hashedPassword = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
+        });
+
+        logger.info('Password changed', { userId });
     }
 
     /**

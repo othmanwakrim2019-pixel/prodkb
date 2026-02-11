@@ -101,14 +101,25 @@ export class EmailService {
     }
 
     const template = await this.getTemplate('INCIDENT_CREATED');
+
+    // Check if template is disabled
+    if (template && template.enabled === false) {
+      logger.info('Email skipped: template INCIDENT_CREATED is disabled');
+      return false;
+    }
+
     const subject = this.processTemplate(template?.subject || `[${incident.severity}] Incident #${incident.id.substring(0, 8)} - ${incident.job?.code || 'N/A'} - ${incident.title}`, data);
     const htmlContent = template ? this.processTemplate(template.body, data) : this.generateIncidentCreatedEmail(data);
     const textContent = template ? this.stripHtml(htmlContent) : this.generateIncidentCreatedEmailText(data);
+
+    // Add CCs if present in template
+    const cc = template?.cc ? template.cc.split(',').map((e: string) => e.trim()).filter((e: string) => e) : undefined;
 
     try {
       await this.transporter.sendMail({
         from: this.config.from,
         to: recipients,
+        cc,
         subject,
         text: textContent,
         html: htmlContent,
@@ -141,14 +152,25 @@ export class EmailService {
     }
 
     const template = await this.getTemplate('INCIDENT_UPDATED');
-    const subject = this.processTemplate(template?.subject || `[UPDATED] ${incident.severity} - Incident #${incident.id.substring(0, 8)} - ${incident.title}`, data);
+
+    // Check if template is disabled
+    if (template && template.enabled === false) {
+      logger.info('Email skipped: template INCIDENT_UPDATED is disabled');
+      return false;
+    }
+
+    const subject = this.processTemplate(template?.subject || `[${incident.severity}] Incident Updated #${incident.id.substring(0, 8)} - ${incident.title}`, data);
     const htmlContent = template ? this.processTemplate(template.body, data) : this.generateIncidentUpdatedEmail(data);
     const textContent = template ? this.stripHtml(htmlContent) : this.generateIncidentUpdatedEmailText(data);
+
+    // Add CCs if present in template
+    const cc = template?.cc ? template.cc.split(',').map((e: string) => e.trim()).filter((e: string) => e) : undefined;
 
     try {
       await this.transporter.sendMail({
         from: this.config.from,
         to: recipients,
+        cc,
         subject,
         text: textContent,
         html: htmlContent,
@@ -181,14 +203,25 @@ export class EmailService {
     }
 
     const template = await this.getTemplate('INCIDENT_RESOLVED');
+
+    // Check if template is disabled
+    if (template && template.enabled === false) {
+      logger.info('Email skipped: template INCIDENT_RESOLVED is disabled');
+      return false;
+    }
+
     const subject = this.processTemplate(template?.subject || `[RESOLVED] Incident #${incident.id.substring(0, 8)} - ${incident.title}`, data);
     const htmlContent = template ? this.processTemplate(template.body, data) : this.generateIncidentResolvedEmail(data);
     const textContent = template ? this.stripHtml(htmlContent) : this.generateIncidentResolvedEmailText(data);
+
+    // Add CCs if present in template
+    const cc = template?.cc ? template.cc.split(',').map((e: string) => e.trim()).filter((e: string) => e) : undefined;
 
     try {
       await this.transporter.sendMail({
         from: this.config.from,
         to: recipients,
+        cc,
         subject,
         text: textContent,
         html: htmlContent,

@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken';
 import { env } from '../src/config/env';
 
 // Mock prisma and auth utils
-jest.mock('../src/utils/prisma', () => ({
-    prisma: {
+jest.mock('../src/utils/prisma', () => {
+    const mock = {
         user: {
             findUnique: jest.fn(),
             create: jest.fn(),
@@ -17,11 +17,18 @@ jest.mock('../src/utils/prisma', () => ({
         role: {
             findUnique: jest.fn(),
         },
+        teamMember: {
+            create: jest.fn(),
+        },
         auditLog: {
             create: jest.fn(),
-        }
-    }
-}));
+        },
+        $transaction: jest.fn(),
+    };
+    // $transaction executes the callback with the mock as the tx client
+    mock.$transaction.mockImplementation((cb: Function) => cb(mock));
+    return { prisma: mock };
+});
 
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
@@ -29,6 +36,8 @@ jest.mock('jsonwebtoken');
 describe('UserService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        // Re-apply $transaction default after clearAllMocks
+        (prisma as any).$transaction.mockImplementation((cb: Function) => cb(prisma));
     });
 
     describe('register', () => {
@@ -54,6 +63,7 @@ describe('UserService', () => {
 
             const result = await userService.register(mockInput);
 
+            expect((prisma as any).$transaction).toHaveBeenCalled();
             expect(prisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
                 data: expect.objectContaining({
                     email: 'test@example.com',

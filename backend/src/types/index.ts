@@ -59,7 +59,6 @@ export interface ITeam {
     name: string;
     description: string | null;
     emailDistribution: string;
-    teamMembers: string;
     isActive: boolean;
     sendEmail: boolean;
     createdAt: Date;

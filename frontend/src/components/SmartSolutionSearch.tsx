@@ -24,7 +24,7 @@ export const SmartSolutionSearch = ({ query, systemId }: SmartSearchProps) => {
 
             setLoading(true);
             try {
-                const response = await api.get('/incidents/search', {
+                const response = await api.get('/api/incidents/search', {
                     params: { query, systemId, requireProcedure: 'true' }
                 });
                 setResults(response.data);

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middleware/auth';
 import { getSystems, createSystem, updateSystem, deleteSystem, getJobs, createJob, updateJob, deleteJob } from '../controllers/systemController';
-import { getAllUsers, deleteUser, updateUser } from '../controllers/userController';
+import { getAllUsers, deleteUser, updateUser, changePassword } from '../controllers/userController';
 import {
     getIncidents,
     getIncidentById,
@@ -47,15 +47,16 @@ router.use('/slas', slaRoutes);
 
 // Users
 router.get('/users', authenticate, getAllUsers);
+router.put('/users/me/password', authenticate, changePassword); // Must be before :id routes
 router.delete('/users/:id', authenticate, checkPermission('USER_MANAGE'), deleteUser);
 router.put('/users/:id', authenticate, checkPermission('USER_MANAGE'), updateUser);
 
 // Incidents
-router.get('/incidents', authenticate, getIncidents);
+router.get('/incidents', authenticate, checkPermission('INCIDENT_VIEW'), getIncidents);
 router.get('/incidents/stats', authenticate, checkPermission('DASHBOARD_VIEW'), getIncidentStats);
 router.get('/incidents/search', authenticate, checkPermission('SEARCH_VIEW'), searchSimilarIncidents);
 router.post('/incidents', authenticate, checkPermission('INCIDENT_CREATE'), createIncident);
-router.get('/incidents/:id', authenticate, getIncidentById);
+router.get('/incidents/:id', authenticate, checkPermission('INCIDENT_VIEW'), getIncidentById);
 router.put('/incidents/:id', authenticate, checkPermission('INCIDENT_EDIT'), updateIncident);
 // Status update should also require edit permission
 router.put('/incidents/:id/status', authenticate, checkPermission('INCIDENT_EDIT'), updateIncidentStatus);
@@ -66,9 +67,9 @@ router.post('/incidents/:id/link-procedure/:procedureId', authenticate, checkPer
 router.delete('/incidents/:id', authenticate, checkPermission('INCIDENT_DELETE'), deleteIncident);
 
 // Procedures
-router.get('/procedures', authenticate, getProcedures);
+router.get('/procedures', authenticate, checkPermission('PROCEDURE_VIEW'), getProcedures);
 router.post('/procedures', authenticate, checkPermission('PROCEDURE_CREATE'), createProcedure);
-router.get('/procedures/:id', authenticate, getProcedureById);
+router.get('/procedures/:id', authenticate, checkPermission('PROCEDURE_VIEW'), getProcedureById);
 router.put('/procedures/:id', authenticate, checkPermission('PROCEDURE_EDIT'), updateProcedure);
 router.delete('/procedures/:id', authenticate, checkPermission('PROCEDURE_DELETE'), deleteProcedure);
 router.get('/search', authenticate, checkPermission('SEARCH_VIEW'), globalSearch);

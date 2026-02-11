@@ -64,10 +64,12 @@ model SystemConfig {
 
 model EmailTemplate {
   id          String   @id @default(uuid())
-  name        String   @unique
+  name        String   @unique // e.g., "INCIDENT_CREATED", "INCIDENT_UPDATED"
   subject     String
-  body        String   
-  variables   String   
+  body        String   @db.Text
+  variables   String?  // Comma-separated list of available variables
+  enabled     Boolean  @default(true)
+  cc          String?  // Comma-separated list of CC emails
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -77,7 +79,6 @@ model Team {
   name              String   @unique
   description       String?
   emailDistribution String
-  teamMembers       String   @default("[]") 
   isActive          Boolean  @default(true)
   sendEmail         Boolean  @default(true)
   createdAt         DateTime @default(now())

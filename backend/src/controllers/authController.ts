@@ -1,7 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { userService } from '../services/UserService';
 import { AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
+
+const registerSchema = z.object({
+    name: z.string().min(2).max(100),
+    email: z.string().email(),
+    password: z.string().min(6).max(100),
+    role: z.string().optional(),
+    teamId: z.string().uuid().optional(),
+    teamRole: z.string().optional(),
+    isActive: z.boolean().optional(),
+});
+
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+});
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -13,7 +29,8 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             teamRole: req.body.teamRole,
             isActive: req.body.isActive
         });
-        const user = await userService.register(req.body);
+        const data = registerSchema.parse(req.body);
+        const user = await userService.register(data);
         res.status(201).json({ message: 'User created successfully', userId: user.id });
     } catch (error) {
         next(error);
@@ -22,7 +39,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = loginSchema.parse(req.body);
         const result = await userService.login(email, password);
         res.json(result);
     } catch (error) {

@@ -112,17 +112,12 @@ async function main() {
     const teams = [];
     for (let i = 0; i < 20; i++) {
         const teamName = faker.company.name() + ' Team';
-        const teamMembers = Array.from({ length: 4 }).map(() => ({
-            name: faker.person.fullName(),
-            role: faker.person.jobTitle()
-        }));
 
         const team = await prisma.team.create({
             data: {
                 name: teamName,
                 description: faker.company.catchPhrase(),
                 emailDistribution: faker.internet.email(),
-                teamMembers: JSON.stringify(teamMembers)
             }
         });
         teams.push(team);

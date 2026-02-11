@@ -9,9 +9,9 @@ const levels = {
 };
 
 const level = () => {
+    if (process.env.LOG_LEVEL) return process.env.LOG_LEVEL;
     const env = process.env.NODE_ENV || 'development';
-    const isDevelopment = env === 'development';
-    return isDevelopment ? 'debug' : 'warn';
+    return env === 'development' ? 'debug' : 'warn';
 };
 
 const colors = {

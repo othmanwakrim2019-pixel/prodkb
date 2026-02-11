@@ -1,7 +1,20 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { logAudit } from '../services/auditService';
 import { AuthRequest } from '../middleware/auth';
+
+const createRoleSchema = z.object({
+    name: z.string().min(2).max(50),
+    description: z.string().max(500).optional(),
+    permissionIds: z.array(z.string().uuid()).min(1),
+});
+
+const updateRoleSchema = z.object({
+    name: z.string().min(2).max(50).optional(),
+    description: z.string().max(500).optional().nullable(),
+    permissionIds: z.array(z.string().uuid()).min(1),
+});
 
 export const getAllRoles = async (req: Request, res: Response) => {
     try {
@@ -30,7 +43,7 @@ export const getAllPermissions = async (req: Request, res: Response) => {
 };
 
 export const createRole = async (req: AuthRequest, res: Response) => {
-    const { name, description, permissionIds } = req.body;
+    const { name, description, permissionIds } = createRoleSchema.parse(req.body);
     try {
         const role = await prisma.role.create({
             data: {
@@ -54,7 +67,7 @@ export const createRole = async (req: AuthRequest, res: Response) => {
 
 export const updateRole = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { name, description, permissionIds } = req.body;
+    const { name, description, permissionIds } = updateRoleSchema.parse(req.body);
     try {
         // Prevent modifying ADMIN role
         const currentRole = await prisma.role.findUnique({ where: { id } });

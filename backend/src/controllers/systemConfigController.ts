@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { emailService } from '../services/emailService';
 import { z } from 'zod';
+import { logger } from '../utils/logger';
 
 const smtpConfigSchema = z.object({
     host: z.string().min(1),
@@ -32,7 +33,7 @@ export const getSmtpConfig = async (req: Request, res: Response) => {
         const parsed = JSON.parse(config.value);
         res.json(parsed);
     } catch (error) {
-        console.error('Failed to get SMTP config:', error);
+        logger.error('Failed to get SMTP config:', error);
         res.status(500).json({ error: 'Failed to fetch SMTP config' });
     }
 };
@@ -55,7 +56,7 @@ export const updateSmtpConfig = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Invalid input', details: error.issues });
         }
-        console.error('Failed to update SMTP config:', error);
+        logger.error('Failed to update SMTP config:', error);
         res.status(500).json({ error: 'Failed to update SMTP config' });
     }
 };
@@ -74,7 +75,7 @@ export const testSmtpConfig = async (req: Request, res: Response) => {
             res.status(400).json({ error: `Failed to send test email: ${result.error}` });
         }
     } catch (error) {
-        console.error('Test email failed:', error);
+        logger.error('Test email failed:', error);
         res.status(500).json({ error: 'Internal server error during test' });
     }
 };
@@ -97,7 +98,7 @@ export const updateConfig = async (req: Request, res: Response) => {
 
         res.json({ message: 'Config updated successfully', key, value });
     } catch (error) {
-        console.error('Failed to update config:', error);
+        logger.error('Failed to update config:', error);
         res.status(500).json({ error: 'Failed to update config' });
     }
 };
@@ -123,7 +124,7 @@ export const getConfigs = async (req: Request, res: Response) => {
 
         res.json(result);
     } catch (error) {
-        console.error('Failed to get configs:', error);
+        logger.error('Failed to get configs:', error);
         res.status(500).json({ error: 'Failed to get configs' });
     }
 };

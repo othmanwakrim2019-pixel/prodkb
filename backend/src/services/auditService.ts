@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { Request } from 'express';
+import { logger } from '../utils/logger';
 
 export type AuditActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT';
 export type AuditEntityType = 'INCIDENT' | 'USER' | 'TEAM' | 'ROLE' | 'PROCEDURE' | 'SYSTEM' | 'JOB' | 'SLA';
@@ -55,7 +56,7 @@ export async function logAudit(params: AuditLogParams): Promise<void> {
         });
     } catch (error) {
         // Log error but don't throw - audit logging should not break main flow
-        console.error('[AuditService] Failed to create audit log:', error);
+        logger.error('[AuditService] Failed to create audit log:', error);
     }
 }
 
@@ -85,14 +86,14 @@ export async function logAuditFailure(
             }
         });
     } catch (error) {
-        console.error('[AuditService] Failed to create audit failure log:', error);
+        logger.error('[AuditService] Failed to create audit failure log:', error);
     }
 }
 /**
  * Generate a human-readable diff between two objects
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function generateAuditDiff(original: any, updated: any): string {
+export function generateAuditDiff(original: Record<string, unknown> | null, updated: Record<string, unknown> | null): string {
+    if (!original || !updated) return 'No changes detected';
     const changes: string[] = [];
 
     // Helper to get name from entity if available

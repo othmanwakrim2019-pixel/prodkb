@@ -11,6 +11,20 @@ import { IncidentStatus, Severity } from '../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams, IIncidentLog } from '../types';
 
 /**
+ * Incident statistics returned by getStats()
+ */
+export interface IncidentStats {
+    createdToday: number;
+    resolvedToday: number;
+    activeIncidents: number;
+    avgResolutionTimeMinutes: number;
+    topSystems: Array<{ systemId: string; count: number; name: string }>;
+    statusBreakdown: Array<{ status: string; count: number }>;
+    trends: Array<{ date: string; created: number; resolved: number }>;
+    myWork: { myTeamQueue: number; myTeamBreaches: number };
+}
+
+/**
  * Service class for incident-related business logic
  */
 export class IncidentService {
@@ -41,6 +55,8 @@ export class IncidentService {
             systemId?: string;
             teamId?: string;
             search?: string;
+            startDate?: Date;
+            endDate?: Date;
         } = {},
         pagination: PaginationParams = {}
     ): Promise<PaginatedResult<IIncident>> {
@@ -54,6 +70,16 @@ export class IncidentService {
         if (filters.environment) where.environment = filters.environment;
         if (filters.systemId) where.systemId = filters.systemId;
         if (filters.teamId) where.assignedTeamId = filters.teamId;
+        if (filters.startDate || filters.endDate) {
+            const createdAtFilter: Record<string, Date> = {};
+            if (filters.startDate) createdAtFilter.gte = filters.startDate;
+            if (filters.endDate) {
+                const end = new Date(filters.endDate);
+                end.setHours(23, 59, 59, 999);
+                createdAtFilter.lte = end;
+            }
+            where.createdAt = createdAtFilter;
+        }
         if (filters.search) {
             where.OR = [
                 { title: { contains: filters.search } },
@@ -331,13 +357,13 @@ export class IncidentService {
         systemId?: string;
         teamId?: string;
         userId?: string;
-    }): Promise<any> {
+    }): Promise<IncidentStats> {
         const { startDate, endDate, systemId, teamId, userId } = filters;
-        const today = new Date();
-        const start = startDate || new Date(today.setHours(0, 0, 0, 0));
-        const end = endDate || new Date(today.setHours(23, 59, 59, 999));
+        const now = new Date();
+        const start = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const end = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-        const where: any = {
+        const where: Record<string, unknown> = {
             createdAt: { gte: start, lte: end }
         };
 

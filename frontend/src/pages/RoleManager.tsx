@@ -33,8 +33,8 @@ export const RoleManager = () => {
     const fetchData = async () => {
         try {
             const [rolesRes, permsRes] = await Promise.all([
-                api.get('/roles'),
-                api.get('/permissions')
+                api.get('/api/roles'),
+                api.get('/api/permissions')
             ]);
             setRoles(rolesRes.data);
             setAllPermissions(permsRes.data);
@@ -66,9 +66,9 @@ export const RoleManager = () => {
             };
 
             if (editingRole.id) {
-                await api.put(`/roles/${editingRole.id}`, payload);
+                await api.put(`/api/roles/${editingRole.id}`, payload);
             } else {
-                await api.post('/roles', payload);
+                await api.post('/api/roles', payload);
             }
 
             setIsEditing(false);
@@ -81,7 +81,7 @@ export const RoleManager = () => {
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure? This will remove the role from all users.')) return;
         try {
-            await api.delete(`/roles/${id}`);
+            await api.delete(`/api/roles/${id}`);
             fetchData();
         } catch (error) {
             alert('Failed to delete role');
