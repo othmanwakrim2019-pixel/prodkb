@@ -17,11 +17,11 @@ const groupLogsByDate = (logs: Log[]) => {
         grouped[date].push(log);
     });
 
-    // Sort dates in descending order (newest first)
+    // Sort dates in ascending order (oldest first)
     const sortedEntries = Object.entries(grouped).sort(([dateA], [dateB]) => {
         const a = new Date(dateA);
         const b = new Date(dateB);
-        return b.getTime() - a.getTime();
+        return a.getTime() - b.getTime();
     });
 
     return Object.fromEntries(sortedEntries);
