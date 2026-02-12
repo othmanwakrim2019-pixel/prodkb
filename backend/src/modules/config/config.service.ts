@@ -1,6 +1,6 @@
 
 import { prisma } from '../../common/utils/prisma';
-import { emailService } from '../../services/emailService';
+import { emailService } from '../../common/services/emailService';
 
 export class ConfigService {
     async getSmtpConfig() {

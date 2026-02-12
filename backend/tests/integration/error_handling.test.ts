@@ -1,23 +1,25 @@
 import request from 'supertest';
 import { app } from '../../src/server';
-import { userService } from '../../src/services/UserService';
-import { prisma } from '../../src/utils/prisma';
+import { userService } from '../../src/modules/users/user.service';
+import { authService } from '../../src/modules/auth/auth.service';
+import { prisma } from '../../src/common/utils/prisma';
 
 describe('Centralized Error Handling Integration', () => {
     let token: string;
     const testUser = {
         name: 'Error Test User',
         email: 'error-test@example.com',
-        password: 'password123'
+        password: 'password123',
+        role: 'ADMIN'
     };
 
     beforeAll(async () => {
         // Cleanup
         await prisma.user.deleteMany({ where: { email: testUser.email } });
         // Create user
-        await userService.register(testUser);
+        await authService.register(testUser);
         // Login
-        const loginRes = await userService.login(testUser.email, testUser.password);
+        const loginRes = await authService.login(testUser.email, testUser.password);
         token = loginRes.token;
     });
 
@@ -45,6 +47,6 @@ describe('Centralized Error Handling Integration', () => {
             .set('Authorization', `Bearer ${token}`);
 
         expect(res.status).toBe(404);
-        expect(res.body.code).toBe('NOT_FOUND');
+        expect(res.body.error.code).toBe('NOT_FOUND');
     });
 });

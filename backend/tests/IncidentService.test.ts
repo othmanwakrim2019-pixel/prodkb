@@ -1,9 +1,9 @@
-import { incidentService } from '../src/services/IncidentService';
-import { prisma } from '../src/utils/prisma';
+import { incidentService } from '../src/modules/incidents/incident.service';
+import { prisma } from '../src/common/utils/prisma';
 import { IncidentStatus, Severity, Environment } from '../src/types/enums';
 
 // Mock prisma
-jest.mock('../src/utils/prisma', () => ({
+jest.mock('../src/common/utils/prisma', () => ({
     prisma: {
         incident: {
             findUnique: jest.fn(),
@@ -26,9 +26,12 @@ jest.mock('../src/utils/prisma', () => ({
         system: {
             findMany: jest.fn(),
             findUnique: jest.fn(),
-        }
+        },
+        $transaction: jest.fn(),
     }
 }));
+
+(prisma as any).$transaction.mockImplementation((cb: Function) => cb(prisma));
 
 describe('IncidentService', () => {
     const mockDate = new Date('2024-01-01T00:00:00.000Z');
