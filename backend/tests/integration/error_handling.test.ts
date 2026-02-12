@@ -16,6 +16,36 @@ describe('Centralized Error Handling Integration', () => {
     beforeAll(async () => {
         // Cleanup
         await prisma.user.deleteMany({ where: { email: testUser.email } });
+
+        // Ensure role and permission exist for integration test
+        let permission = await prisma.permission.findUnique({ where: { code: 'INCIDENT_VIEW' } });
+        if (!permission) {
+            permission = await prisma.permission.create({
+                data: { code: 'INCIDENT_VIEW', description: 'Permission to view incidents' }
+            });
+        }
+
+        let role = await prisma.role.findUnique({
+            where: { name: 'ADMIN' },
+            include: { permissions: { where: { code: 'INCIDENT_VIEW' } } }
+        });
+
+        if (!role) {
+            role = await prisma.role.create({
+                data: {
+                    name: 'ADMIN',
+                    description: 'Admin role',
+                    permissions: { connect: { id: permission.id } }
+                },
+                include: { permissions: true }
+            });
+        } else if (role.permissions.length === 0) {
+            await prisma.role.update({
+                where: { id: role.id },
+                data: { permissions: { connect: { id: permission.id } } }
+            });
+        }
+
         // Create user
         await authService.register(testUser);
         // Login
