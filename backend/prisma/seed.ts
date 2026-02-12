@@ -72,12 +72,24 @@ async function main() {
             name: 'OPERATOR',
             description: 'Can create incidents and view status',
             permissions: {
-                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'INCIDENT_CREATE', 'PROCEDURE_VIEW']
+                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT', 'PROCEDURE_VIEW']
                     .map(code => ({ id: permsMap.get(code) }))
             }
         }
     });
-    const roles = [adminRole, expertRole, operatorRole];
+
+    const viewerRole = await prisma.role.create({
+        data: {
+            name: 'VIEWER',
+            description: 'Read-only access to assigned team incidents',
+            permissions: {
+                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'PROCEDURE_VIEW']
+                    .map(code => ({ id: permsMap.get(code) }))
+            }
+        }
+    });
+
+    const roles = [adminRole, expertRole, operatorRole, viewerRole];
 
     // Create Users (Admin + Random Users)
     console.log('Creating users...');
@@ -89,6 +101,11 @@ async function main() {
         data: { name: 'Admin User', email: 'admin@prodkb.com', password: hashedPassword, roleId: adminRole.id, isActive: true }
     });
     users.push(admin);
+
+    const viewerUser = await prisma.user.create({
+        data: { name: 'Viewer User', email: 'viewer@prodkb.com', password: hashedPassword, roleId: viewerRole.id, isActive: true }
+    });
+    users.push(viewerUser);
 
     // Create 50 Random Users
     for (let i = 0; i < 50; i++) {
@@ -124,6 +141,11 @@ async function main() {
 
         // Add random members to team
         const members = faker.helpers.arrayElements(users, 3);
+        // Ensure Viewer is in the first team (Bode LLC or similar, ensuring they have access to something)
+        if (i === 0) {
+            members.push(viewerUser);
+        }
+
         const memberData = members.map(u => ({ teamId: team.id, userId: u.id, role: 'MEMBER' }));
         // Ensure at least one distinct userId to avoid duplicates in createMany if faker picks same
         // But createMany skipDuplicates not supported in sqlite easily? 

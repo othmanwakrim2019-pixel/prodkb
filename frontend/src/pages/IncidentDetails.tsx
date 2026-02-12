@@ -247,7 +247,14 @@ export const IncidentDetails = () => {
                                         {incident.logs.map((log: Log) => (
                                             <div key={log.id} className="bg-slate-50 p-4 rounded-md border border-slate-200">
                                                 <div className="flex items-start justify-between mb-2">
-                                                    <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
+                                                        {log.createdBy && (
+                                                            <span className="text-xs text-slate-500 font-semibold">
+                                                                by {log.createdBy.name}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <span className="text-xs text-slate-400">
                                                         {new Date(log.createdAt).toLocaleString()}
                                                     </span>
@@ -323,6 +330,20 @@ export const IncidentDetails = () => {
                                     {new Date(incident.createdAt).toLocaleString()}
                                 </span>
                             </div>
+                            {incident.updatedBy && (
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Updated By</span>
+                                    <span className="font-medium text-slate-900">{incident.updatedBy.name}</span>
+                                </div>
+                            )}
+                            {incident.updatedAt && incident.updatedAt !== incident.createdAt && (
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Updated At</span>
+                                    <span className="font-medium text-slate-900">
+                                        {new Date(incident.updatedAt).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 

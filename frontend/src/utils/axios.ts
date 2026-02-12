@@ -19,9 +19,18 @@ axios.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle errors securely
+// Response interceptor to handle errors and unwrap data
 axios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // If the response follows the standard ApiResponse format, unwrap the data
+        if (response.data && Object.prototype.hasOwnProperty.call(response.data, 'success')) {
+            return {
+                ...response,
+                data: response.data.data
+            };
+        }
+        return response;
+    },
     (error) => {
         // Strip sensitive data from error before logging/throwing
         if (error.config) {

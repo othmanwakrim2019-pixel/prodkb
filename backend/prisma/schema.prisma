@@ -12,26 +12,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  isActive  Boolean  @default(true)
-  
-  roleId    String?
-  role      Role?    @relation(fields: [roleId], references: [id])
-  
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  isActive Boolean @default(true)
+
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdIncidents  Incident[] @relation("CreatedIncidents")
-  resolvedIncidents Incident[] @relation("ResolvedIncidents")
-  createdProcedures Procedure[] @relation("CreatedProcedures")
-  updatedProcedures Procedure[] @relation("UpdatedProcedures")
+  createdIncidents  Incident[]    @relation("CreatedIncidents")
+  resolvedIncidents Incident[]    @relation("ResolvedIncidents")
+  updatedIncidents  Incident[]    @relation("UpdatedIncidents")
+  createdProcedures Procedure[]   @relation("CreatedProcedures")
+  updatedProcedures Procedure[]   @relation("UpdatedProcedures")
+  updatedTeams      Team[]        @relation("UpdatedTeams")
+  updatedSystems    System[]      @relation("UpdatedSystems")
+  updatedJobs       Job[]         @relation("UpdatedJobs")
+  updatedSLAs       SLA[]         @relation("UpdatedSLAs")
+  updatedRoles      Role[]        @relation("UpdatedRoles")
+  createdLogs       IncidentLog[] @relation("CreatedLogs")
   auditLogs         AuditLog[]
   teamMemberships   TeamMember[]
 
-  @@index([email])
   @@index([roleId])
 }
 
@@ -41,6 +47,8 @@ model Role {
   description String?
   users       User[]
   permissions Permission[]
+  updatedById String?
+  updatedBy   User?        @relation("UpdatedRoles", fields: [updatedById], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -63,15 +71,15 @@ model SystemConfig {
 }
 
 model EmailTemplate {
-  id          String   @id @default(uuid())
-  name        String   @unique // e.g., "INCIDENT_CREATED", "INCIDENT_UPDATED"
-  subject     String
-  body        String   @db.Text
-  variables   String?  // Comma-separated list of available variables
-  enabled     Boolean  @default(true)
-  cc          String?  // Comma-separated list of CC emails
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "INCIDENT_CREATED", "INCIDENT_UPDATED"
+  subject   String
+  body      String   @db.Text
+  variables String? // Comma-separated list of available variables
+  enabled   Boolean  @default(true)
+  cc        String? // Comma-separated list of CC emails
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Team {
@@ -81,12 +89,14 @@ model Team {
   emailDistribution String
   isActive          Boolean  @default(true)
   sendEmail         Boolean  @default(true)
+  updatedById       String?
+  updatedBy         User?    @relation("UpdatedTeams", fields: [updatedById], references: [id])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  members           TeamMember[]
-  jobs              Job[]
-  incidents         Incident[]
+  members   TeamMember[]
+  jobs      Job[]
+  incidents Incident[]
 
   @@index([name])
 }
@@ -106,42 +116,48 @@ model TeamMember {
 }
 
 model SLA {
-  id                    String   @id @default(uuid())
-  name                  String   @unique
-  description           String?
-  severity              String
+  id                     String   @id @default(uuid())
+  name                   String   @unique
+  description            String?
+  severity               String
   acknowledgeTimeMinutes Int
-  resolveTimeMinutes    Int
-  isActive              Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  resolveTimeMinutes     Int
+  isActive               Boolean  @default(true)
+  updatedById            String?
+  updatedBy              User?    @relation("UpdatedSLAs", fields: [updatedById], references: [id])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  incidents             Incident[]
+  incidents Incident[]
 
   @@index([severity])
 }
 
 model System {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String      @id @default(uuid())
+  name        String      @unique
   description String?
   jobs        Job[]
   incidents   Incident[]
   procedures  Procedure[]
+  updatedById String?
+  updatedBy   User?       @relation("UpdatedSystems", fields: [updatedById], references: [id])
 
   @@index([name])
 }
 
 model Job {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   name        String
-  code        String   @unique
+  code        String      @unique
   systemId    String
-  system      System   @relation(fields: [systemId], references: [id])
+  system      System      @relation(fields: [systemId], references: [id])
   teamId      String?
-  team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  team        Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
   incidents   Incident[]
   procedures  Procedure[]
+  updatedById String?
+  updatedBy   User?       @relation("UpdatedJobs", fields: [updatedById], references: [id])
 
   @@index([systemId])
   @@index([teamId])
@@ -149,47 +165,50 @@ model Job {
 }
 
 model Incident {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   title           String
-  description     String   
+  description     String
   environment     String
   severity        String
   status          String
-  impact          String?  
+  impact          String?
   detectionSource String?
   startDatetime   DateTime?
   endDatetime     DateTime?
-  
-  systemId        String
-  system          System   @relation(fields: [systemId], references: [id])
-  
-  jobId           String?
-  job             Job?     @relation(fields: [jobId], references: [id])
-  
-  createdById     String
-  createdBy       User     @relation("CreatedIncidents", fields: [createdById], references: [id])
-  
-  resolvedById    String?
-  resolvedBy      User?    @relation("ResolvedIncidents", fields: [resolvedById], references: [id])
-  
-  assignedTeamId  String?
-  assignedTeam    Team?    @relation(fields: [assignedTeamId], references: [id], onDelete: SetNull)
-  
-  slaId           String?
-  sla             SLA?     @relation(fields: [slaId], references: [id], onDelete: SetNull)
-  
-  acknowledgedAt  DateTime?
-  resolvedAt      DateTime?
+
+  systemId String
+  system   System @relation(fields: [systemId], references: [id])
+
+  jobId String?
+  job   Job?    @relation(fields: [jobId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CreatedIncidents", fields: [createdById], references: [id])
+
+  resolvedById String?
+  resolvedBy   User?   @relation("ResolvedIncidents", fields: [resolvedById], references: [id])
+
+  updatedById String?
+  updatedBy   User?   @relation("UpdatedIncidents", fields: [updatedById], references: [id])
+
+  assignedTeamId String?
+  assignedTeam   Team?   @relation(fields: [assignedTeamId], references: [id], onDelete: SetNull)
+
+  slaId String?
+  sla   SLA?    @relation(fields: [slaId], references: [id], onDelete: SetNull)
+
+  acknowledgedAt    DateTime?
+  resolvedAt        DateTime?
   timeToAcknowledge Int?
   timeToResolve     Int?
-  
+
   linkedProcedureId String?
   linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
-  
-  logs            IncidentLog[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  logs IncidentLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([assignedTeamId])
   @@index([slaId])
@@ -198,8 +217,8 @@ model Incident {
   @@index([systemId])
   @@index([createdAt])
   @@index([environment])
+  @@index([status, createdAt]) // Optimized for dashboard
 }
-
 
 model IncidentLog {
   id           String   @id @default(uuid())
@@ -207,48 +226,51 @@ model IncidentLog {
   incident     Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   logType      String
   errorCode    String?
-  errorMessage String?  
-  rawLog       String?  
-  metadata     String?  
-  
-  filePath     String?
-  fileName     String?
-  fileSize     Int?
-  mimeType     String?
-  
-  createdAt    DateTime @default(now())
+  errorMessage String?
+  rawLog       String?
+  metadata     String?
+
+  filePath String?
+  fileName String?
+  fileSize Int?
+  mimeType String?
+
+  createdById String?
+  createdBy   User?   @relation("CreatedLogs", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
 
   @@index([incidentId])
   @@index([logType])
 }
 
 model Procedure {
-  id              String   @id @default(uuid())
+  id              String  @id @default(uuid())
   title           String
-  description     String   
-  rootCause       String?  
-  resolutionSteps String   
-  workaround      String?  
-  commands        String?  
+  description     String
+  rootCause       String?
+  resolutionSteps String
+  workaround      String?
+  commands        String?
   errorCode       String?
   tags            String?
-  
-  systemId        String
-  system          System   @relation(fields: [systemId], references: [id])
-  
-  jobId           String?
-  job             Job?     @relation(fields: [jobId], references: [id])
-  
-  createdById     String
-  createdBy       User     @relation("CreatedProcedures", fields: [createdById], references: [id])
-  
-  updatedById     String?
-  updatedBy       User?    @relation("UpdatedProcedures", fields: [updatedById], references: [id])
-  
-  incidents       Incident[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  systemId String
+  system   System @relation(fields: [systemId], references: [id])
+
+  jobId String?
+  job   Job?    @relation(fields: [jobId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CreatedProcedures", fields: [createdById], references: [id])
+
+  updatedById String?
+  updatedBy   User?   @relation("UpdatedProcedures", fields: [updatedById], references: [id])
+
+  incidents Incident[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([systemId])
   @@index([errorCode])
@@ -262,7 +284,7 @@ model AuditLog {
   actionType String
   entityType String
   entityId   String
-  details    String?  
+  details    String?
   ipAddress  String?
   userAgent  String?
   result     String   @default("SUCCESS")
