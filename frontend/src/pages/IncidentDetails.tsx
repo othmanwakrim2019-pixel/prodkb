@@ -5,6 +5,38 @@ import { FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 
 import { useAuth } from '../context/AuthContext';
 import { Incident, Log } from '../types';
 
+// Helper function to group logs by date
+const groupLogsByDate = (logs: Log[]) => {
+    const grouped: Record<string, Log[]> = {};
+
+    logs.forEach(log => {
+        const date = new Date(log.createdAt).toLocaleDateString('en-US');
+        if (!grouped[date]) {
+            grouped[date] = [];
+        }
+        grouped[date].push(log);
+    });
+
+    // Sort dates in descending order (newest first)
+    const sortedEntries = Object.entries(grouped).sort(([dateA], [dateB]) => {
+        const a = new Date(dateA);
+        const b = new Date(dateB);
+        return b.getTime() - a.getTime();
+    });
+
+    return Object.fromEntries(sortedEntries);
+};
+
+// Helper function to format date header
+const formatFullDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    }).format(date);
+};
+
 export const IncidentDetails = () => {
     const { id } = useParams();
     const { canEdit, hasPermission } = useAuth();
@@ -243,40 +275,54 @@ export const IncidentDetails = () => {
                                 </div>
 
                                 {incident.logs && incident.logs.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {incident.logs.map((log: Log) => (
-                                            <div key={log.id} className="bg-slate-50 p-4 rounded-md border border-slate-200">
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
-                                                        {log.createdBy && (
-                                                            <span className="text-xs text-slate-500 font-semibold">
-                                                                by {log.createdBy.name}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-xs text-slate-400">
-                                                        {new Date(log.createdAt).toLocaleString()}
-                                                    </span>
+                                    <div className="space-y-6">
+                                        {Object.entries(groupLogsByDate(incident.logs)).map(([date, logsForDate]) => (
+                                            <div key={date}>
+                                                {/* Date Header */}
+                                                <div className="mb-3">
+                                                    <h4 className="text-sm font-semibold text-slate-700 px-1">
+                                                        {formatFullDate(date)}
+                                                    </h4>
                                                 </div>
-                                                {log.fileName && (
-                                                    <div className="flex items-center text-sm text-accent mb-2">
-                                                        <Paperclip className="h-4 w-4 mr-2" />
-                                                        <button
-                                                            onClick={() => handleDownloadFile(log.fileName!)}
-                                                            className="hover:underline text-left"
-                                                        >
-                                                            {log.fileName} ({Math.round((log.fileSize || 0) / 1024)}KB)
-                                                        </button>
-                                                        <Download className="h-3 w-3 ml-2" />
-                                                    </div>
-                                                )}
-                                                {log.errorMessage && <p className="text-red-600 font-medium text-sm mb-2">{log.errorMessage}</p>}
-                                                {log.rawLog && (
-                                                    <pre className="text-xs font-mono text-slate-600 whitespace-pre-wrap overflow-x-auto">
-                                                        {log.rawLog}
-                                                    </pre>
-                                                )}
+
+                                                {/* Logs for this date */}
+                                                <div className="space-y-3">
+                                                    {logsForDate.map((log: Log) => (
+                                                        <div key={log.id} className="bg-slate-50 p-4 rounded-md border border-slate-200">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
+                                                                    {log.createdBy && (
+                                                                        <span className="text-xs text-slate-500 font-semibold">
+                                                                            by {log.createdBy.name}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs text-slate-400">
+                                                                    {new Date(log.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                            </div>
+                                                            {log.fileName && (
+                                                                <div className="flex items-center text-sm text-accent mb-2">
+                                                                    <Paperclip className="h-4 w-4 mr-2" />
+                                                                    <button
+                                                                        onClick={() => handleDownloadFile(log.fileName!)}
+                                                                        className="hover:underline text-left"
+                                                                    >
+                                                                        {log.fileName} ({Math.round((log.fileSize || 0) / 1024)}KB)
+                                                                    </button>
+                                                                    <Download className="h-3 w-3 ml-2" />
+                                                                </div>
+                                                            )}
+                                                            {log.errorMessage && <p className="text-red-600 font-medium text-sm mb-2">{log.errorMessage}</p>}
+                                                            {log.rawLog && (
+                                                                <pre className="text-xs font-mono text-slate-600 whitespace-pre-wrap overflow-x-auto">
+                                                                    {log.rawLog}
+                                                                </pre>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
