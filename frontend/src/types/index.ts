@@ -93,7 +93,8 @@ export interface Log {
     fileName?: string;
     fileSize?: number;
     createdAt: string;
-    user?: User;
+    user?: User; // Legacy or specific log types?
+    createdBy?: { id: string; name: string };
 }
 
 export interface Incident {
@@ -109,10 +110,12 @@ export interface Incident {
     assignedTeamId?: string;
     slaId?: string;
     createdBy?: User;
+    updatedBy?: { id: string; name: string };
     resolvedBy?: User;
     createdAt: string;
     startDatetime: string;
     endDatetime?: string;
+    updatedAt: string;
     logs?: Log[];
     linkedProcedure?: Procedure;
 }

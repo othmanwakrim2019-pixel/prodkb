@@ -1,8 +1,9 @@
+
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
+import { JwtService } from '../utils/jwt.utils';
+import { AppError, UnauthorizedError, ForbiddenError } from '../errors/app.error';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -17,32 +18,24 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-        res.status(401).json({ error: 'Authentication required' });
+        next(new UnauthorizedError('Authentication required'));
         return;
     }
 
     try {
-        const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string };
+        const decoded = JwtService.verify(token) as { userId: string };
 
-        // Fetch fresh user data from DB to ensure permissions are up-to-date
+        // Fetch fresh user data from DB
         const user = await prisma.user.findUnique({
             where: { id: decoded.userId },
             include: {
-                role: {
-                    include: {
-                        permissions: true
-                    }
-                },
-                teamMemberships: {
-                    select: {
-                        teamId: true
-                    }
-                }
+                role: { include: { permissions: true } },
+                teamMemberships: { select: { teamId: true } }
             }
         });
 
         if (!user || user.isActive === false) {
-            res.status(401).json({ error: 'User not found or inactive' });
+            next(new UnauthorizedError('User not found or inactive'));
             return;
         }
 
@@ -59,7 +52,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
         next();
     } catch (error) {
-        res.status(401).json({ error: 'Invalid token' });
+        next(error);
     }
 };
 
@@ -71,7 +64,7 @@ export const checkPermission = (requiredPermission: string) => {
                 requiredPermission,
                 path: req.path
             });
-            res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
+            next(new ForbiddenError(`Insufficient permissions: ${requiredPermission}`));
             return;
         }
         next();
@@ -87,7 +80,7 @@ export const authorize = (roles: string[]) => {
                 requiredRoles: roles,
                 path: req.path
             });
-            res.status(403).json({ error: 'Forbidden' });
+            next(new ForbiddenError());
             return;
         }
         next();

@@ -25,7 +25,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
+      context: ./backend0
       dockerfile: Dockerfile
     container_name: prodkb-backend
     ports:

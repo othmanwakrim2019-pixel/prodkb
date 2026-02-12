@@ -1,43 +1,24 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
-import { getSystems, createSystem, updateSystem, deleteSystem, getJobs, createJob, updateJob, deleteJob } from '../controllers/systemController';
-import { getAllUsers, deleteUser, updateUser, changePassword } from '../controllers/userController';
-import {
-    getIncidents,
-    getIncidentById,
-    createIncident,
-    updateIncident,
-    updateIncidentStatus,
-    addIncidentLog,
-    linkProcedure,
-    uploadIncidentFile,
-    downloadFile,
-    upload,
-    getIncidentStats,
-    searchSimilarIncidents,
-    deleteIncident,
-} from '../controllers/incidentController';
-import { getProcedures, getProcedureById, createProcedure, updateProcedure, deleteProcedure } from '../controllers/procedureController';
-import { globalSearch } from '../controllers/searchController';
-import * as roleController from '../controllers/roleController';
-import { checkPermission } from '../middleware/auth';
-import teamRoutes from './teamRoutes';
-import slaRoutes from './slaRoutes';
-import { uploadLimiter } from '../middleware/rateLimiter';
+
+import { systemRoutes } from '../modules/systems/system.routes';
+import { authRoutes } from '../modules/auth/auth.routes';
+import { userRoutes } from '../modules/users/user.routes';
+import incidentRoutes from '../modules/incidents/incident.routes';
+import { procedureRoutes } from '../modules/procedures/procedure.routes';
+
+import { roleRoutes } from '../modules/roles/role.routes';
+
+import { teamRoutes } from '../modules/teams/team.routes';
+import { slaRoutes } from '../modules/slas/sla.routes';
+
 
 const router = Router();
 
-// Systems
-router.get('/systems', authenticate, getSystems);
-router.post('/systems', authenticate, checkPermission('SYSTEM_MANAGE'), createSystem);
-router.put('/systems/:id', authenticate, checkPermission('SYSTEM_MANAGE'), updateSystem);
-router.delete('/systems/:id', authenticate, checkPermission('SYSTEM_MANAGE'), deleteSystem);
+router.use('/auth', authRoutes);
 
-// Jobs
-router.get('/jobs', authenticate, getJobs);
-router.post('/jobs', authenticate, checkPermission('SYSTEM_MANAGE'), createJob);
-router.put('/jobs/:id', authenticate, checkPermission('SYSTEM_MANAGE'), updateJob);
-router.delete('/jobs/:id', authenticate, checkPermission('SYSTEM_MANAGE'), deleteJob);
+// Systems & Jobs
+router.use('/', systemRoutes);
+
 
 // Teams
 router.use('/teams', teamRoutes);
@@ -46,63 +27,40 @@ router.use('/teams', teamRoutes);
 router.use('/slas', slaRoutes);
 
 // Users
-router.get('/users', authenticate, getAllUsers);
-router.put('/users/me/password', authenticate, changePassword); // Must be before :id routes
-router.delete('/users/:id', authenticate, checkPermission('USER_MANAGE'), deleteUser);
-router.put('/users/:id', authenticate, checkPermission('USER_MANAGE'), updateUser);
+router.use('/users', userRoutes); // Was /users
 
-// Incidents
-router.get('/incidents', authenticate, checkPermission('INCIDENT_VIEW'), getIncidents);
-router.get('/incidents/stats', authenticate, checkPermission('DASHBOARD_VIEW'), getIncidentStats);
-router.get('/incidents/search', authenticate, checkPermission('SEARCH_VIEW'), searchSimilarIncidents);
-router.post('/incidents', authenticate, checkPermission('INCIDENT_CREATE'), createIncident);
-router.get('/incidents/:id', authenticate, checkPermission('INCIDENT_VIEW'), getIncidentById);
-router.put('/incidents/:id', authenticate, checkPermission('INCIDENT_EDIT'), updateIncident);
-// Status update should also require edit permission
-router.put('/incidents/:id/status', authenticate, checkPermission('INCIDENT_EDIT'), updateIncidentStatus);
-router.post('/incidents/:id/logs', authenticate, checkPermission('INCIDENT_EDIT'), addIncidentLog);
-router.post('/incidents/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), uploadIncidentFile);
-router.get('/incidents/:id/files/:filename', authenticate, downloadFile);
-router.post('/incidents/:id/link-procedure/:procedureId', authenticate, checkPermission('INCIDENT_EDIT'), linkProcedure);
-router.delete('/incidents/:id', authenticate, checkPermission('INCIDENT_DELETE'), deleteIncident);
+// Incidents (Modularized)
+router.use('/incidents', incidentRoutes);
 
 // Procedures
-router.get('/procedures', authenticate, checkPermission('PROCEDURE_VIEW'), getProcedures);
-router.post('/procedures', authenticate, checkPermission('PROCEDURE_CREATE'), createProcedure);
-router.get('/procedures/:id', authenticate, checkPermission('PROCEDURE_VIEW'), getProcedureById);
-router.put('/procedures/:id', authenticate, checkPermission('PROCEDURE_EDIT'), updateProcedure);
-router.delete('/procedures/:id', authenticate, checkPermission('PROCEDURE_DELETE'), deleteProcedure);
-router.get('/search', authenticate, checkPermission('SEARCH_VIEW'), globalSearch);
+router.use('/procedures', procedureRoutes);
 
-// Role Management
-router.get('/roles', authenticate, checkPermission('ROLE_MANAGE'), roleController.getAllRoles);
-router.post('/roles', authenticate, checkPermission('ROLE_MANAGE'), roleController.createRole);
-router.put('/roles/:id', authenticate, checkPermission('ROLE_MANAGE'), roleController.updateRole);
-router.delete('/roles/:id', authenticate, checkPermission('ROLE_MANAGE'), roleController.deleteRole);
 
-// Permissions
-router.get('/permissions', authenticate, roleController.getAllPermissions);
+// Role Management & Permissions
+router.use('/', roleRoutes);
 
-import * as auditController from '../controllers/auditController';
 
-import * as configController from '../controllers/systemConfigController';
+
 
 // ... existing imports ...
 
 // System Config (SMTP & Generic)
-router.get('/config/smtp', authenticate, checkPermission('SYSTEM_MANAGE'), configController.getSmtpConfig);
-router.put('/config/smtp', authenticate, checkPermission('SYSTEM_MANAGE'), configController.updateSmtpConfig);
-router.post('/config/smtp/test', authenticate, checkPermission('SYSTEM_MANAGE'), configController.testSmtpConfig);
-router.put('/config/:key', authenticate, checkPermission('SYSTEM_MANAGE'), configController.updateConfig);
-router.get('/config/params', authenticate, checkPermission('SYSTEM_MANAGE'), configController.getConfigs);
-
+import { configRoutes } from '../modules/config/config.routes';
+router.use('/config', configRoutes);
 
 // Audit Logs
-router.get('/audit-logs', authenticate, checkPermission('AUDIT_VIEW'), auditController.getAuditLogs);
+import { auditRoutes } from '../modules/audit/audit.routes';
+router.use('/audit-logs', auditRoutes);
+
+// Search (Global)
+import { searchRoutes } from '../modules/search/search.routes';
+router.use('/search', searchRoutes);
+
 
 // Email Templates
-import emailTemplateRoutes from './emailTemplateRoutes';
+import { emailTemplateRoutes } from '../modules/email-templates/email-template.routes';
 router.use('/email-templates', emailTemplateRoutes);
 
 export default router;
+
 
