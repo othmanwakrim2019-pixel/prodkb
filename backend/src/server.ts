@@ -18,9 +18,12 @@ const app = express();
 // CORS configuration - MUST be first
 const allowedOrigins = [
     env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:8080', // Docker Nginx
     'http://localhost:3000', // Swagger UI
     'http://127.0.0.1:3000'
 ];
+
+logger.info(`CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
 
 app.use(cors({
     origin: (origin, callback) => {

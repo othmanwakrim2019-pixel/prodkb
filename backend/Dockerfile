@@ -45,7 +45,7 @@ COPY --from=builder /app/src/openapi.yaml ./dist/src/
 COPY start.sh ./
 
 # Install OpenSSL (required for Prisma on Alpine)
-RUN apk -U upgrade && apk add --no-cache openssl && chmod +x start.sh
+RUN apk add --no-cache openssl && chmod +x start.sh
 
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nodejs:nodejs /app

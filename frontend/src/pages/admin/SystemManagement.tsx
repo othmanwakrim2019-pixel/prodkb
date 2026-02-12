@@ -48,10 +48,7 @@ export const SystemManagement = () => {
             setShowSystemForm(false);
             await fetchSystems();
             alert('System created successfully!');
-            await fetchSystems();
-            alert('System created successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -59,7 +56,7 @@ export const SystemManagement = () => {
     const handleCreateJob = async (e: React.FormEvent, systemId: string) => {
         e.preventDefault();
         try {
-            await axios.post('/api/jobs', {
+            await axios.post('/api/systems/jobs', {
                 ...newJob,
                 systemId,
                 teamId: newJob.teamId || null
@@ -68,10 +65,7 @@ export const SystemManagement = () => {
             setShowJobForm(null);
             await fetchSystems();
             alert('Job created successfully!');
-            await fetchSystems();
-            alert('Job created successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -86,10 +80,7 @@ export const SystemManagement = () => {
             setEditingSystem(null);
             await fetchSystems();
             alert('System updated successfully!');
-            await fetchSystems();
-            alert('System updated successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -100,10 +91,7 @@ export const SystemManagement = () => {
             await axios.delete(`/api/systems/${systemId}`);
             await fetchSystems();
             alert('System deleted successfully!');
-            await fetchSystems();
-            alert('System deleted successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -111,7 +99,7 @@ export const SystemManagement = () => {
     const handleUpdateJob = async () => {
         if (!editingJob) return;
         try {
-            await axios.put(`/api/jobs/${editingJob.id}`, {
+            await axios.put(`/api/systems/jobs/${editingJob.id}`, {
                 name: editingJob.name,
                 code: editingJob.code,
                 systemId: editingJob.systemId,
@@ -120,10 +108,7 @@ export const SystemManagement = () => {
             setEditingJob(null);
             await fetchSystems();
             alert('Job updated successfully!');
-            await fetchSystems();
-            alert('Job updated successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -131,13 +116,10 @@ export const SystemManagement = () => {
     const handleDeleteJob = async (jobId: string, jobName: string) => {
         if (!confirm(`Delete job "${jobName}"? This will fail if there are related incidents or procedures.`)) return;
         try {
-            await axios.delete(`/api/jobs/${jobId}`);
+            await axios.delete(`/api/systems/jobs/${jobId}`);
             await fetchSystems();
             alert('Job deleted successfully!');
-            await fetchSystems();
-            alert('Job deleted successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };

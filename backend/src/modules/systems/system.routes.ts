@@ -8,10 +8,10 @@ const router = Router();
 router.use(authenticate);
 
 // Systems
-router.get('/systems', SystemController.getSystems);
-router.post('/systems', checkPermission('SYSTEM_MANAGE'), SystemController.createSystem);
-router.put('/systems/:id', checkPermission('SYSTEM_MANAGE'), SystemController.updateSystem);
-router.delete('/systems/:id', checkPermission('SYSTEM_MANAGE'), SystemController.deleteSystem);
+router.get('/', SystemController.getSystems);
+router.post('/', checkPermission('SYSTEM_MANAGE'), SystemController.createSystem);
+router.put('/:id', checkPermission('SYSTEM_MANAGE'), SystemController.updateSystem);
+router.delete('/:id', checkPermission('SYSTEM_MANAGE'), SystemController.deleteSystem);
 
 // Jobs
 router.get('/jobs', SystemController.getJobs);

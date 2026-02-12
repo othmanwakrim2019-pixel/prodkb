@@ -11,6 +11,6 @@ router.use(authenticate); // All user routes require auth
 router.get('/', checkPermission('USER_VIEW'), UserController.getAllUsers);
 router.put('/:id', checkPermission('USER_MANAGE'), UserController.updateUser);
 router.delete('/:id', checkPermission('USER_MANAGE'), UserController.deleteUser);
-router.post('/change-password', UserController.changePassword);
+router.put('/me/password', UserController.changePassword);
 
 export const userRoutes = router;
