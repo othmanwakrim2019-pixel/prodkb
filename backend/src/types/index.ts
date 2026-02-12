@@ -153,6 +153,8 @@ export interface IIncidentLog {
     fileName: string | null;
     fileSize: number | null;
     mimeType: string | null;
+    createdById: string;
+    createdBy?: IUserPublic;
     createdAt: Date;
 }
 

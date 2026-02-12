@@ -32,7 +32,11 @@ export class IncidentService {
         sla: true,
         linkedProcedure: { select: { id: true, title: true } },
 
-        logs: true,
+        logs: {
+            include: {
+                createdBy: { select: { id: true, name: true, email: true } }
+            }
+        },
         updatedBy: { select: { id: true, name: true } },
     };
 
