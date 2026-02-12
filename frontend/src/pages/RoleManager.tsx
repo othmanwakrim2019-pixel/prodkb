@@ -34,7 +34,7 @@ export const RoleManager = () => {
         try {
             const [rolesRes, permsRes] = await Promise.all([
                 api.get('/api/roles'),
-                api.get('/api/permissions')
+                api.get('/api/roles/permissions')
             ]);
             setRoles(rolesRes.data);
             setAllPermissions(permsRes.data);

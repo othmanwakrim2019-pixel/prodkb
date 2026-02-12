@@ -11,9 +11,9 @@ router.use(authenticate);
 router.get('/permissions', RoleController.getAllPermissions);
 
 // Roles
-router.get('/roles', checkPermission('ROLE_MANAGE'), RoleController.getAllRoles);
-router.post('/roles', checkPermission('ROLE_MANAGE'), RoleController.createRole);
-router.put('/roles/:id', checkPermission('ROLE_MANAGE'), RoleController.updateRole);
-router.delete('/roles/:id', checkPermission('ROLE_MANAGE'), RoleController.deleteRole);
+router.get('/', checkPermission('ROLE_MANAGE'), RoleController.getAllRoles);
+router.post('/', checkPermission('ROLE_MANAGE'), RoleController.createRole);
+router.put('/:id', checkPermission('ROLE_MANAGE'), RoleController.updateRole);
+router.delete('/:id', checkPermission('ROLE_MANAGE'), RoleController.deleteRole);
 
 export const roleRoutes = router;
