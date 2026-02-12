@@ -1,15 +1,17 @@
 import request from 'supertest';
 import { app } from '../../src/server';
-import { prisma } from '../../src/utils/prisma';
+import { prisma } from '../../src/common/utils/prisma';
 import bcrypt from 'bcryptjs';
 
-import { userService } from '../../src/services/UserService';
+import { userService } from '../../src/modules/users/user.service';
+import { authService } from '../../src/modules/auth/auth.service';
 
 describe('Auth Integration', () => {
     const testUser = {
         name: 'Integration Test User',
         email: 'integration-test@example.com',
-        password: 'password123'
+        password: 'password123',
+        role: 'ADMIN'
     };
 
     // ...
@@ -21,7 +23,7 @@ describe('Auth Integration', () => {
         });
 
         // Seed user for login tests
-        await userService.register(testUser);
+        await authService.register(testUser);
     });
 
     afterAll(async () => {
@@ -39,9 +41,9 @@ describe('Auth Integration', () => {
             .send(testUser);
 
         expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty('user');
-        expect(res.body.user.email).toBe(testUser.email);
-        expect(res.body).toHaveProperty('token');
+        expect(res.body.data).toHaveProperty('user');
+        expect(res.body.data.user.email).toBe(testUser.email);
+        expect(res.body.data).toHaveProperty('token');
     });
     */
 
@@ -54,8 +56,8 @@ describe('Auth Integration', () => {
             });
 
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('token');
-        expect(res.body.user.email).toBe(testUser.email);
+        expect(res.body.data).toHaveProperty('token');
+        expect(res.body.data.user.email).toBe(testUser.email);
     });
 
     it('should fail login with wrong password', async () => {

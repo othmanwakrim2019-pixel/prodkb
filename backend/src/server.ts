@@ -1,16 +1,16 @@
 import express from 'express';
-import { logger } from './utils/logger';
+import { logger } from './common/utils/logger';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
-import apiRoutes from './routes/apiRoutes';
+import apiRoutes from './modules/api.routes';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';
 import { apiLimiter, authLimiter } from './common/middleware/rate-limiter.middleware';
 import { errorHandler } from './common/middleware/error.middleware';
-import { notFoundHandler } from './middleware/errorHandler'; // Need to migrate this too or keep for now if specific
+import { notFoundHandler } from './common/middleware/not-found.middleware';
 import { prisma } from './common/utils/prisma';
 
 const app = express();

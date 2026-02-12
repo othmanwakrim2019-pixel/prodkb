@@ -3,7 +3,7 @@ import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import { incidentService } from './incident.service';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
-import { fileUploadService } from '../../services/fileUploadService'; // Keep old service for now
+import { fileUploadService } from '../../common/services/fileUploadService';
 import { createIncidentSchema, updateIncidentSchema } from './incident.schema';
 import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../common/errors/app.error';
 import { createResponse } from '../../common/types/api.response';

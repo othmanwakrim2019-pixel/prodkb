@@ -1,6 +1,6 @@
-import { EmailService } from '../src/services/emailService';
+import { EmailService } from '../src/common/services/emailService';
 import nodemailer from 'nodemailer';
-import { prisma } from '../src/utils/prisma';
+import { prisma } from '../src/common/utils/prisma';
 
 // Mock nodemailer
 jest.mock('nodemailer');
@@ -10,7 +10,7 @@ const sendMailMock = jest.fn();
 });
 
 // Mock prisma
-jest.mock('../src/utils/prisma', () => ({
+jest.mock('../src/common/utils/prisma', () => ({
     prisma: {
         systemConfig: {
             findUnique: jest.fn(),

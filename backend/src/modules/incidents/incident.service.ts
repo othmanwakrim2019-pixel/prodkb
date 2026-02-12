@@ -6,7 +6,7 @@
 
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
-import { emailService } from '../../services/emailService'; // Keep until EmailService is moved
+import { emailService } from '../../common/services/emailService';
 import { NotFoundError, ValidationError } from '../../common/errors/app.error';
 import { IncidentStatus } from '../../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams, IIncidentLog } from '../../types';

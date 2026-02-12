@@ -1,23 +1,55 @@
 import request from 'supertest';
 import { app } from '../../src/server';
-import { userService } from '../../src/services/UserService';
-import { prisma } from '../../src/utils/prisma';
+import { userService } from '../../src/modules/users/user.service';
+import { authService } from '../../src/modules/auth/auth.service';
+import { prisma } from '../../src/common/utils/prisma';
 
 describe('Centralized Error Handling Integration', () => {
     let token: string;
     const testUser = {
         name: 'Error Test User',
         email: 'error-test@example.com',
-        password: 'password123'
+        password: 'password123',
+        role: 'ADMIN'
     };
 
     beforeAll(async () => {
         // Cleanup
         await prisma.user.deleteMany({ where: { email: testUser.email } });
+
+        // Ensure role and permission exist for integration test
+        let permission = await prisma.permission.findUnique({ where: { code: 'INCIDENT_VIEW' } });
+        if (!permission) {
+            permission = await prisma.permission.create({
+                data: { code: 'INCIDENT_VIEW', description: 'Permission to view incidents' }
+            });
+        }
+
+        let role = await prisma.role.findUnique({
+            where: { name: 'ADMIN' },
+            include: { permissions: { where: { code: 'INCIDENT_VIEW' } } }
+        });
+
+        if (!role) {
+            role = await prisma.role.create({
+                data: {
+                    name: 'ADMIN',
+                    description: 'Admin role',
+                    permissions: { connect: { id: permission.id } }
+                },
+                include: { permissions: true }
+            });
+        } else if (role.permissions.length === 0) {
+            await prisma.role.update({
+                where: { id: role.id },
+                data: { permissions: { connect: { id: permission.id } } }
+            });
+        }
+
         // Create user
-        await userService.register(testUser);
+        await authService.register(testUser);
         // Login
-        const loginRes = await userService.login(testUser.email, testUser.password);
+        const loginRes = await authService.login(testUser.email, testUser.password);
         token = loginRes.token;
     });
 
@@ -45,6 +77,6 @@ describe('Centralized Error Handling Integration', () => {
             .set('Authorization', `Bearer ${token}`);
 
         expect(res.status).toBe(404);
-        expect(res.body.code).toBe('NOT_FOUND');
+        expect(res.body.error.code).toBe('NOT_FOUND');
     });
 });
