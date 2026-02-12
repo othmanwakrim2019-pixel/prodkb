@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
-import apiRoutes from './routes/apiRoutes';
+import apiRoutes from './modules/api.routes';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';

@@ -23,7 +23,7 @@ describe('API Routes', () => {
 
 describe('Rate Limiter', () => {
     it('should export rate limiters', () => {
-        const { apiLimiter, authLimiter, uploadLimiter } = require('../src/middleware/rateLimiter');
+        const { apiLimiter, authLimiter, uploadLimiter } = require('../src/common/middleware/rate-limiter.middleware');
         expect(apiLimiter).toBeDefined();
         expect(authLimiter).toBeDefined();
         expect(uploadLimiter).toBeDefined();
@@ -32,7 +32,7 @@ describe('Rate Limiter', () => {
 
 describe('Auth Middleware', () => {
     it('should export authenticate function', () => {
-        const { authenticate, checkPermission, authorize } = require('../src/middleware/auth');
+        const { authenticate, checkPermission, authorize } = require('../src/common/middleware/auth.middleware');
         expect(authenticate).toBeDefined();
         expect(typeof authenticate).toBe('function');
         expect(checkPermission).toBeDefined();
@@ -41,8 +41,8 @@ describe('Auth Middleware', () => {
         expect(typeof authorize).toBe('function');
     });
 
-    it('should return 401 when no token provided', async () => {
-        const { authenticate } = require('../src/middleware/auth');
+    it('should call next with UnauthorizedError when no token provided', async () => {
+        const { authenticate } = require('../src/common/middleware/auth.middleware');
 
         const req = { header: jest.fn().mockReturnValue(undefined) } as any;
         const res = {
@@ -53,9 +53,10 @@ describe('Auth Middleware', () => {
 
         await authenticate(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
-        expect(next).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+        expect(next.mock.calls[0][0].message).toBe('Authentication required');
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.json).not.toHaveBeenCalled();
     });
 });
 

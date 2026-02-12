@@ -27,4 +27,4 @@ router.post('/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploa
 router.get('/:id/files/:filename', authenticate, IncidentController.downloadFile);
 router.post('/:id/link-procedure/:procedureId', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.linkProcedure);
 
-export default router;
+export const incidentRoutes = router;
