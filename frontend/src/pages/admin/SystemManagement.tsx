@@ -48,7 +48,7 @@ export const SystemManagement = () => {
             setShowSystemForm(false);
             await fetchSystems();
             alert('System created successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -65,7 +65,7 @@ export const SystemManagement = () => {
             setShowJobForm(null);
             await fetchSystems();
             alert('Job created successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -80,7 +80,7 @@ export const SystemManagement = () => {
             setEditingSystem(null);
             await fetchSystems();
             alert('System updated successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -91,7 +91,7 @@ export const SystemManagement = () => {
             await axios.delete(`/api/systems/${systemId}`);
             await fetchSystems();
             alert('System deleted successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -108,7 +108,7 @@ export const SystemManagement = () => {
             setEditingJob(null);
             await fetchSystems();
             alert('Job updated successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
@@ -119,7 +119,7 @@ export const SystemManagement = () => {
             await axios.delete(`/api/systems/jobs/${jobId}`);
             await fetchSystems();
             alert('Job deleted successfully!');
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };
