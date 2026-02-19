@@ -53,7 +53,7 @@ export const RoleManager = () => {
         try {
             const [rolesRes, permsRes] = await Promise.all([
                 api.get('/api/v1/roles'),
-                api.get('/api/v1/permissions')
+                api.get('/api/v1/roles/permissions')
             ]);
             setRoles(Array.isArray(rolesRes.data) ? rolesRes.data : rolesRes.data?.data || []);
             setAllPermissions(Array.isArray(permsRes.data) ? permsRes.data : permsRes.data?.data || []);
@@ -221,7 +221,7 @@ export const RoleManager = () => {
                                                     {perms.filter(p => selectedPerms.has(p.id)).length}/{perms.length}
                                                 </span>
                                                 <div className={`w-4 h-4 rounded border flex items-center justify-center ${allSelected ? 'bg-blue-600 border-blue-600' :
-                                                        someSelected ? 'bg-blue-200 border-blue-400' : 'border-slate-300'
+                                                    someSelected ? 'bg-blue-200 border-blue-400' : 'border-slate-300'
                                                     }`}>
                                                     {allSelected && <Check className="w-3 h-3 text-white" />}
                                                     {someSelected && !allSelected && <div className="w-2 h-0.5 bg-blue-600 rounded" />}
