@@ -35,12 +35,12 @@ interface CustomTooltipProps {
 }
 
 interface PieLabelProps {
-    cx: number;
-    cy: number;
-    midAngle: number;
-    innerRadius: number;
-    outerRadius: number;
-    percent: number;
+    cx?: number;
+    cy?: number;
+    midAngle?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    percent?: number;
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -152,7 +152,7 @@ const STATUS_COLORS: Record<string, string> = {
     'Closed': '#64748b',
 };
 
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelProps) => {
+const renderLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, percent = 0 }: PieLabelProps) => {
     if (percent < 0.08) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
