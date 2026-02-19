@@ -9,21 +9,17 @@ async function main() {
 
     // Clean existing data
     console.log('Cleaning existing data...');
-    // Delete in order of dependencies (child first)
-    await prisma.incidentLog.deleteMany();
-    await prisma.auditLog.deleteMany();
-    // await prisma.file.deleteMany(); // Model does not exist
-    await prisma.incident.deleteMany();
-    await prisma.procedure.deleteMany();
-    await prisma.teamMember.deleteMany();
-    await prisma.job.deleteMany();
-    await prisma.system.deleteMany();
-    await prisma.sLA.deleteMany();
-    await prisma.team.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.role.deleteMany();
-    await prisma.emailTemplate.deleteMany();
-    await prisma.permission.deleteMany();
+    // Use raw SQL with TRUNCATE CASCADE to handle all FK constraints automatically
+    // This handles tables like PlanningJob that may exist in DB but not in Prisma schema
+    await prisma.$executeRawUnsafe(`
+        DO $$ DECLARE
+            r RECORD;
+        BEGIN
+            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != '_prisma_migrations') LOOP
+                EXECUTE 'TRUNCATE TABLE "public"."' || r.tablename || '" CASCADE';
+            END LOOP;
+        END $$;
+    `);
 
     // Create Permissions & Roles
     console.log('Creating permissions and roles...');
