@@ -193,7 +193,7 @@ paths:
         '200':
           description: User profile returned
   
-  /api/incidents:
+  /api/v1/incidents:
     get:
       summary: List incidents
       tags: [Incidents]
@@ -234,7 +234,7 @@ paths:
         '201':
           description: Incident created
 
-  /api/incidents/{id}:
+  /api/v1/incidents/{id}:
     get:
       summary: Get incident details
       tags: [Incidents]
@@ -272,7 +272,7 @@ paths:
         '204':
           description: Incident deleted
 
-  /api/incidents/{id}/status:
+  /api/v1/incidents/{id}/status:
     put:
       summary: Update incident status
       tags: [Incidents]
@@ -294,7 +294,7 @@ paths:
         '200':
           description: Status updated
 
-  /api/users:
+  /api/v1/users:
     get:
       summary: List all users
       tags: [Users]
@@ -302,7 +302,7 @@ paths:
         '200':
           description: List of users
 
-  /api/users/{id}:
+  /api/v1/users/{id}:
     put:
       summary: Update user
       tags: [Users]
@@ -333,7 +333,7 @@ paths:
         '204':
           description: User deleted
 
-  /api/incidents/stats:
+  /api/v1/incidents/stats:
     get:
       summary: Get incident statistics
       tags: [Incidents]
@@ -341,7 +341,7 @@ paths:
         '200':
           description: Statistics returned
 
-  /api/incidents/search:
+  /api/v1/incidents/search:
     get:
       summary: Search similar incidents
       tags: [Incidents]
@@ -354,7 +354,7 @@ paths:
         '200':
           description: Search results
 
-  /api/incidents/{id}/logs:
+  /api/v1/incidents/{id}/logs:
     post:
       summary: Add incident log
       tags: [Incidents]
@@ -378,7 +378,7 @@ paths:
         '201':
           description: Log added
 
-  /api/incidents/{id}/upload:
+  /api/v1/incidents/{id}/upload:
     post:
       summary: Upload file to incident
       tags: [Incidents]
@@ -401,7 +401,7 @@ paths:
         '201':
           description: File uploaded
 
-  /api/incidents/{id}/files/{filename}:
+  /api/v1/incidents/{id}/files/{filename}:
     get:
       summary: Download incident file
       tags: [Incidents]
@@ -420,7 +420,7 @@ paths:
         '200':
           description: File stream
 
-  /api/incidents/{id}/link-procedure/{procedureId}:
+  /api/v1/incidents/{id}/link-procedure/{procedureId}:
     post:
       summary: Link procedure to incident
       tags: [Incidents]
@@ -439,7 +439,7 @@ paths:
         '200':
           description: Procedure linked
 
-  /api/systems:
+  /api/v1/systems:
     get:
       summary: List all systems
       tags: [Systems]
@@ -453,7 +453,7 @@ paths:
         '201':
           description: System created
 
-  /api/systems/{id}:
+  /api/v1/systems/{id}:
     put:
       summary: Update system
       tags: [Systems]
@@ -484,7 +484,7 @@ paths:
         '204':
           description: System deleted
 
-  /api/jobs:
+  /api/v1/jobs:
     get:
       summary: List all jobs
       tags: [Jobs]
@@ -498,7 +498,7 @@ paths:
         '201':
           description: Job created
 
-  /api/jobs/{id}:
+  /api/v1/jobs/{id}:
     put:
       summary: Update job
       tags: [Jobs]
@@ -529,7 +529,7 @@ paths:
         '204':
           description: Job deleted
 
-  /api/teams:
+  /api/v1/teams:
     get:
       summary: List all teams
       tags: [Teams]
@@ -543,7 +543,7 @@ paths:
         '201':
           description: Team created
 
-  /api/teams/{id}:
+  /api/v1/teams/{id}:
     get:
       summary: Get team details
       tags: [Teams]
@@ -586,7 +586,7 @@ paths:
         '204':
           description: Team deleted
 
-  /api/teams/{id}/members:
+  /api/v1/teams/{id}/members:
     post:
       summary: Add team member
       tags: [Teams]
@@ -610,7 +610,7 @@ paths:
         '201':
           description: Member added
 
-  /api/teams/{id}/members/{userId}:
+  /api/v1/teams/{id}/members/{userId}:
     delete:
       summary: Remove team member
       tags: [Teams]
@@ -629,7 +629,7 @@ paths:
         '204':
           description: Member removed
 
-  /api/slas:
+  /api/v1/slas:
     get:
       summary: List all SLAs
       tags: [SLAs]
@@ -643,7 +643,7 @@ paths:
         '201':
           description: SLA created
 
-  /api/slas/{id}:
+  /api/v1/slas/{id}:
     get:
       summary: Get SLA details
       tags: [SLAs]
@@ -686,7 +686,7 @@ paths:
         '204':
           description: SLA deleted
 
-  /api/procedures:
+  /api/v1/procedures:
     get:
       summary: Search procedures
       tags: [Procedures]
@@ -700,7 +700,7 @@ paths:
         '201':
           description: Procedure created
 
-  /api/procedures/{id}:
+  /api/v1/procedures/{id}:
     get:
       summary: Get procedure details
       tags: [Procedures]
@@ -738,7 +738,7 @@ paths:
         '204':
           description: Procedure deleted
 
-  /api/search:
+  /api/v1/search:
     get:
       summary: Global search
       tags: [Search]
@@ -752,7 +752,7 @@ paths:
         '200':
           description: Search results
 
-  /api/roles:
+  /api/v1/roles:
     get:
       summary: List all roles
       tags: [Roles]
@@ -766,7 +766,7 @@ paths:
         '201':
           description: Role created
 
-  /api/roles/{id}:
+  /api/v1/roles/{id}:
     put:
       summary: Update role
       tags: [Roles]
@@ -792,7 +792,7 @@ paths:
         '204':
           description: Role deleted
 
-  /api/permissions:
+  /api/v1/permissions:
     get:
       summary: List all permissions
       tags: [Roles]
@@ -800,7 +800,7 @@ paths:
         '200':
           description: List of permissions
 
-  /api/email-templates:
+  /api/v1/email-templates:
     get:
       summary: Get email templates
       tags: [Settings]
@@ -814,7 +814,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/EmailTemplate'
 
-  /api/email-templates/{id}:
+  /api/v1/email-templates/{id}:
     get:
       summary: Get email template details
       tags: [Settings]
@@ -850,7 +850,7 @@ paths:
         '200':
           description: Template updated
 
-  /api/email-templates/preview:
+  /api/v1/email-templates/preview:
     post:
       summary: Preview email template
       tags: [Settings]
@@ -868,7 +868,7 @@ paths:
         '200':
           description: Preview generated
 
-  /api/config/smtp:
+  /api/v1/config/smtp:
     get:
       summary: Get SMTP configuration
       tags: [Settings]
@@ -882,7 +882,7 @@ paths:
         '200':
           description: Config updated
 
-  /api/config/smtp/test:
+  /api/v1/config/smtp/test:
     post:
       summary: Test SMTP configuration
       tags: [Settings]
@@ -898,7 +898,7 @@ paths:
         '200':
           description: Test email sent
 
-  /api/config/params:
+  /api/v1/config/params:
     get:
       summary: Get system parameters
       tags: [Settings]
@@ -906,7 +906,7 @@ paths:
         '200':
           description: System parameters returned
 
-  /api/config/{key}:
+  /api/v1/config/{key}:
     put:
       summary: Update system config
       tags: [Settings]
@@ -928,7 +928,7 @@ paths:
         '200':
           description: Config updated
 
-  /api/audit-logs:
+  /api/v1/audit-logs:
     get:
       summary: Get audit logs
       tags: [Audit]
