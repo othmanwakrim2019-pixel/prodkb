@@ -5,6 +5,7 @@ import axios from '../utils/axios';
 import { useAuth } from '../context/AuthContext';
 import { ShieldAlert } from 'lucide-react';
 import { System, Job } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface CreateProcedureFormValues {
     title: string;
@@ -21,6 +22,7 @@ interface CreateProcedureFormValues {
 
 export const CreateProcedure = () => {
     const { hasPermission } = useAuth();
+    const { t } = useTranslation();
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProcedureFormValues>({
         defaultValues: {
             title: '',
@@ -50,7 +52,7 @@ export const CreateProcedure = () => {
         const fetchSystems = async () => {
             try {
                 const response = await axios.get('/api/systems');
-                setSystems(response.data);
+                setSystems(Array.isArray(response.data) ? response.data : response.data?.data || []);
             } catch (error) {
                 console.error('Failed to fetch systems', error);
             }
@@ -198,7 +200,7 @@ export const CreateProcedure = () => {
                 <div className="bg-red-50 p-6 rounded-full mb-4">
                     <ShieldAlert className="h-12 w-12 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('common.accessDenied')}</h2>
                 <p className="text-slate-600 mt-2 max-w-md">
                     You do not have permission to {isEditMode ? 'edit' : 'create'} procedures. Please contact your administrator if you believe this is an error.
                 </p>
@@ -209,7 +211,7 @@ export const CreateProcedure = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900">{isEditMode ? 'Edit Procedure' : 'Create New Procedure'}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{isEditMode ? t('createProcedure.editTitle') : t('createProcedure.title')}</h1>
                 <p className="text-sm text-slate-500 mt-1">Document a solution for future reference</p>
             </div>
 
@@ -362,3 +364,6 @@ export const CreateProcedure = () => {
         </div>
     );
 };
+
+export default CreateProcedure;
+

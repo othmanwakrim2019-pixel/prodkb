@@ -3,6 +3,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2 } from 'lucide-react';
 import { User, TeamMembership } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 interface Team {
     id: string;
@@ -16,6 +17,7 @@ interface Role {
 
 export const UserManagement = () => {
     const { canManageUsers } = useAuth();
+    const { t } = useTranslation();
     const [users, setUsers] = useState<User[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
@@ -34,7 +36,7 @@ export const UserManagement = () => {
     const fetchUsers = async () => {
         try {
             const response = await axios.get('/api/users');
-            setUsers(response.data);
+            setUsers(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch users', error);
         }
@@ -43,7 +45,7 @@ export const UserManagement = () => {
     const fetchTeams = async () => {
         try {
             const response = await axios.get('/api/teams');
-            setTeams(response.data);
+            setTeams(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch teams', error);
         }
@@ -52,7 +54,7 @@ export const UserManagement = () => {
     const fetchRoles = async () => {
         try {
             const response = await axios.get('/api/roles');
-            setRoles(response.data);
+            setRoles(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch roles', error);
         }
@@ -169,7 +171,7 @@ export const UserManagement = () => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900">User Management</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t('admin.users.title')}</h2>
                 <div className="flex items-center gap-4">
                     <div className="relative">
                         <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -363,7 +365,7 @@ export const UserManagement = () => {
             {editingUser && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full m-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Edit User</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.users.editUser')}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>

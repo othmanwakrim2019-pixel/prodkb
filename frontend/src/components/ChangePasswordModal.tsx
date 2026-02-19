@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { Key, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ChangePasswordModalProps {
     isOpen: boolean;
@@ -8,6 +9,7 @@ interface ChangePasswordModalProps {
 }
 
 export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
+    const { t } = useTranslation();
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,26 +23,26 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
         setSuccess('');
 
         if (newPassword !== confirmPassword) {
-            setError('New passwords do not match');
+            setError(t('password.mismatch'));
             return;
         }
 
         if (newPassword.length < 8) {
-            setError('New password must be at least 8 characters');
+            setError(t('password.minLength'));
             return;
         }
 
         setLoading(true);
         try {
             await api.put('/api/users/me/password', { currentPassword, newPassword });
-            setSuccess('Password changed successfully!');
+            setSuccess(t('password.success'));
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             setTimeout(() => onClose(), 1500);
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { error?: string } } };
-            setError(axiosErr.response?.data?.error || 'Failed to change password');
+            setError(axiosErr.response?.data?.error || t('password.failed'));
         } finally {
             setLoading(false);
         }
@@ -54,7 +56,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                 <div className="flex items-center justify-between p-4 border-b">
                     <div className="flex items-center gap-2">
                         <Key className="h-5 w-5 text-blue-600" />
-                        <h2 className="text-lg font-semibold">Change Password</h2>
+                        <h2 className="text-lg font-semibold">{t('password.title')}</h2>
                     </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
                         <X className="h-5 w-5" />
@@ -74,7 +76,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">{t('password.currentPassword')}</label>
                         <input
                             type="password"
                             value={currentPassword}
@@ -85,7 +87,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">{t('password.newPassword')}</label>
                         <input
                             type="password"
                             value={newPassword}
@@ -97,7 +99,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">{t('password.confirmPassword')}</label>
                         <input
                             type="password"
                             value={confirmPassword}
@@ -114,14 +116,14 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                             onClick={onClose}
                             className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
                             className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                         >
-                            {loading ? 'Changing...' : 'Change Password'}
+                            {loading ? t('password.changing') : t('password.submit')}
                         </button>
                     </div>
                 </form>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api'; // Corrected path to lib/api
 import { Edit, Save, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface EmailTemplate {
     id: string;
@@ -14,6 +15,7 @@ interface EmailTemplate {
 }
 
 export const EmailTemplates = () => {
+    const { t } = useTranslation();
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export const EmailTemplates = () => {
     const fetchTemplates = async () => {
         try {
             const res = await api.get('/api/email-templates');
-            setTemplates(res.data);
+            setTemplates(Array.isArray(res.data) ? res.data : res.data?.data || []);
         } catch (error) {
             console.error(' Failed to fetch templates:', error);
         } finally {
@@ -82,7 +84,7 @@ export const EmailTemplates = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Email Templates</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">{t('admin.emailTemplates.title')}</h2>
                     <p className="text-muted-foreground">Customize email notifications sent by the system.</p>
                 </div>
             </div>

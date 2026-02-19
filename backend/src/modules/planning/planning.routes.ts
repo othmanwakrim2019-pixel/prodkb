@@ -5,22 +5,24 @@ import { authenticate } from '../../common/middleware/auth.middleware';
 
 const router = Router();
 
-// All planning routes require authentication
 router.use(authenticate);
 
-// GET  /api/planning/jobs?period=monthly|quarterly|annual
-router.get('/jobs', PlanningController.getJobs);
+// --- Instances ---
+router.get('/instances', PlanningController.getInstances);
+router.get('/instances/:id', PlanningController.getInstance);
+router.post('/instances', PlanningController.createInstance);
+router.patch('/instances/:id/archive', PlanningController.archiveInstance);
+router.patch('/instances/:id/reactivate', PlanningController.reactivateInstance);
 
-// POST /api/planning/jobs
+// --- Jobs within instances ---
+router.get('/instances/:id/jobs', PlanningController.getJobsByInstance);
+// Batch route MUST come before parameterized /jobs/:id routes
+router.patch('/jobs/positions/batch', PlanningController.batchUpdatePositions);
 router.post('/jobs', PlanningController.createJob);
-
-// PATCH /api/planning/jobs/:id/complete
-router.patch('/jobs/:id/complete', PlanningController.completeJob);
-
-// PUT /api/planning/jobs/:id
 router.put('/jobs/:id', PlanningController.updateJob);
-
-// DELETE /api/planning/jobs/:id
 router.delete('/jobs/:id', PlanningController.deleteJob);
+router.patch('/jobs/:id/status', PlanningController.updateJobStatus);
+router.patch('/jobs/:id/complete', PlanningController.completeJob);
+router.patch('/jobs/:id/position', PlanningController.updateJobPosition);
 
 export const planningRoutes = router;

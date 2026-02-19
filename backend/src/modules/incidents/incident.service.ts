@@ -7,13 +7,37 @@
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { emailService } from '../../common/services/emailService';
-import { NotFoundError, ValidationError } from '../../common/errors/app.error';
+import { NotFoundError, ValidationError, ConflictError } from '../../common/errors/app.error';
 import { IncidentStatus } from '../../constants';
+import type { IncidentStatusType } from '../../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams, IIncidentLog } from '../../types';
+import { autoAssignService } from '../auto-assign/auto-assign.service';
+import { webhookService } from '../webhooks/webhook.service';
+
+// ── Incident Status State Machine ──
+// Defines which status transitions are allowed.
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+    [IncidentStatus.OPEN]: [IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED],
+    [IncidentStatus.ACKNOWLEDGED]: [IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED],
+    [IncidentStatus.IN_PROGRESS]: [IncidentStatus.RESOLVED, IncidentStatus.OPEN],
+    [IncidentStatus.RESOLVED]: [IncidentStatus.CLOSED, IncidentStatus.OPEN],
+    [IncidentStatus.CLOSED]: [IncidentStatus.OPEN], // Allow reopen
+};
+
+function validateStatusTransition(currentStatus: string, newStatus: string): void {
+    const allowed = ALLOWED_TRANSITIONS[currentStatus];
+    if (!allowed || !allowed.includes(newStatus)) {
+        throw new ValidationError(
+            `Invalid status transition: '${currentStatus}' → '${newStatus}'. ` +
+            `Allowed transitions from '${currentStatus}': [${(allowed || []).join(', ')}]`
+        );
+    }
+}
 
 export interface IncidentStats {
     createdToday: number;
     resolvedToday: number;
+    closedCount: number;
     activeIncidents: number;
     avgResolutionTimeMinutes: number;
     topSystems: Array<{ systemId: string; count: number; name: string }>;
@@ -157,7 +181,8 @@ export class IncidentService {
                     systemId: data.systemId,
                     jobId: data.jobId || null,
                     createdById: userId,
-                    assignedTeamId: data.assignedTeamId || null,
+                    // Auto-assignment: if no team specified, let the rules engine decide
+                    assignedTeamId: data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null,
                     slaId: data.slaId || null,
                     impact: data.impact || null,
                     detectionSource: data.detectionSource || null,
@@ -187,6 +212,9 @@ export class IncidentService {
             logger.error('Failed to send incident notification', { error: err.message, incidentId: incident.id });
         });
 
+        // Webhook dispatch — fire-and-forget
+        webhookService.dispatch('incident.created', { incident }).catch(() => { });
+
         return incident as unknown as IIncident;
     }
 
@@ -195,12 +223,26 @@ export class IncidentService {
      */
     async update(id: string, data: UpdateIncidentDTO, userId: string): Promise<IIncident> {
         const existing = await this.findById(id);
+
+        // ── State machine enforcement ──
+        if (data.status && data.status !== existing.status) {
+            validateStatusTransition(existing.status, data.status);
+        }
+
         const wasResolved = existing.status === IncidentStatus.RESOLVED;
         const isNowResolved = data.status === IncidentStatus.RESOLVED;
 
         const updateData: Record<string, unknown> = { ...data };
 
-        // Handle resolution tracking
+        // ── Acknowledgement tracking ──
+        if (data.status === IncidentStatus.ACKNOWLEDGED && !existing.acknowledgedAt) {
+            updateData.acknowledgedAt = new Date();
+            updateData.timeToAcknowledge = Math.round(
+                (new Date().getTime() - new Date(existing.createdAt).getTime()) / 60000
+            );
+        }
+
+        // ── Resolution tracking ──
         const wasEffectiveResolved = [IncidentStatus.RESOLVED, IncidentStatus.CLOSED].includes(existing.status as any);
         const isNowEffectiveResolved = [IncidentStatus.RESOLVED, IncidentStatus.CLOSED].includes(data.status as any);
 
@@ -214,10 +256,24 @@ export class IncidentService {
 
         updateData.updatedById = userId;
 
-        const incident = await prisma.incident.update({
-            where: { id },
-            data: updateData,
-            include: this.defaultInclude,
+        // ── Optimistic locking ──
+        const expectedVersion = (data as any).version;
+        if (expectedVersion !== undefined && expectedVersion !== existing.version) {
+            throw new ConflictError(
+                `Incident has been modified by another user. ` +
+                `Expected version ${expectedVersion}, but current version is ${existing.version}. ` +
+                `Please refresh and try again.`
+            );
+        }
+        updateData.version = (existing.version ?? 0) + 1;
+
+        // ── Transactional update with optimistic lock ──
+        const incident = await prisma.$transaction(async (tx) => {
+            return tx.incident.update({
+                where: { id, version: existing.version }, // optimistic lock
+                data: updateData,
+                include: this.defaultInclude,
+            });
         });
 
         logger.info('Incident updated', { incidentId: id, userId, changes: Object.keys(data) });
@@ -228,7 +284,66 @@ export class IncidentService {
             this.sendNotification(incident, 'updated').catch(err => logger.error('Failed to send notification', { error: err.message }));
         }
 
+        // Webhook dispatch — fire-and-forget
+        const webhookEvent = isNowResolved ? 'incident.resolved' : 'incident.updated';
+        webhookService.dispatch(webhookEvent, { incident }).catch(() => { });
+
         return incident as unknown as IIncident;
+    }
+
+    /**
+     * Acknowledge an incident — dedicated endpoint
+     * Transitions: Open → Acknowledged, sets timestamps
+     */
+    async acknowledge(id: string, userId: string): Promise<IIncident> {
+        const incident = await this.findById(id);
+
+        if (incident.status !== IncidentStatus.OPEN) {
+            throw new ValidationError(
+                `Cannot acknowledge incident in status '${incident.status}'. Only 'Open' incidents can be acknowledged.`
+            );
+        }
+
+        if (incident.acknowledgedAt) {
+            throw new ValidationError('Incident has already been acknowledged.');
+        }
+
+        const now = new Date();
+        const timeToAcknowledge = Math.round(
+            (now.getTime() - new Date(incident.createdAt).getTime()) / 60000
+        );
+
+        const updated = await prisma.incident.update({
+            where: { id },
+            data: {
+                status: IncidentStatus.ACKNOWLEDGED,
+                acknowledgedAt: now,
+                timeToAcknowledge,
+                updatedById: userId,
+                version: (incident.version ?? 0) + 1,
+            },
+            include: this.defaultInclude,
+        });
+
+        // Log the acknowledgement
+        await prisma.incidentLog.create({
+            data: {
+                incidentId: id,
+                logType: 'note',
+                rawLog: `Incident acknowledged. Time to acknowledge: ${timeToAcknowledge} minutes.`,
+                createdById: userId,
+            },
+        });
+
+        logger.info('Incident acknowledged', { incidentId: id, userId, timeToAcknowledge });
+
+        this.sendNotification(updated, 'updated').catch(err =>
+            logger.error('Failed to send notification', { error: err.message })
+        );
+
+        webhookService.dispatch('incident.updated', { incident: updated }).catch(() => { });
+
+        return updated as unknown as IIncident;
     }
 
     async addLog(incidentId: string, data: {
@@ -318,87 +433,187 @@ export class IncidentService {
         systemId?: string;
         teamId?: string;
         userId?: string;
+        userRole?: string;
+        userTeamIds?: string[];
     }): Promise<IncidentStats> {
-        const { startDate, endDate, systemId, teamId, userId } = filters;
+        const { startDate, endDate, systemId, teamId, userRole, userTeamIds } = filters;
         const now = new Date();
         const start = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         const end = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
+        // ── Role-based scope ──
+        // Admin sees everything; standard users see only their team's incidents
+        const isAdmin = userRole === 'ADMIN';
+        const scopeFilter: Record<string, unknown> = {};
+        if (!isAdmin && userTeamIds && userTeamIds.length > 0) {
+            scopeFilter.assignedTeamId = { in: userTeamIds };
+        } else if (!isAdmin) {
+            // User has no teams — they should see nothing
+            scopeFilter.assignedTeamId = { in: [] };
+        }
+
+        // ── Base where clause (period + scope + optional UI filters) ──
         const where: Record<string, unknown> = {
-            createdAt: { gte: start, lte: end }
+            createdAt: { gte: start, lte: end },
+            ...scopeFilter,
         };
-
         if (systemId) where.systemId = systemId;
-        if (teamId) where.assignedTeamId = teamId;
+        if (teamId) where.assignedTeamId = teamId; // UI filter overrides scope
 
-        const activeWhere = { ...where };
-        delete activeWhere.createdAt;
-        activeWhere.status = { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] };
+        // ── Active incidents (no date filter, only scope + status) ──
+        const activeWhere: Record<string, unknown> = {
+            ...scopeFilter,
+            status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] },
+        };
+        if (systemId) activeWhere.systemId = systemId;
+        if (teamId) activeWhere.assignedTeamId = teamId;
 
-        const [created, resolved, active] = await Promise.all([
+        // ── Resolved where (resolved within period) ──
+        const resolvedWhere: Record<string, unknown> = {
+            ...scopeFilter,
+            resolvedAt: { gte: start, lte: end },
+        };
+        if (systemId) resolvedWhere.systemId = systemId;
+        if (teamId) resolvedWhere.assignedTeamId = teamId;
+
+        // ── Closed where (status = CLOSED, created in period) ──
+        const closedWhere: Record<string, unknown> = {
+            ...scopeFilter,
+            status: IncidentStatus.CLOSED,
+            createdAt: { gte: start, lte: end },
+        };
+        if (systemId) closedWhere.systemId = systemId;
+        if (teamId) closedWhere.assignedTeamId = teamId;
+
+        // ── 1. Core KPI counts ──
+        const [created, resolved, active, closed] = await Promise.all([
             prisma.incident.count({ where }),
-            prisma.incident.count({
-                where: {
-                    ...where,
-                    createdAt: undefined,
-                    resolvedAt: { gte: start, lte: end }
-                }
-            }),
-            prisma.incident.count({ where: activeWhere })
+            prisma.incident.count({ where: resolvedWhere }),
+            prisma.incident.count({ where: activeWhere }),
+            prisma.incident.count({ where: closedWhere }),
         ]);
 
-        const resolvedIncidents = await prisma.incident.findMany({
+        // ── 2. Average resolution time ──
+        const avgResult = await prisma.incident.aggregate({
             where: {
-                ...where,
-                createdAt: undefined,
-                resolvedAt: { gte: start, lte: end },
-                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] }
+                ...resolvedWhere,
+                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
+                timeToResolve: { not: null },
             },
-            select: { createdAt: true, resolvedAt: true },
-            take: 1000
+            _avg: { timeToResolve: true },
         });
+        const avgResolutionTime = Math.round(avgResult._avg.timeToResolve || 0);
 
-        const totalTime = resolvedIncidents.reduce((acc, inc) => {
-            if (inc.resolvedAt) {
-                return acc + (inc.resolvedAt.getTime() - inc.createdAt.getTime());
-            }
-            return acc;
-        }, 0);
-
-        const avgResolutionTime = resolvedIncidents.length > 0
-            ? Math.round((totalTime / resolvedIncidents.length) / 60000)
-            : 0;
-
-        // Simplified stats logic for brevity, detailed logic remains similar to original
+        // ── 3. Status breakdown ──
         const statusCounts = await prisma.incident.groupBy({
             by: ['status'],
             where,
             _count: { status: true }
         });
-
         const statusBreakdown = statusCounts.map(s => ({
             status: s.status,
             count: s._count.status
         }));
 
-        const trends: any[] = [];
-        const topSystemStats: any[] = [];
-        let myWork = { myTeamQueue: 0, myTeamBreaches: 0 };
+        // ── 4. Trends — daily created/resolved over the period ──
+        const trendMap = new Map<string, { created: number; resolved: number }>();
 
-        // Re-implementing simplified trends/topSystems for brevity in migration, 
-        // preserving original logic if users need it. 
-        // (Assuming original logic is preserved in implementation phase or copy-pasted if critical)
-        // For now, I will keep the structure valid.
+        // Initialize all dates in range
+        const cursor = new Date(start);
+        while (cursor <= end) {
+            const key = cursor.toISOString().split('T')[0];
+            trendMap.set(key, { created: 0, resolved: 0 });
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
+        // Created per day
+        const createdIncidents = await prisma.incident.findMany({
+            where,
+            select: { createdAt: true },
+        });
+        for (const inc of createdIncidents) {
+            const key = inc.createdAt.toISOString().split('T')[0];
+            const entry = trendMap.get(key);
+            if (entry) entry.created++;
+        }
+
+        // Resolved per day
+        const resolvedIncidents = await prisma.incident.findMany({
+            where: { ...resolvedWhere, resolvedAt: { not: null, gte: start, lte: end } },
+            select: { resolvedAt: true },
+        });
+        for (const inc of resolvedIncidents) {
+            if (inc.resolvedAt) {
+                const key = inc.resolvedAt.toISOString().split('T')[0];
+                const entry = trendMap.get(key);
+                if (entry) entry.resolved++;
+            }
+        }
+
+        const trends = Array.from(trendMap.entries()).map(([date, data]) => ({
+            date,
+            created: data.created,
+            resolved: data.resolved,
+        }));
+
+        // ── 5. Top failing systems ──
+        const topSystemsRaw = await prisma.incident.groupBy({
+            by: ['systemId'],
+            where,
+            _count: { id: true },
+            orderBy: { _count: { id: 'desc' } },
+            take: 5,
+        });
+
+        const systemIds = topSystemsRaw.map(s => s.systemId);
+        const systemNames = systemIds.length > 0
+            ? await prisma.system.findMany({
+                where: { id: { in: systemIds } },
+                select: { id: true, name: true },
+            })
+            : [];
+        const nameMap = new Map(systemNames.map(s => [s.id, s.name]));
+
+        const topSystems = topSystemsRaw.map(s => ({
+            systemId: s.systemId,
+            name: nameMap.get(s.systemId) || 'Unknown',
+            count: s._count.id,
+        }));
+
+        // ── 6. My Work — always scoped to user's teams ──
+        const myTeamFilter: Record<string, unknown> = {};
+        if (userTeamIds && userTeamIds.length > 0) {
+            myTeamFilter.assignedTeamId = { in: userTeamIds };
+        } else {
+            myTeamFilter.assignedTeamId = { in: [] };
+        }
+
+        const [myTeamQueue, myTeamBreaches] = await Promise.all([
+            prisma.incident.count({
+                where: {
+                    ...myTeamFilter,
+                    status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] },
+                },
+            }),
+            prisma.incident.count({
+                where: {
+                    ...myTeamFilter,
+                    slaBreached: true,
+                    status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] },
+                },
+            }),
+        ]);
 
         return {
             createdToday: created,
             resolvedToday: resolved,
+            closedCount: closed,
             activeIncidents: active,
             avgResolutionTimeMinutes: avgResolutionTime,
-            topSystems: topSystemStats,
+            topSystems,
             statusBreakdown,
             trends,
-            myWork
+            myWork: { myTeamQueue, myTeamBreaches },
         };
     }
 

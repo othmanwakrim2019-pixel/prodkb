@@ -20,7 +20,9 @@ export class IncidentController {
                 endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
                 systemId: req.query.systemId as string,
                 teamId: req.query.teamId as string,
-                userId: req.user?.id
+                userId: req.user?.id,
+                userRole: req.user?.role,
+                userTeamIds: req.user?.teamIds || [],
             };
 
             const stats = await incidentService.getStats(filters);
@@ -219,6 +221,12 @@ export class IncidentController {
             if (!userId) throw new ValidationError('User not authenticated');
 
             const { id, filename } = req.params;
+
+            // ── Path traversal protection ──
+            if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+                throw new ValidationError('Invalid filename: path traversal characters are not allowed');
+            }
+
             const fileLog = await incidentService.getFileLog(id, filename);
 
             if (!fileLog.filePath) throw new NotFoundError('File path missing in log');
@@ -255,6 +263,17 @@ export class IncidentController {
     static async updateIncidentStatus(req: AuthRequest, res: Response, next: NextFunction) {
         req.body = { status: req.body.status };
         return IncidentController.updateIncident(req, res, next);
+    }
+
+    static async acknowledgeIncident(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) throw new ValidationError('User not authenticated');
+            const incident = await incidentService.acknowledge(req.params.id, userId);
+            res.json(createResponse(true, incident, 'Incident acknowledged'));
+        } catch (error) {
+            next(error);
+        }
     }
 
     static async deleteIncident(req: AuthRequest, res: Response, next: NextFunction) {

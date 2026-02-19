@@ -4,6 +4,7 @@ import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { AuthenticationError, ConflictError, ValidationError, NotFoundError } from '../../common/errors/app.error';
 import { JwtService } from '../../common/utils/jwt.utils';
+import { refreshTokenService } from './refresh-token.service';
 import type { CreateUserDTO, IUserPublic } from '../../types';
 
 export class AuthService {
@@ -105,8 +106,12 @@ export class AuthService {
 
         const permissions = user.role?.permissions?.map(p => p.code) || [];
 
+        // Generate refresh token for token rotation
+        const refreshToken = await refreshTokenService.generate(user.id);
+
         return {
             token,
+            refreshToken,
             user: {
                 ...this.toPublicUser(user),
                 permissions,

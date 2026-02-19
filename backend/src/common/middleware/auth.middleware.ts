@@ -14,6 +14,36 @@ export interface AuthRequest extends Request {
     };
 }
 
+// ── In-memory permission cache (5-minute TTL) ──
+// Eliminates a DB query on every single API call.
+// Cache is invalidated when roles/permissions change.
+
+interface CachedAuth {
+    role: string;
+    permissions: string[];
+    teamIds: string[];
+    expiresAt: number;
+}
+
+const AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const authCache = new Map<string, CachedAuth>();
+
+/**
+ * Invalidate cached auth for a specific user.
+ * Call this when a user's role or permissions change.
+ */
+export const invalidateAuthCache = (userId: string) => {
+    authCache.delete(userId);
+};
+
+/**
+ * Clear the entire auth cache.
+ * Useful after bulk role/permission changes.
+ */
+export const clearAuthCache = () => {
+    authCache.clear();
+};
+
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -24,10 +54,26 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
     try {
         const decoded = JwtService.verify(token) as { userId: string };
+        const userId = decoded.userId;
 
-        // Fetch fresh user data from DB
+        // ── Check cache first ──
+        const cached = authCache.get(userId);
+        const now = Date.now();
+
+        if (cached && cached.expiresAt > now) {
+            req.user = {
+                id: userId,
+                role: cached.role,
+                permissions: cached.permissions,
+                teamIds: cached.teamIds,
+            };
+            next();
+            return;
+        }
+
+        // ── Cache miss — fetch from DB ──
         const user = await prisma.user.findUnique({
-            where: { id: decoded.userId },
+            where: { id: userId },
             include: {
                 role: { include: { permissions: true } },
                 teamMemberships: { select: { teamId: true } }
@@ -35,6 +81,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         });
 
         if (!user || user.isActive === false) {
+            authCache.delete(userId);
             next(new UnauthorizedError('User not found or inactive'));
             return;
         }
@@ -43,8 +90,16 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         const permissions = user.role?.permissions.map((p: any) => p.code) || [];
         const teamIds = user.teamMemberships.map((t: any) => t.teamId);
 
+        // ── Store in cache ──
+        authCache.set(userId, {
+            role: roleName,
+            permissions,
+            teamIds,
+            expiresAt: now + AUTH_CACHE_TTL_MS,
+        });
+
         req.user = {
-            id: user.id,
+            id: userId,
             role: roleName,
             permissions: permissions,
             teamIds: teamIds

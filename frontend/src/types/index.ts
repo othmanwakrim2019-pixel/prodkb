@@ -112,6 +112,7 @@ export interface Incident {
     createdBy?: User;
     updatedBy?: { id: string; name: string };
     resolvedBy?: User;
+    resolvedAt?: string;
     createdAt: string;
     startDatetime: string;
     endDatetime?: string;

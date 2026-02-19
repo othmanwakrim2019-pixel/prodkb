@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 import { Filter, Clock, User, Shield } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface AuditLog {
     id: string;
@@ -20,6 +21,7 @@ interface AuditLog {
 const AuditLogs = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     // Filters
     const [actionType, setActionType] = useState('');
@@ -33,7 +35,7 @@ const AuditLogs = () => {
             if (entityType) params.entityType = entityType;
 
             const res = await api.get('/api/audit-logs', { params });
-            setLogs(res.data);
+            setLogs(Array.isArray(res.data) ? res.data : res.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch audit logs', error);
         } finally {
@@ -48,8 +50,8 @@ const AuditLogs = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Audit Logs</h1>
-                <p className="text-muted-foreground">Track system activity and security events</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('admin.auditLogs.title')}</h1>
+                <p className="text-muted-foreground">{t('admin.auditLogs.subtitle')}</p>
             </div>
 
             {/* Filters */}
@@ -61,7 +63,7 @@ const AuditLogs = () => {
                         value={actionType}
                         onChange={e => setActionType(e.target.value)}
                     >
-                        <option value="">All Actions</option>
+                        <option value="">{t('admin.auditLogs.allActions')}</option>
                         <option value="LOGIN">LOGIN</option>
                         <option value="CREATE">CREATE</option>
                         <option value="UPDATE">UPDATE</option>
@@ -75,11 +77,11 @@ const AuditLogs = () => {
                         value={entityType}
                         onChange={e => setEntityType(e.target.value)}
                     >
-                        <option value="">All Entities</option>
-                        <option value="USER">User</option>
-                        <option value="INCIDENT">Incident</option>
-                        <option value="ROLE">Role</option>
-                        <option value="SYSTEM">System</option>
+                        <option value="">{t('admin.auditLogs.allEntities')}</option>
+                        <option value="USER">{t('common.user')}</option>
+                        <option value="INCIDENT">{t('incidents.title')}</option>
+                        <option value="ROLE">{t('common.role')}</option>
+                        <option value="SYSTEM">{t('common.system')}</option>
                     </select>
                 </div>
             </div>
@@ -89,11 +91,11 @@ const AuditLogs = () => {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 border-b">
                         <tr>
-                            <th className="px-4 py-3 font-medium text-slate-700">Timestamp</th>
-                            <th className="px-4 py-3 font-medium text-slate-700">User</th>
-                            <th className="px-4 py-3 font-medium text-slate-700">Action</th>
-                            <th className="px-4 py-3 font-medium text-slate-700">Entity</th>
-                            <th className="px-4 py-3 font-medium text-slate-700">Details</th>
+                            <th className="px-4 py-3 font-medium text-slate-700">{t('admin.auditLogs.timestamp')}</th>
+                            <th className="px-4 py-3 font-medium text-slate-700">{t('admin.auditLogs.user')}</th>
+                            <th className="px-4 py-3 font-medium text-slate-700">{t('admin.auditLogs.action')}</th>
+                            <th className="px-4 py-3 font-medium text-slate-700">{t('admin.auditLogs.entity')}</th>
+                            <th className="px-4 py-3 font-medium text-slate-700">{t('admin.auditLogs.details')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -132,13 +134,13 @@ const AuditLogs = () => {
                         {logs.length === 0 && !loading && (
                             <tr>
                                 <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                                    No audit logs found matching criteria.
+                                    {t('admin.auditLogs.noLogs')}
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
-                {loading && <div className="p-4 text-center text-slate-500">Loading logs...</div>}
+                {loading && <div className="p-4 text-center text-slate-500">{t('admin.auditLogs.loadingLogs')}</div>}
             </div>
         </div>
     );

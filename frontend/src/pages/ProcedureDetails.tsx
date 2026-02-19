@@ -158,3 +158,6 @@ export const ProcedureDetails = () => {
         </div>
     );
 };
+
+export default ProcedureDetails;
+

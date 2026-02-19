@@ -1,57 +1,115 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PermissionRoute } from './components/PermissionRoute';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { ToastProvider } from './components/ui/Toast';
+import { ConfirmProvider } from './components/ui/ConfirmDialog';
+import { PageLoader } from './components/ui/PageLoader';
 
-import Dashboard from './pages/Dashboard';
-import { Incidents } from './pages/Incidents';
-import { CreateIncident } from './pages/CreateIncident';
-import { IncidentDetails } from './pages/IncidentDetails';
-import { Procedures } from './pages/Procedures';
-import { ProcedureDetails } from './pages/ProcedureDetails';
-import { CreateProcedure } from './pages/CreateProcedure';
-import { Search } from './pages/Search';
-import { Admin } from './pages/Admin';
-import { Planning } from './pages/planning/Planning';
+// ── Lazy-loaded page chunks (Phase 5: Code splitting) ──
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Incidents = lazy(() => import('./pages/Incidents'));
+const CreateIncident = lazy(() => import('./pages/CreateIncident'));
+const IncidentDetails = lazy(() => import('./pages/IncidentDetails'));
+const Procedures = lazy(() => import('./pages/Procedures'));
+const ProcedureDetails = lazy(() => import('./pages/ProcedureDetails'));
+const CreateProcedure = lazy(() => import('./pages/CreateProcedure'));
+const Search = lazy(() => import('./pages/Search'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Planning = lazy(() => import('./pages/planning/Planning'));
 
 function App() {
     return (
-        <AuthProvider>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route element={<ProtectedRoute />}>
-                        <Route element={<Layout />}>
-                            <Route path="/" element={<Dashboard />} />
+        <ErrorBoundary>
+            <AuthProvider>
+                <ToastProvider>
+                    <ConfirmProvider>
+                        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                            <Routes>
+                                <Route path="/login" element={<Login />} />
+                                <Route element={<ProtectedRoute />}>
+                                    <Route element={<Layout />}>
+                                        <Route path="/" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary>
+                                                    <Dashboard />
+                                                </ErrorBoundary>
+                                            </Suspense>
+                                        } />
 
-                            <Route element={<PermissionRoute permission="INCIDENT_VIEW" />}>
-                                <Route path="/incidents" element={<Incidents />} />
-                                <Route path="/incidents/:id" element={<IncidentDetails />} />
-                            </Route>
-                            <Route element={<PermissionRoute permission="INCIDENT_CREATE" />}>
-                                <Route path="/incidents/new" element={<CreateIncident />} />
-                            </Route>
+                                        <Route element={<PermissionRoute permission="INCIDENT_VIEW" />}>
+                                            <Route path="/incidents" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><Incidents /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                            <Route path="/incidents/:id" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><IncidentDetails /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
+                                        <Route element={<PermissionRoute permission="INCIDENT_CREATE" />}>
+                                            <Route path="/incidents/new" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><CreateIncident /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
 
-                            <Route element={<PermissionRoute permission="PROCEDURE_VIEW" />}>
-                                <Route path="/procedures" element={<Procedures />} />
-                                <Route path="/procedures/:id" element={<ProcedureDetails />} />
-                            </Route>
-                            <Route element={<PermissionRoute permission="PROCEDURE_CREATE" />}>
-                                <Route path="/procedures/new" element={<CreateProcedure />} />
-                                <Route path="/procedures/:id/edit" element={<CreateProcedure />} />
-                            </Route>
-                            <Route path="/search" element={<Search />} />
-                            <Route path="/admin" element={<Admin />} />
-                            <Route path="/planning" element={<Planning />} />
-                        </Route>
-                    </Route>
+                                        <Route element={<PermissionRoute permission="PROCEDURE_VIEW" />}>
+                                            <Route path="/procedures" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><Procedures /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                            <Route path="/procedures/:id" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><ProcedureDetails /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
+                                        <Route element={<PermissionRoute permission="PROCEDURE_CREATE" />}>
+                                            <Route path="/procedures/new" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><CreateProcedure /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                            <Route path="/procedures/:id/edit" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><CreateProcedure /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
+                                        <Route path="/search" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><Search /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                        <Route path="/admin" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><Admin /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                        <Route path="/planning" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><Planning /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                    </Route>
+                                </Route>
 
-                    <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-            </Router>
-        </AuthProvider>
+                                <Route path="*" element={<Navigate to="/" />} />
+                            </Routes>
+                        </Router>
+                    </ConfirmProvider>
+                </ToastProvider>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Plus, Check, Shield, Trash2, Edit } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Permission {
     id: string;
@@ -17,6 +18,7 @@ interface Role {
 }
 
 export const RoleManager = () => {
+    const { t } = useTranslation();
     const [roles, setRoles] = useState<Role[]>([]);
     const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,8 +38,8 @@ export const RoleManager = () => {
                 api.get('/api/roles'),
                 api.get('/api/roles/permissions')
             ]);
-            setRoles(rolesRes.data);
-            setAllPermissions(permsRes.data);
+            setRoles(Array.isArray(rolesRes.data) ? rolesRes.data : rolesRes.data?.data || []);
+            setAllPermissions(Array.isArray(permsRes.data) ? permsRes.data : permsRes.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch roles/permissions:', error);
         } finally {
@@ -125,8 +127,8 @@ export const RoleManager = () => {
         return (
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">{editingRole.id ? 'Edit Role' : 'New Role'}</h2>
-                    <button onClick={() => setIsEditing(false)} className="text-slate-500 hover:text-slate-700">Cancel</button>
+                    <h2 className="text-2xl font-bold">{editingRole.id ? t('admin.roles.editRole') : t('admin.roles.addRole')}</h2>
+                    <button onClick={() => setIsEditing(false)} className="text-slate-500 hover:text-slate-700">{t('common.cancel')}</button>
                 </div>
 
                 <div className="space-y-4 bg-white p-6 rounded-lg border shadow-sm">

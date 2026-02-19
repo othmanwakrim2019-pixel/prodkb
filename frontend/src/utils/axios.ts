@@ -3,6 +3,7 @@ import axios from 'axios';
 // Set base URL for API requests from environment variable
 // If VITE_API_URL is not set, default to relative path (assuming reverse proxy)
 // If you are running locally without Docker/Proxy, you might need http://localhost:3000
+// API v1 — all calls go through /api/v1 (backward compat on server still supports /api)
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 
 // Request interceptor to add auth token

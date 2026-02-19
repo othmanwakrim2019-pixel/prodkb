@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
     LogOut,
@@ -13,12 +14,14 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Layout = () => {
     const { user, logout, hasPermission } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const { t } = useTranslation();
 
     const handleLogout = () => {
         logout();
@@ -27,31 +30,31 @@ export const Layout = () => {
 
     const navItems = [
         {
-            label: 'Dashboard',
+            label: t('nav.dashboard'),
             path: '/',
             icon: LayoutDashboard,
             requiredPermission: 'DASHBOARD_VIEW'
         },
         {
-            label: 'Incidents / Abends',
+            label: t('nav.incidents'),
             path: '/incidents',
             icon: AlertCircle,
             requiredPermission: 'INCIDENT_VIEW'
         },
         {
-            label: 'Procedures',
+            label: t('nav.procedures'),
             path: '/procedures',
             icon: BookOpen,
             requiredPermission: 'PROCEDURE_VIEW'
         },
         {
-            label: 'Search',
+            label: t('nav.search'),
             path: '/search',
             icon: Search,
             requiredPermission: 'SEARCH_VIEW'
         },
         {
-            label: 'Planning',
+            label: t('nav.planning'),
             path: '/planning',
             icon: CalendarClock,
             requiredPermission: 'DASHBOARD_VIEW'
@@ -59,15 +62,12 @@ export const Layout = () => {
     ];
 
     if (user?.role === 'ADMIN' || hasPermission('USER_MANAGE')) {
-        navItems.push({ label: 'Admin', path: '/admin', icon: SettingsIcon, requiredPermission: 'ROLE_MANAGE' });
+        navItems.push({ label: t('nav.admin'), path: '/admin', icon: SettingsIcon, requiredPermission: 'ROLE_MANAGE' });
     }
 
     // Filter items based on permissions
     const visibleNavItems = navItems.filter(item => {
-        // Always show if no permission required (fallback) but here all have constraints
         if (!item.requiredPermission) return true;
-        // Search might be special, if they can view *anything* they can search it? 
-        // For now, strict check:
         return hasPermission(item.requiredPermission);
     });
 
@@ -102,7 +102,8 @@ export const Layout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-white/10">
-                    <div className="flex items-center mb-4 px-2">
+                    <LanguageSwitcher />
+                    <div className="flex items-center mb-4 px-2 mt-3">
                         <div className="flex-shrink-0">
                             <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
                                 {user?.name.charAt(0)}
@@ -118,14 +119,14 @@ export const Layout = () => {
                         className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors mb-1"
                     >
                         <Key className="mr-3 h-5 w-5" />
-                        Change Password
+                        {t('common.changePassword')}
                     </button>
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors"
                     >
                         <LogOut className="mr-3 h-5 w-5" />
-                        Sign Out
+                        {t('common.signOut')}
                     </button>
                 </div>
             </aside>

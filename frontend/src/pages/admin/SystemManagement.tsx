@@ -3,9 +3,11 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { System, Team, Job } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export const SystemManagement = () => {
     const { canManageSystems } = useAuth();
+    const { t } = useTranslation();
     const [systems, setSystems] = useState<System[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [systemSearch, setSystemSearch] = useState('');
@@ -25,7 +27,7 @@ export const SystemManagement = () => {
     const fetchSystems = async () => {
         try {
             const response = await axios.get('/api/systems');
-            setSystems(response.data);
+            setSystems(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch systems', error);
         }
@@ -34,7 +36,7 @@ export const SystemManagement = () => {
     const fetchTeams = async () => {
         try {
             const response = await axios.get('/api/teams');
-            setTeams(response.data);
+            setTeams(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch teams', error);
         }
@@ -131,7 +133,7 @@ export const SystemManagement = () => {
     return (
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 className="text-lg font-semibold text-slate-900">Applications</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t('admin.systems.title')}</h2>
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative flex-1 md:flex-none">
                         <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -349,7 +351,7 @@ export const SystemManagement = () => {
             {editingSystem && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full m-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Edit System</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.systems.editSystem')}</h3>
                         <div className="grid grid-cols-1 gap-4 mb-6">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>

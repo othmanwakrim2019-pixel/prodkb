@@ -30,11 +30,11 @@ export class ConfigService {
         });
 
         // Trigger reload in email service
-        (emailService as any).reloadConfig();
+        emailService.reloadConfig();
     }
 
     async sendTestEmail(email: string) {
-        return (emailService as any).sendTestEmail(email);
+        return emailService.sendTestEmail(email);
     }
 
     async updateConfig(key: string, value: string) {

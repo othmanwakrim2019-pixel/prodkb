@@ -2,8 +2,45 @@
 import { prisma } from '../../common/utils/prisma';
 import { NotFoundError } from '../../common/errors/app.error';
 
+// ── Typed DTOs (eliminates `any`) ──
+export interface CreateProcedureDTO {
+    title: string;
+    description: string;
+    resolutionSteps: string;
+    systemId: string;
+    jobId?: string;
+    rootCause?: string;
+    workaround?: string;
+    commands?: string;
+    errorCode?: string;
+    tags?: string;
+}
+
+export interface UpdateProcedureDTO {
+    title?: string;
+    description?: string;
+    resolutionSteps?: string;
+    systemId?: string;
+    jobId?: string | null;
+    rootCause?: string | null;
+    workaround?: string | null;
+    commands?: string | null;
+    errorCode?: string | null;
+    tags?: string | null;
+}
+
+export interface ProcedurePaginationParams {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
 export class ProcedureService {
-    async findAll(search?: string) {
+    async findAll(search?: string, pagination: ProcedurePaginationParams = {}) {
+        const { page = 1, limit = 100, sortBy = 'updatedAt', sortOrder = 'desc' } = pagination;
+        const skip = (page - 1) * limit;
+
         const where: Record<string, unknown> = {};
         if (search) {
             where.OR = [
@@ -14,14 +51,28 @@ export class ProcedureService {
             ];
         }
 
-        return prisma.procedure.findMany({
-            where,
-            include: {
-                system: true,
-                job: true,
-                _count: { select: { incidents: true } },
-            },
-        });
+        const [data, total] = await Promise.all([
+            prisma.procedure.findMany({
+                where,
+                include: {
+                    system: true,
+                    job: true,
+                    _count: { select: { incidents: true } },
+                },
+                skip,
+                take: limit,
+                orderBy: { [sortBy]: sortOrder },
+            }),
+            prisma.procedure.count({ where }),
+        ]);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 
     async findById(id: string) {
@@ -41,7 +92,7 @@ export class ProcedureService {
         return procedure;
     }
 
-    async create(data: any, userId: string) {
+    async create(data: CreateProcedureDTO, userId: string) {
         return prisma.procedure.create({
             data: {
                 ...data,
@@ -50,7 +101,7 @@ export class ProcedureService {
         });
     }
 
-    async update(id: string, data: any, userId: string) {
+    async update(id: string, data: UpdateProcedureDTO, userId: string) {
         const procedure = await prisma.procedure.findUnique({ where: { id } });
         if (!procedure) throw new NotFoundError('Procedure not found');
 

@@ -48,14 +48,11 @@ export class ConfigController {
                 return res.status(400).json({ error: 'Email address required' });
             }
 
-            const result = await configService.sendTestEmail(email);
-            if (result.success) {
-                res.json({ message: 'Test email sent successfully' });
-            } else {
-                res.status(400).json({ error: `Failed to send test email: ${result.error}` });
-            }
-        } catch (error) {
-            next(error);
+            await configService.sendTestEmail(email);
+            res.json({ message: 'Test email sent successfully' });
+        } catch (error: any) {
+            const msg = error?.message || 'Unknown error';
+            res.status(400).json({ error: `Failed to send test email: ${msg}` });
         }
     }
 

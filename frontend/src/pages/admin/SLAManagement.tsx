@@ -3,9 +3,11 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { SLA, Severity } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export const SLAManagement = () => {
     const { canManageSLAs } = useAuth();
+    const { t } = useTranslation();
     const [slas, setSlas] = useState<SLA[]>([]);
     const [showSlaForm, setShowSlaForm] = useState(false);
     const [newSla, setNewSla] = useState({ name: '', description: '', severity: 'Medium', acknowledgeTimeMinutes: 60, resolveTimeMinutes: 480 });
@@ -18,7 +20,7 @@ export const SLAManagement = () => {
     const fetchSlas = async () => {
         try {
             const response = await axios.get('/api/slas');
-            setSlas(response.data);
+            setSlas(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch SLAs', error);
         }
@@ -75,21 +77,21 @@ export const SLAManagement = () => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900">SLA Policies</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t('admin.slas.title')}</h2>
                 {canManageSLAs() && (
                     <button
                         onClick={() => setShowSlaForm(!showSlaForm)}
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Create Policy
+                        {t('admin.slas.addSla')}
                     </button>
                 )}
             </div>
 
             {showSlaForm && (
                 <form onSubmit={handleCreateSla} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
-                    <h3 className="font-medium text-slate-900">Create New SLA Policy</h3>
+                    <h3 className="font-medium text-slate-900">{t('admin.slas.addSla')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-slate-700 mb-1">Policy Name</label>

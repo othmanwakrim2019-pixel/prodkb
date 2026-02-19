@@ -1,42 +1,142 @@
 
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { planningService } from './planning.service';
+import { planningInstanceService, planningJobService } from './planning.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit } from '../audit/audit.service';
-import { PlanningPeriod } from '@prisma/client';
 
 // --- Validation Schemas ---
 
 const periodEnum = z.enum(['monthly', 'quarterly', 'annual']);
+const statusEnum = z.enum(['pending', 'running', 'done']);
+const instanceStatusEnum = z.enum(['active', 'archived']);
 
-const createPlanningJobSchema = z.object({
+const createInstanceSchema = z.object({
     name: z.string().min(2).max(200),
-    application: z.string().min(1).max(100),
-    scheduledTime: z.string().datetime({ message: 'scheduledTime must be a valid ISO 8601 datetime' }),
+    description: z.string().max(500).optional(),
     period: periodEnum,
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime(),
+});
+
+const createJobSchema = z.object({
+    instanceId: z.string().uuid(),
+    systemId: z.string().uuid(),
+    jobId: z.string().uuid(),
+    scheduledTime: z.string().datetime(),
     dependencies: z.array(z.string().uuid()).default([]),
-    status: z.enum(['pending', 'running', 'done']).optional(),
+    status: statusEnum.optional(),
 });
 
-const updatePlanningJobSchema = z.object({
-    name: z.string().min(2).max(200).optional(),
-    application: z.string().min(1).max(100).optional(),
+const updateJobSchema = z.object({
+    systemId: z.string().uuid().optional(),
+    jobId: z.string().uuid().optional(),
     scheduledTime: z.string().datetime().optional(),
-    period: periodEnum.optional(),
     dependencies: z.array(z.string().uuid()).optional(),
-    status: z.enum(['pending', 'running', 'done']).optional(),
 });
 
-// --- Controller ---
+const updateStatusSchema = z.object({
+    status: statusEnum,
+});
+
+const updatePositionSchema = z.object({
+    positionX: z.number(),
+    positionY: z.number(),
+});
+
+const batchPositionsSchema = z.object({
+    positions: z.array(z.object({
+        id: z.string().uuid(),
+        positionX: z.number(),
+        positionY: z.number(),
+    })),
+});
+
+// --- Instance Controller ---
 
 export class PlanningController {
 
-    static async getJobs(req: Request, res: Response, next: NextFunction) {
+    // -- Instances --
+
+    static async getInstances(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const period = periodEnum.parse(req.query.period);
-            const jobs = await planningService.findByPeriod(period as PlanningPeriod);
+            const period = req.query.period ? periodEnum.parse(req.query.period) : undefined;
+            const status = req.query.status ? instanceStatusEnum.parse(req.query.status) : undefined;
+            const instances = await planningInstanceService.findAll({ period, status });
+            res.json(createResponse(true, instances));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const instance = await planningInstanceService.findById(req.params.id);
+            res.json(createResponse(true, instance));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async createInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const data = createInstanceSchema.parse(req.body);
+            const instance = await planningInstanceService.create({
+                ...data,
+                startDate: new Date(data.startDate),
+                endDate: new Date(data.endDate),
+                createdById: req.user!.id,
+            });
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'CREATE',
+                entityType: 'PLANNING_JOB',
+                entityId: instance.id,
+                details: JSON.stringify({ name: data.name, period: data.period }),
+                req,
+            });
+
+            res.status(201).json(createResponse(true, instance, 'Planning instance created'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async archiveInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const instance = await planningInstanceService.archive(req.params.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'UPDATE',
+                entityType: 'PLANNING_JOB',
+                entityId: req.params.id,
+                details: JSON.stringify({ action: 'ARCHIVE' }),
+                req,
+            });
+
+            res.json(createResponse(true, instance, 'Instance archived'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async reactivateInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const instance = await planningInstanceService.reactivate(req.params.id);
+            res.json(createResponse(true, instance, 'Instance reactivated'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // -- Jobs --
+
+    static async getJobsByInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const jobs = await planningJobService.findByInstance(req.params.id);
             res.json(createResponse(true, jobs));
         } catch (error) {
             next(error);
@@ -45,23 +145,22 @@ export class PlanningController {
 
     static async createJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const data = createPlanningJobSchema.parse(req.body);
-            const job = await planningService.create({
+            const data = createJobSchema.parse(req.body);
+            const job = await planningJobService.create({
                 ...data,
                 scheduledTime: new Date(data.scheduledTime),
-                period: data.period as PlanningPeriod,
             });
 
             await logAudit({
-                userId: req.user?.id || 'unknown',
+                userId: req.user!.id,
                 actionType: 'CREATE',
                 entityType: 'PLANNING_JOB',
                 entityId: job.id,
-                details: JSON.stringify({ name: data.name, application: data.application, period: data.period }),
+                details: JSON.stringify({ instanceId: data.instanceId, systemId: data.systemId, jobId: data.jobId }),
                 req,
             });
 
-            res.status(201).json(createResponse(true, job, 'Planning job created successfully'));
+            res.status(201).json(createResponse(true, job, 'Planning job created'));
         } catch (error) {
             next(error);
         }
@@ -70,17 +169,15 @@ export class PlanningController {
     static async updateJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const data = updatePlanningJobSchema.parse(req.body);
+            const data = updateJobSchema.parse(req.body);
 
             const updateData: Record<string, unknown> = { ...data };
-            if (data.scheduledTime) {
-                updateData.scheduledTime = new Date(data.scheduledTime);
-            }
+            if (data.scheduledTime) updateData.scheduledTime = new Date(data.scheduledTime);
 
-            const updated = await planningService.update(id, updateData as Parameters<typeof planningService.update>[1]);
+            const updated = await planningJobService.update(id, updateData as Parameters<typeof planningJobService.update>[1]);
 
             await logAudit({
-                userId: req.user?.id || 'unknown',
+                userId: req.user!.id,
                 actionType: 'UPDATE',
                 entityType: 'PLANNING_JOB',
                 entityId: id,
@@ -88,27 +185,7 @@ export class PlanningController {
                 req,
             });
 
-            res.json(createResponse(true, updated, 'Planning job updated successfully'));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    static async completeJob(req: AuthRequest, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const completed = await planningService.complete(id);
-
-            await logAudit({
-                userId: req.user?.id || 'unknown',
-                actionType: 'UPDATE',
-                entityType: 'PLANNING_JOB',
-                entityId: id,
-                details: JSON.stringify({ action: 'COMPLETE', previousStatus: 'running', newStatus: 'done' }),
-                req,
-            });
-
-            res.json(createResponse(true, completed, 'Job marked as done. Downstream jobs activated if ready.'));
+            res.json(createResponse(true, updated, 'Planning job updated'));
         } catch (error) {
             next(error);
         }
@@ -117,18 +194,80 @@ export class PlanningController {
     static async deleteJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const job = await planningService.delete(id);
+            const job = await planningJobService.delete(id);
 
             await logAudit({
-                userId: req.user?.id || 'unknown',
+                userId: req.user!.id,
                 actionType: 'DELETE',
                 entityType: 'PLANNING_JOB',
                 entityId: id,
-                details: JSON.stringify({ name: job.name, application: job.application }),
+                details: JSON.stringify({ jobId: job.jobId, systemId: job.systemId }),
                 req,
             });
 
-            res.json(createResponse(true, null, 'Planning job deleted successfully'));
+            res.json(createResponse(true, null, 'Planning job deleted'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async updateJobStatus(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { status } = updateStatusSchema.parse(req.body);
+            const updated = await planningJobService.updateStatus(id, status, req.user!.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'UPDATE',
+                entityType: 'PLANNING_JOB',
+                entityId: id,
+                details: JSON.stringify({ action: 'STATUS_CHANGE', newStatus: status }),
+                req,
+            });
+
+            res.json(createResponse(true, updated, `Job status updated to ${status}`));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async completeJob(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const completed = await planningJobService.complete(id, req.user!.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'UPDATE',
+                entityType: 'PLANNING_JOB',
+                entityId: id,
+                details: JSON.stringify({ action: 'COMPLETE' }),
+                req,
+            });
+
+            res.json(createResponse(true, completed, 'Job completed. Downstream jobs activated if ready.'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async updateJobPosition(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { positionX, positionY } = updatePositionSchema.parse(req.body);
+            await planningJobService.updatePosition(id, positionX, positionY);
+            res.json(createResponse(true, null, 'Position saved'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async batchUpdatePositions(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { positions } = batchPositionsSchema.parse(req.body);
+            await planningJobService.updatePositions(positions);
+            res.json(createResponse(true, null, `${positions.length} positions saved`));
         } catch (error) {
             next(error);
         }

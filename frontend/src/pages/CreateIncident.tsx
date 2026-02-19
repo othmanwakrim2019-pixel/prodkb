@@ -6,6 +6,7 @@ import { Plus, Trash2, Upload, X, ShieldAlert } from 'lucide-react';
 import { SmartSolutionSearch } from '../components/SmartSolutionSearch';
 import { useAuth } from '../context/AuthContext';
 import { System, Job, Team, SLA } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface CreateIncidentFormValues {
     title: string;
@@ -23,6 +24,7 @@ interface CreateIncidentFormValues {
 
 export const CreateIncident = () => {
     const { hasPermission } = useAuth();
+    const { t } = useTranslation();
     const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateIncidentFormValues>({
         defaultValues: {
             title: '',
@@ -62,9 +64,9 @@ export const CreateIncident = () => {
                     axios.get('/api/teams'),
                     axios.get('/api/slas')
                 ]);
-                setSystems(systemsRes.data);
-                setTeams(teamsRes.data);
-                setSlas(slasRes.data);
+                setSystems(Array.isArray(systemsRes.data) ? systemsRes.data : systemsRes.data?.data || []);
+                setTeams(Array.isArray(teamsRes.data) ? teamsRes.data : teamsRes.data?.data || []);
+                setSlas(Array.isArray(slasRes.data) ? slasRes.data : slasRes.data?.data || []);
             } catch (error) {
                 console.error('Failed to fetch data', error);
             }
@@ -109,7 +111,7 @@ export const CreateIncident = () => {
                 <div className="bg-red-50 p-6 rounded-full mb-4">
                     <ShieldAlert className="h-12 w-12 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('common.accessDenied')}</h2>
                 <p className="text-slate-600 mt-2 max-w-md">
                     You do not have permission to declare new incidents.
                 </p>
@@ -173,7 +175,7 @@ export const CreateIncident = () => {
                 <div className="bg-red-50 p-6 rounded-full mb-4">
                     <ShieldAlert className="h-12 w-12 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('common.accessDenied')}</h2>
                 <p className="text-slate-600 mt-2 max-w-md">
                     You do not have permission to declare new incidents.
                 </p>
@@ -184,7 +186,7 @@ export const CreateIncident = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900">Declare New Incident</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{t('createIncident.title')}</h1>
                 <p className="text-sm text-slate-500 mt-1">Select the failing component to get started.</p>
             </div>
 
@@ -473,3 +475,6 @@ export const CreateIncident = () => {
         </div>
     );
 };
+
+export default CreateIncident;
+
