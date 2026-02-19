@@ -14,6 +14,7 @@ import { ProcedureDetails } from './pages/ProcedureDetails';
 import { CreateProcedure } from './pages/CreateProcedure';
 import { Search } from './pages/Search';
 import { Admin } from './pages/Admin';
+import { Planning } from './pages/planning/Planning';
 
 function App() {
     return (
@@ -43,6 +44,7 @@ function App() {
                             </Route>
                             <Route path="/search" element={<Search />} />
                             <Route path="/admin" element={<Admin />} />
+                            <Route path="/planning" element={<Planning />} />
                         </Route>
                     </Route>
 

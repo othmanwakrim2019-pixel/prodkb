@@ -295,3 +295,32 @@ model AuditLog {
   @@index([entityType])
   @@index([timestamp])
 }
+
+enum PlanningPeriod {
+  monthly
+  quarterly
+  annual
+}
+
+enum PlanningStatus {
+  pending
+  running
+  done
+}
+
+model PlanningJob {
+  id            String         @id @default(uuid())
+  name          String
+  application   String
+  scheduledTime DateTime
+  period        PlanningPeriod
+  dependencies  Json           @default("[]") // Array of PlanningJob IDs
+  status        PlanningStatus @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([period])
+  @@index([status])
+  @@index([period, status])
+}
