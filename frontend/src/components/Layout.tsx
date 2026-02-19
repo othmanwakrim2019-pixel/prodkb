@@ -8,7 +8,8 @@ import {
     AlertCircle,
     BookOpen,
     Search,
-    Key
+    Key,
+    CalendarClock
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
@@ -48,6 +49,12 @@ export const Layout = () => {
             path: '/search',
             icon: Search,
             requiredPermission: 'SEARCH_VIEW'
+        },
+        {
+            label: 'Planning',
+            path: '/planning',
+            icon: CalendarClock,
+            requiredPermission: 'DASHBOARD_VIEW'
         },
     ];
 
