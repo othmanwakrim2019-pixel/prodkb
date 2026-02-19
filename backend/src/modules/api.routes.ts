@@ -11,6 +11,7 @@ import { configRoutes } from './config/config.routes';
 import { emailTemplateRoutes } from './email-templates/email-template.routes';
 import { auditRoutes } from './audit/audit.routes';
 import { searchRoutes } from './search/search.routes';
+import { planningRoutes } from './planning/planning.routes';
 
 const router = Router();
 
@@ -25,5 +26,6 @@ router.use('/config', configRoutes);
 router.use('/email-templates', emailTemplateRoutes);
 router.use('/audit-logs', auditRoutes);
 router.use('/search', searchRoutes);
+router.use('/planning', planningRoutes);
 
 export default router;
