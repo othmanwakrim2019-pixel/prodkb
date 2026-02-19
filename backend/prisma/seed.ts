@@ -24,22 +24,74 @@ async function main() {
     // Create Permissions & Roles
     console.log('Creating permissions and roles...');
     const permissions = [
+        // Core
         'DASHBOARD_VIEW',
+        'SEARCH_VIEW',
+        // Incidents
         'INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT', 'INCIDENT_DELETE',
+        // Procedures
         'PROCEDURE_VIEW', 'PROCEDURE_CREATE', 'PROCEDURE_EDIT', 'PROCEDURE_DELETE',
+        // Users & Roles
         'USER_VIEW', 'USER_MANAGE',
         'ROLE_MANAGE',
-        'AUDIT_VIEW',
-        'SYSTEM_MANAGE',
+        // Teams
         'TEAM_MANAGE', 'TEAM_DELETE',
+        // Systems & Jobs
+        'SYSTEM_MANAGE',
+        'JOB_VIEW', 'JOB_MANAGE',
+        // SLAs & Escalation
         'SLA_MANAGE',
-        'SEARCH_VIEW'
+        'ESCALATION_MANAGE',
+        // Auto-Assignment
+        'AUTO_ASSIGN_MANAGE',
+        // Planning
+        'PLANNING_VIEW', 'PLANNING_MANAGE',
+        // Analytics
+        'ANALYTICS_VIEW',
+        // Webhooks
+        'WEBHOOK_MANAGE',
+        // Configuration & Email
+        'CONFIG_MANAGE',
+        'EMAIL_TEMPLATE_MANAGE',
+        // Audit
+        'AUDIT_VIEW',
     ];
+
+    const permDescriptions: Record<string, string> = {
+        'DASHBOARD_VIEW': 'View dashboard and statistics',
+        'SEARCH_VIEW': 'Use global search functionality',
+        'INCIDENT_VIEW': 'View incidents list and details',
+        'INCIDENT_CREATE': 'Create new incidents',
+        'INCIDENT_EDIT': 'Edit incidents, update status, add logs',
+        'INCIDENT_DELETE': 'Delete incidents',
+        'PROCEDURE_VIEW': 'View procedures list and details',
+        'PROCEDURE_CREATE': 'Create new procedures',
+        'PROCEDURE_EDIT': 'Edit existing procedures',
+        'PROCEDURE_DELETE': 'Delete procedures',
+        'USER_VIEW': 'View users list',
+        'USER_MANAGE': 'Create, edit, and deactivate users',
+        'ROLE_MANAGE': 'Create, edit, and delete roles',
+        'TEAM_MANAGE': 'Create and edit teams, manage members',
+        'TEAM_DELETE': 'Delete teams',
+        'SYSTEM_MANAGE': 'Create, edit, and delete systems',
+        'JOB_VIEW': 'View jobs list',
+        'JOB_MANAGE': 'Create, edit, and delete jobs',
+        'SLA_MANAGE': 'Create, edit, and delete SLA policies',
+        'ESCALATION_MANAGE': 'Create, edit, and delete escalation rules',
+        'AUTO_ASSIGN_MANAGE': 'Create, edit, and delete auto-assignment rules',
+        'PLANNING_VIEW': 'View planning instances and jobs',
+        'PLANNING_MANAGE': 'Create, edit, archive planning instances and manage planning jobs',
+        'ANALYTICS_VIEW': 'View analytics dashboards (MTTR, SLA compliance, team performance)',
+        'WEBHOOK_MANAGE': 'Create, edit, and delete webhooks',
+        'CONFIG_MANAGE': 'Manage SMTP and system configuration',
+        'EMAIL_TEMPLATE_MANAGE': 'Edit email notification templates',
+        'AUDIT_VIEW': 'View audit logs',
+    };
 
     const permsMap = new Map();
     for (const code of permissions) {
         const p = await prisma.permission.create({
-            data: { code, description: `Permission to ${code.toLowerCase().replace('_', ' ')}` }
+            data: { code, description: permDescriptions[code] || `Permission to ${code.toLowerCase().replace('_', ' ')}` }
         });
         permsMap.set(code, p.id);
     }
@@ -47,7 +99,7 @@ async function main() {
     const adminRole = await prisma.role.create({
         data: {
             name: 'ADMIN',
-            description: 'Full system access',
+            description: 'Full system access — all permissions',
             permissions: { connect: permissions.map(code => ({ id: permsMap.get(code) })) }
         }
     });
@@ -55,10 +107,16 @@ async function main() {
     const expertRole = await prisma.role.create({
         data: {
             name: 'EXPERT',
-            description: 'Can manage procedures and resolve incidents',
+            description: 'Can manage procedures, resolve incidents, view planning and analytics',
             permissions: {
-                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'INCIDENT_EDIT', 'PROCEDURE_VIEW', 'PROCEDURE_CREATE', 'PROCEDURE_EDIT']
-                    .map(code => ({ id: permsMap.get(code) }))
+                connect: [
+                    'DASHBOARD_VIEW', 'SEARCH_VIEW',
+                    'INCIDENT_VIEW', 'INCIDENT_EDIT',
+                    'PROCEDURE_VIEW', 'PROCEDURE_CREATE', 'PROCEDURE_EDIT',
+                    'PLANNING_VIEW', 'PLANNING_MANAGE',
+                    'ANALYTICS_VIEW',
+                    'JOB_VIEW',
+                ].map(code => ({ id: permsMap.get(code) }))
             }
         }
     });
@@ -66,10 +124,15 @@ async function main() {
     const operatorRole = await prisma.role.create({
         data: {
             name: 'OPERATOR',
-            description: 'Can create incidents and view status',
+            description: 'Can create incidents, view planning and procedures',
             permissions: {
-                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT', 'PROCEDURE_VIEW']
-                    .map(code => ({ id: permsMap.get(code) }))
+                connect: [
+                    'DASHBOARD_VIEW', 'SEARCH_VIEW',
+                    'INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT',
+                    'PROCEDURE_VIEW',
+                    'PLANNING_VIEW',
+                    'JOB_VIEW',
+                ].map(code => ({ id: permsMap.get(code) }))
             }
         }
     });
@@ -77,10 +140,14 @@ async function main() {
     const viewerRole = await prisma.role.create({
         data: {
             name: 'VIEWER',
-            description: 'Read-only access to assigned team incidents',
+            description: 'Read-only access to incidents, procedures, and planning',
             permissions: {
-                connect: ['DASHBOARD_VIEW', 'INCIDENT_VIEW', 'PROCEDURE_VIEW']
-                    .map(code => ({ id: permsMap.get(code) }))
+                connect: [
+                    'DASHBOARD_VIEW',
+                    'INCIDENT_VIEW',
+                    'PROCEDURE_VIEW',
+                    'PLANNING_VIEW',
+                ].map(code => ({ id: permsMap.get(code) }))
             }
         }
     });

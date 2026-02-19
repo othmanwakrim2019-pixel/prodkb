@@ -57,7 +57,7 @@ export const Layout = () => {
             label: t('nav.planning'),
             path: '/planning',
             icon: CalendarClock,
-            requiredPermission: 'DASHBOARD_VIEW'
+            requiredPermission: 'PLANNING_VIEW'
         },
     ];
 

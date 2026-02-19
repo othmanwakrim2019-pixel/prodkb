@@ -11,14 +11,14 @@ import { createResponse } from '../../common/types/api.response';
 
 const router = Router();
 
-router.get('/', authenticate, checkPermission('SLA_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', authenticate, checkPermission('ESCALATION_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const rules = await escalationService.findAll();
         res.json(createResponse(true, rules));
     } catch (error) { next(error); }
 });
 
-router.post('/', authenticate, checkPermission('SLA_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', authenticate, checkPermission('ESCALATION_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = createEscalationRuleSchema.parse(req.body);
         const rule = await escalationService.create(data);
@@ -26,7 +26,7 @@ router.post('/', authenticate, checkPermission('SLA_MANAGE'), async (req: Reques
     } catch (error) { next(error); }
 });
 
-router.put('/:id', authenticate, checkPermission('SLA_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', authenticate, checkPermission('ESCALATION_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = updateEscalationRuleSchema.parse(req.body);
         const rule = await escalationService.update(req.params.id, data);
@@ -34,7 +34,7 @@ router.put('/:id', authenticate, checkPermission('SLA_MANAGE'), async (req: Requ
     } catch (error) { next(error); }
 });
 
-router.delete('/:id', authenticate, checkPermission('SLA_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', authenticate, checkPermission('ESCALATION_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         await escalationService.delete(req.params.id);
         res.json(createResponse(true, null, 'Escalation rule deleted'));

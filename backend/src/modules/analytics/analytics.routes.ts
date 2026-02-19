@@ -6,7 +6,7 @@ import { createResponse } from '../../common/types/api.response';
 
 const router = Router();
 
-router.get('/mttr', authenticate, checkPermission('DASHBOARD_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/mttr', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getMTTRTrends(days);
@@ -14,7 +14,7 @@ router.get('/mttr', authenticate, checkPermission('DASHBOARD_VIEW'), async (req:
     } catch (error) { next(error); }
 });
 
-router.get('/sla-compliance', authenticate, checkPermission('DASHBOARD_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/sla-compliance', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getSLACompliance(days);
@@ -22,7 +22,7 @@ router.get('/sla-compliance', authenticate, checkPermission('DASHBOARD_VIEW'), a
     } catch (error) { next(error); }
 });
 
-router.get('/team-performance', authenticate, checkPermission('DASHBOARD_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/team-performance', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getTeamPerformance(days);
@@ -30,7 +30,7 @@ router.get('/team-performance', authenticate, checkPermission('DASHBOARD_VIEW'),
     } catch (error) { next(error); }
 });
 
-router.get('/severity', authenticate, checkPermission('DASHBOARD_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/severity', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getSeverityDistribution(days);
