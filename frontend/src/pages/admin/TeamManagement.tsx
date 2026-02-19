@@ -4,9 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { EditTeamModal } from '../../components/EditTeamModal';
 import { Team, User, TeamMember } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export const TeamManagement = () => {
     const { canManageTeams } = useAuth();
+    const { t } = useTranslation();
     const [teams, setTeams] = useState<Team[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export const TeamManagement = () => {
     const fetchTeams = async () => {
         try {
             const response = await axios.get('/api/teams');
-            setTeams(response.data);
+            setTeams(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch teams', error);
         }
@@ -33,7 +35,7 @@ export const TeamManagement = () => {
     const fetchUsers = async () => {
         try {
             const response = await axios.get('/api/users');
-            setUsers(response.data);
+            setUsers(Array.isArray(response.data) ? response.data : response.data?.data || []);
         } catch (error) {
             console.error('Failed to fetch users', error);
         }
@@ -129,7 +131,7 @@ export const TeamManagement = () => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900">Team Management</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t('admin.teams.title')}</h2>
                 {canManageTeams() && (
                     <button
                         onClick={() => setShowTeamForm(!showTeamForm)}

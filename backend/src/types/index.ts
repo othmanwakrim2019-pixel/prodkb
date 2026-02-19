@@ -134,6 +134,11 @@ export interface IIncident {
     linkedProcedureId: string | null;
     linkedProcedure?: IProcedure | null;
     logs?: IIncidentLog[];
+    // Phase 2: Optimistic locking + SLA enforcement
+    version: number;
+    escalationLevel: number;
+    slaBreached: boolean;
+    slaBreachNotifiedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -3,25 +3,46 @@ import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { NotFoundError, ValidationError, ConflictError } from '../../common/errors/app.error';
 
+export interface SystemPaginationParams {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
 export class SystemService {
-    /**
-     * Get all systems with relations
-     */
-    async findAllSystems() {
-        return prisma.system.findMany({
-            include: {
-                jobs: {
-                    include: {
-                        team: true
+    async findAllSystems(pagination: SystemPaginationParams = {}) {
+        const { page = 1, limit = 100, sortBy = 'name', sortOrder = 'asc' } = pagination;
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            prisma.system.findMany({
+                include: {
+                    jobs: {
+                        include: {
+                            team: true
+                        }
+                    },
+                    procedures: {
+                        include: {
+                            job: true
+                        }
                     }
                 },
-                procedures: {
-                    include: {
-                        job: true
-                    }
-                }
-            },
-        });
+                skip,
+                take: limit,
+                orderBy: { [sortBy]: sortOrder },
+            }),
+            prisma.system.count(),
+        ]);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 
     /**
@@ -76,16 +97,30 @@ export class SystemService {
         return system; // Return deleted system for audit details
     }
 
-    /**
-     * Get all jobs
-     */
-    async findAllJobs() {
-        return prisma.job.findMany({
-            include: {
-                system: true,
-                team: true
-            },
-        });
+    async findAllJobs(pagination: SystemPaginationParams = {}) {
+        const { page = 1, limit = 100, sortBy = 'name', sortOrder = 'asc' } = pagination;
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            prisma.job.findMany({
+                include: {
+                    system: true,
+                    team: true
+                },
+                skip,
+                take: limit,
+                orderBy: { [sortBy]: sortOrder },
+            }),
+            prisma.job.count(),
+        ]);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 
     /**

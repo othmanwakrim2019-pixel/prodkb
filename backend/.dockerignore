@@ -1,37 +1,12 @@
-# Dependencies
 node_modules
-npm-debug.log
-
-# Build artifacts
 dist
-
-# Environment files
-.env
-.env.local
-.env.*.local
-
-# IDE
-.idea
-.vscode
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-logs
 *.log
-
-# Test files
-tests
-*.test.ts
-*.spec.ts
-jest.config.ts
+logs
+.env
+.env.*
+!.env.example
 coverage
-
-# Development files
-*.md
+test-results
+*.db
+*.db-journal
 .git
-.gitignore

@@ -53,21 +53,24 @@ export class TeamController {
 
     static async listTeams(req: Request, res: Response, next: NextFunction) {
         try {
-            const teams = await teamService.findAll();
+            const result = await teamService.findAll();
 
-            // Calculate system counts (logic moved from controller or kept here? Kept here for presentation logic)
-            const teamsWithSystemCount = teams.map(team => {
-                const uniqueSystemIds = new Set(team.jobs.map(j => j.systemId));
+            // Calculate system counts (presentation logic stays in controller)
+            const teamsWithSystemCount = result.data.map((team: any) => {
+                const uniqueSystemIds = new Set(team.jobs.map((j: any) => j.systemId));
                 return {
                     ...team,
                     systemCount: uniqueSystemIds.size,
                     systems: Array.from(uniqueSystemIds).map(sysId =>
-                        team.jobs.find(j => j.systemId === sysId)?.system
+                        team.jobs.find((j: any) => j.systemId === sysId)?.system
                     ).filter(Boolean),
                 };
             });
 
-            res.json(createResponse(true, teamsWithSystemCount));
+            res.json(createResponse(true, {
+                ...result,
+                data: teamsWithSystemCount,
+            }));
         } catch (error) {
             next(error);
         }

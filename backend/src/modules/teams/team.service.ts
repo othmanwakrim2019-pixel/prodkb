@@ -3,6 +3,13 @@ import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../common/errors/app.error';
 
+export interface TeamPaginationParams {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
 export class TeamService {
     async create(data: { name: string; description?: string; emailDistribution: string; sendEmail?: boolean }) {
         const team = await prisma.team.create({
@@ -25,43 +32,59 @@ export class TeamService {
         return team;
     }
 
-    async findAll() {
-        return prisma.team.findMany({
-            include: {
-                members: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                email: true,
-                                role: true,
+    async findAll(pagination: TeamPaginationParams = {}) {
+        const { page = 1, limit = 100, sortBy = 'name', sortOrder = 'asc' } = pagination;
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            prisma.team.findMany({
+                include: {
+                    members: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    role: true,
+                                },
                             },
                         },
                     },
-                },
-                jobs: {
-                    select: {
-                        systemId: true,
-                        system: {
-                            select: {
-                                id: true,
-                                name: true,
+                    jobs: {
+                        select: {
+                            systemId: true,
+                            system: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
                             },
                         },
                     },
-                },
-                _count: {
-                    select: {
-                        jobs: true,
-                        incidents: true,
+                    _count: {
+                        select: {
+                            jobs: true,
+                            incidents: true,
+                        },
                     },
                 },
-            },
-            orderBy: {
-                name: 'asc',
-            },
-        });
+                skip,
+                take: limit,
+                orderBy: {
+                    [sortBy]: sortOrder,
+                },
+            }),
+            prisma.team.count(),
+        ]);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 
     async findById(id: string) {

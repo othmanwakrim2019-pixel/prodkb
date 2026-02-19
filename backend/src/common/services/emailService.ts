@@ -79,9 +79,32 @@ export class EmailService {
     }
   }
 
+  /** Re-read SMTP config from DB and recreate the transporter */
+  async reloadConfig(): Promise<void> {
+    logger.info('Reloading email service configuration…');
+    await this.initialize();
+  }
+
+  /** Send a lightweight test email to verify SMTP settings */
+  async sendTestEmail(to: string): Promise<boolean> {
+    if (!this.enabled || !this.transporter || !this.config) {
+      throw new Error('Email service is not configured. Save a valid SMTP configuration first.');
+    }
+
+    await this.transporter.sendMail({
+      from: this.config.from,
+      to,
+      subject: 'ProdKB — SMTP Test',
+      text: 'If you see this message, your SMTP configuration is working correctly.',
+      html: '<p>If you see this message, your SMTP configuration is <strong>working correctly</strong>.</p>',
+    });
+
+    return true;
+  }
+
   async sendIncidentCreated(data: IncidentEmailData): Promise<boolean> {
     if (!this.enabled || !this.transporter || !this.config) {
-      logger.debug('Email service not enabled, skipping email');
+      logger.warn('Email service not enabled, skipping incident notification');
       return false;
     }
 
@@ -89,22 +112,34 @@ export class EmailService {
 
     // Check if team has opted out of emails
     if (incident.assignedTeam && incident.assignedTeam.sendEmail === false) {
-      logger.debug('Email skipped for team (sendEmail=false)', { teamName: incident.assignedTeam.name });
+      logger.warn('Email skipped for team (sendEmail=false)', { teamName: incident.assignedTeam.name });
       return false;
     }
 
-    // Get email recipients - team distribution list
-    const recipients = incident.assignedTeam?.emailDistribution || '';
+    // Get email recipients - team distribution list, fallback to team member emails
+    let recipients = incident.assignedTeam?.emailDistribution || '';
+    if (!recipients && incident.assignedTeamId) {
+      // Fallback: resolve from team members
+      try {
+        const members = await prisma.teamMember.findMany({
+          where: { teamId: incident.assignedTeamId },
+          include: { user: { select: { email: true } } },
+        });
+        recipients = members.map(m => m.user.email).filter(Boolean).join(',');
+      } catch (e) {
+        logger.warn('Failed to resolve team member emails', { teamId: incident.assignedTeamId });
+      }
+    }
     if (!recipients) {
-      logger.debug('No email recipients for incident', { incidentId: incident.id });
+      logger.warn('No email recipients found for incident (no distribution list and no team members)', { incidentId: incident.id, teamId: incident.assignedTeamId });
       return false;
     }
 
-    const template = await this.getTemplate('INCIDENT_CREATED');
+    const template = await this.getTemplate('incident_created');
 
     // Check if template is disabled
     if (template && template.enabled === false) {
-      logger.info('Email skipped: template INCIDENT_CREATED is disabled');
+      logger.info('Email skipped: template incident_created is disabled');
       return false;
     }
 
@@ -140,22 +175,31 @@ export class EmailService {
 
     const { incident } = data;
 
-    // Check team preference
     if (incident.assignedTeam && incident.assignedTeam.sendEmail === false) {
-      logger.debug('Update email skipped for team (sendEmail=false)', { teamName: incident.assignedTeam.name });
       return false;
     }
 
-    const recipients = incident.assignedTeam?.emailDistribution || '';
+    let recipients = incident.assignedTeam?.emailDistribution || '';
+    if (!recipients && incident.assignedTeamId) {
+      try {
+        const members = await prisma.teamMember.findMany({
+          where: { teamId: incident.assignedTeamId },
+          include: { user: { select: { email: true } } },
+        });
+        recipients = members.map(m => m.user.email).filter(Boolean).join(',');
+      } catch (e) {
+        logger.warn('Failed to resolve team member emails for update notification');
+      }
+    }
     if (!recipients) {
       return false;
     }
 
-    const template = await this.getTemplate('INCIDENT_UPDATED');
+    const template = await this.getTemplate('incident_updated');
 
     // Check if template is disabled
     if (template && template.enabled === false) {
-      logger.info('Email skipped: template INCIDENT_UPDATED is disabled');
+      logger.info('Email skipped: template incident_updated is disabled');
       return false;
     }
 
@@ -191,22 +235,31 @@ export class EmailService {
 
     const { incident } = data;
 
-    // Check team preference
     if (incident.assignedTeam && incident.assignedTeam.sendEmail === false) {
-      logger.debug('Resolution email skipped for team (sendEmail=false)', { teamName: incident.assignedTeam.name });
       return false;
     }
 
-    const recipients = incident.assignedTeam?.emailDistribution || '';
+    let recipients = incident.assignedTeam?.emailDistribution || '';
+    if (!recipients && incident.assignedTeamId) {
+      try {
+        const members = await prisma.teamMember.findMany({
+          where: { teamId: incident.assignedTeamId },
+          include: { user: { select: { email: true } } },
+        });
+        recipients = members.map(m => m.user.email).filter(Boolean).join(',');
+      } catch (e) {
+        logger.warn('Failed to resolve team member emails for resolved notification');
+      }
+    }
     if (!recipients) {
       return false;
     }
 
-    const template = await this.getTemplate('INCIDENT_RESOLVED');
+    const template = await this.getTemplate('incident_resolved');
 
     // Check if template is disabled
     if (template && template.enabled === false) {
-      logger.info('Email skipped: template INCIDENT_RESOLVED is disabled');
+      logger.info('Email skipped: template incident_resolved is disabled');
       return false;
     }
 
@@ -237,9 +290,15 @@ export class EmailService {
 
   private async getTemplate(name: string) {
     try {
-      return await (prisma as any).emailTemplate.findUnique({ where: { name } });
-    } catch (error) {
-      logger.warn('Failed to fetch email template, using fallback', { templateName: name });
+      const template = await prisma.emailTemplate.findUnique({ where: { name } });
+      if (template) {
+        logger.info(`Email template '${name}' loaded from DB (enabled=${template.enabled})`);
+      } else {
+        logger.warn(`Email template '${name}' not found in DB — using hardcoded fallback`);
+      }
+      return template;
+    } catch (error: any) {
+      logger.error('Failed to fetch email template from DB', { templateName: name, error: error?.message });
       return null;
     }
   }

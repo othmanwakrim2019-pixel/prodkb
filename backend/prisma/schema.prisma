@@ -37,6 +37,9 @@ model User {
   createdLogs       IncidentLog[] @relation("CreatedLogs")
   auditLogs         AuditLog[]
   teamMemberships   TeamMember[]
+  createdInstances  PlanningInstance[] @relation("CreatedInstances")
+  completedPlanningJobs PlanningJob[] @relation("CompletedPlanningJobs")
+  refreshTokens     RefreshToken[]
 
   @@index([roleId])
 }
@@ -97,6 +100,8 @@ model Team {
   members   TeamMember[]
   jobs      Job[]
   incidents Incident[]
+  escalationRules EscalationRule[] @relation("EscalationTeam")
+  autoAssignRules AutoAssignmentRule[] @relation("AutoAssignTeam")
 
   @@index([name])
 }
@@ -139,7 +144,10 @@ model System {
   description String?
   jobs        Job[]
   incidents   Incident[]
+  planningJobs PlanningJob[]
   procedures  Procedure[]
+  escalationRules EscalationRule[]
+  autoAssignRules AutoAssignmentRule[]
   updatedById String?
   updatedBy   User?       @relation("UpdatedSystems", fields: [updatedById], references: [id])
 
@@ -156,6 +164,7 @@ model Job {
   team        Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
   incidents   Incident[]
   procedures  Procedure[]
+  planningJobs PlanningJob[]
   updatedById String?
   updatedBy   User?       @relation("UpdatedJobs", fields: [updatedById], references: [id])
 
@@ -202,6 +211,12 @@ model Incident {
   timeToAcknowledge Int?
   timeToResolve     Int?
 
+  // Phase 2: Optimistic locking + SLA enforcement
+  version            Int       @default(1)
+  escalationLevel    Int       @default(0)
+  slaBreached        Boolean   @default(false)
+  slaBreachNotifiedAt DateTime?
+
   linkedProcedureId String?
   linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
 
@@ -218,6 +233,7 @@ model Incident {
   @@index([createdAt])
   @@index([environment])
   @@index([status, createdAt]) // Optimized for dashboard
+  @@index([slaBreached, status]) // SLA enforcement queries
 }
 
 model IncidentLog {
@@ -308,19 +324,135 @@ enum PlanningStatus {
   done
 }
 
-model PlanningJob {
-  id            String         @id @default(uuid())
-  name          String
-  application   String
-  scheduledTime DateTime
-  period        PlanningPeriod
-  dependencies  Json           @default("[]") // Array of PlanningJob IDs
-  status        PlanningStatus @default(pending)
+enum InstanceStatus {
+  active
+  archived
+}
+
+model PlanningInstance {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  period      PlanningPeriod
+  startDate   DateTime
+  endDate     DateTime
+  status      InstanceStatus @default(active)
+  createdById String
+  createdBy   User           @relation("CreatedInstances", fields: [createdById], references: [id])
+  jobs        PlanningJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([period])
-  @@index([status])
   @@index([period, status])
+  @@index([createdById])
+}
+
+model PlanningJob {
+  id            String           @id @default(uuid())
+  instanceId    String
+  instance      PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  systemId      String
+  system        System           @relation(fields: [systemId], references: [id])
+  jobId         String
+  job           Job              @relation(fields: [jobId], references: [id])
+  scheduledTime DateTime
+  dependencies  Json             @default("[]") // Array of PlanningJob IDs
+  status        PlanningStatus   @default(pending)
+  positionX     Float?
+  positionY     Float?
+  completedAt   DateTime?
+  completedById String?
+  completedBy   User?            @relation("CompletedPlanningJobs", fields: [completedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([instanceId, jobId])
+  @@index([instanceId])
+  @@index([systemId])
+  @@index([status])
+}
+
+// ── Phase 2: Escalation Rules ──
+model EscalationRule {
+  id          String   @id @default(uuid())
+  name        String
+  systemId    String?
+  system      System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
+  severity    String?  // null = applies to all severities
+  level       Int      @default(1) // escalation tier
+  teamId      String
+  team        Team     @relation("EscalationTeam", fields: [teamId], references: [id])
+  delayMinutes Int     // minutes after SLA breach before this level triggers
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([systemId, severity, level])
+  @@index([systemId, severity])
+}
+
+// ── Phase 2: Auto-Assignment Rules ──
+model AutoAssignmentRule {
+  id        String   @id @default(uuid())
+  name      String
+  systemId  String?
+  system    System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
+  severity  String?  // null = wildcard
+  teamId    String
+  team      Team     @relation("AutoAssignTeam", fields: [teamId], references: [id])
+  priority  Int      @default(0) // higher wins
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([systemId, severity])
+}
+
+// ── Phase 2: Webhooks ──
+model Webhook {
+  id         String   @id @default(uuid())
+  name       String
+  url        String
+  secret     String   // HMAC-SHA256 signing secret
+  events     String   // comma-separated: incident.created,incident.resolved,...
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  deliveries WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id            String   @id @default(uuid())
+  webhookId     String
+  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event         String
+  payload       String   @db.Text
+  statusCode    Int?
+  response      String?  @db.Text
+  deliveredAt   DateTime?
+  attemptCount  Int      @default(0)
+  success       Boolean  @default(false)
+  error         String?
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([event])
+}
+
+// ── Phase 2: Refresh Tokens ──
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }

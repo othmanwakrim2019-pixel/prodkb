@@ -9,6 +9,7 @@
  */
 export const IncidentStatus = {
     OPEN: 'Open',
+    ACKNOWLEDGED: 'Acknowledged',
     IN_PROGRESS: 'In Progress',
     RESOLVED: 'Resolved',
     CLOSED: 'Closed',

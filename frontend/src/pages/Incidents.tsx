@@ -5,6 +5,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IncidentFilters } from '../components/IncidentFilters';
 import { Incident } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export const Incidents = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -12,6 +13,7 @@ export const Incidents = () => {
     const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
     const { canCreate, canDelete } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { t } = useTranslation();
 
     const handleDelete = async (id: string, title: string) => {
         if (!confirm(`Are you sure you want to delete incident "${title}"?`)) {
@@ -71,7 +73,7 @@ export const Incidents = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">Incidents</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{t('incidents.title')}</h1>
                 {canCreate() && (
                     <Link
                         to="/incidents/new"
@@ -243,3 +245,6 @@ export const Incidents = () => {
         </div>
     );
 };
+
+export default Incidents;
+

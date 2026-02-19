@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { PlanningJob } from './planning.types';
+import type { PlanningJob, PlanningStatusType } from './planning.types';
 
 const STATUS_STYLES: Record<string, { bg: string; border: string; badge: string; badgeText: string; text: string }> = {
     pending: {
@@ -28,13 +28,14 @@ const STATUS_STYLES: Record<string, { bg: string; border: string; badge: string;
 
 interface JobNodeData {
     job: PlanningJob;
-    onComplete: (id: string) => void;
+    onStatusChange: (id: string, status: PlanningStatusType) => void;
     onDelete: (id: string) => void;
 }
 
 function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
-    const { job, onComplete, onDelete } = data;
+    const { job, onStatusChange, onDelete } = data;
     const style = STATUS_STYLES[job.status] || STATUS_STYLES.pending;
+    const [showDropdown, setShowDropdown] = useState(false);
 
     const scheduledDate = new Date(job.scheduledTime).toLocaleString('en-US', {
         month: 'short',
@@ -43,18 +44,42 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
         minute: '2-digit',
     });
 
+    const statusOptions: PlanningStatusType[] = ['pending', 'running', 'done'];
+
     return (
-        <div
-            className={`rounded-lg border-2 shadow-md min-w-[220px] ${style.bg} ${style.border} transition-all duration-200`}
-        >
-            <Handle type="target" position={Position.Left} className="!bg-slate-400 !w-2 !h-2" />
+        <div className={`rounded-lg border-2 shadow-md min-w-[230px] max-w-[260px] ${style.bg} ${style.border} transition-all duration-200`}>
+            <Handle type="target" position={Position.Left} className="!bg-slate-400 !w-2.5 !h-2.5" />
 
             <div className="p-3">
-                {/* Header */}
+                {/* Header: Status + Delete */}
                 <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-mono ${style.badgeText} ${style.badge} px-1.5 py-0.5 rounded`}>
-                        {job.status.toUpperCase()}
-                    </span>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            className={`text-xs font-mono ${style.badgeText} ${style.badge} px-2 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity`}
+                            title="Click to change status"
+                        >
+                            {job.status.toUpperCase()} ▾
+                        </button>
+                        {showDropdown && (
+                            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-[100px]">
+                                {statusOptions
+                                    .filter(s => s !== job.status)
+                                    .map(s => (
+                                        <button
+                                            key={s}
+                                            onClick={() => {
+                                                onStatusChange(job.id, s);
+                                                setShowDropdown(false);
+                                            }}
+                                            className="block w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                                        >
+                                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                                        </button>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
                     <button
                         onClick={() => onDelete(job.id)}
                         className="text-slate-400 hover:text-red-500 transition-colors text-xs p-0.5"
@@ -64,35 +89,43 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
                     </button>
                 </div>
 
-                {/* Job Name */}
-                <h3 className={`font-semibold text-sm leading-tight mb-1 ${style.text}`}>
-                    {job.name}
-                </h3>
-
-                {/* Application */}
-                <p className="text-xs text-slate-500 mb-1">
-                    <span className="font-medium">App:</span> {job.application}
+                {/* System Name */}
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                    {job.system.name}
                 </p>
+
+                {/* Job Name + Code */}
+                <h3 className={`font-semibold text-sm leading-tight mb-1 ${style.text}`}>
+                    {job.job.name}
+                </h3>
+                <p className="text-xs text-slate-500 font-mono mb-1">{job.job.code}</p>
 
                 {/* Scheduled Time */}
                 <p className="text-xs text-slate-400 mb-2">
                     🕐 {scheduledDate}
                 </p>
 
-                {/* Mark as Done Button — only for running jobs */}
+                {/* Completion info */}
+                {job.status === 'done' && job.completedBy && (
+                    <p className="text-[10px] text-emerald-600">
+                        ✓ by {job.completedBy.name}
+                    </p>
+                )}
+
+                {/* Quick "Mark as Done" button for running jobs */}
                 {job.status === 'running' && (
                     <button
-                        onClick={() => onComplete(job.id)}
+                        onClick={() => onStatusChange(job.id, 'done')}
                         className="w-full text-xs font-medium py-1.5 px-3 rounded-md
                                    bg-blue-600 text-white hover:bg-blue-700
-                                   transition-colors shadow-sm"
+                                   transition-colors shadow-sm mt-1"
                     >
                         ✓ Mark as Done
                     </button>
                 )}
             </div>
 
-            <Handle type="source" position={Position.Right} className="!bg-slate-400 !w-2 !h-2" />
+            <Handle type="source" position={Position.Right} className="!bg-slate-400 !w-2.5 !h-2.5" />
         </div>
     );
 }

@@ -4,12 +4,14 @@ import { Link } from 'react-router-dom';
 import { Search as SearchIcon, FileText, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { SearchResults } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export const Search = () => {
     const { hasPermission } = useAuth();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResults | null>(null);
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
 
     if (!hasPermission('SEARCH_VIEW')) {
         return (
@@ -17,9 +19,9 @@ export const Search = () => {
                 <div className="bg-red-50 p-6 rounded-full mb-4">
                     <ShieldAlert className="h-12 w-12 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('common.accessDenied')}</h2>
                 <p className="text-slate-600 mt-2 max-w-md">
-                    You do not have permission to view this page. Please contact your administrator if you believe this is an error.
+                    {t('common.accessDeniedMessage')}
                 </p>
             </div>
         );
@@ -42,7 +44,7 @@ export const Search = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-slate-900">Global Search</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t('search.title')}</h1>
 
             <form onSubmit={handleSearch} className="max-w-3xl">
                 <div className="relative">
@@ -52,7 +54,7 @@ export const Search = () => {
                     <input
                         type="text"
                         className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent shadow-sm"
-                        placeholder="Search for error codes, logs, procedures..."
+                        placeholder={t('search.placeholder')}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
@@ -60,12 +62,12 @@ export const Search = () => {
                         type="submit"
                         className="absolute inset-y-0 right-0 px-4 py-2 bg-primary text-white rounded-r-md hover:bg-slate-800 font-medium"
                     >
-                        Search
+                        {t('search.button')}
                     </button>
                 </div>
             </form>
 
-            {loading && <div className="text-center py-8">Searching...</div>}
+            {loading && <div className="text-center py-8">{t('search.searching')}</div>}
 
             {results && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -73,7 +75,7 @@ export const Search = () => {
                     <div>
                         <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
                             <FileText className="h-5 w-5 mr-2 text-blue-600" />
-                            Procedures ({results.procedures.length})
+                            {t('search.procedures')} ({results.procedures.length})
                         </h2>
                         <div className="space-y-4">
                             {results.procedures.map((procedure) => (
@@ -90,7 +92,7 @@ export const Search = () => {
                                 </Link>
                             ))}
                             {results.procedures.length === 0 && (
-                                <p className="text-slate-500 text-sm">No procedures found.</p>
+                                <p className="text-slate-500 text-sm">{t('search.noProcedures')}</p>
                             )}
                         </div>
                     </div>
@@ -99,7 +101,7 @@ export const Search = () => {
                     <div>
                         <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
                             <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
-                            Incidents ({results.incidents.length})
+                            {t('search.incidents')} ({results.incidents.length})
                         </h2>
                         <div className="space-y-4">
                             {results.incidents.map((incident) => (
@@ -120,7 +122,7 @@ export const Search = () => {
                                 </Link>
                             ))}
                             {results.incidents.length === 0 && (
-                                <p className="text-slate-500 text-sm">No incidents found.</p>
+                                <p className="text-slate-500 text-sm">{t('search.noIncidents')}</p>
                             )}
                         </div>
                     </div>
@@ -129,3 +131,5 @@ export const Search = () => {
         </div>
     );
 };
+
+export default Search;

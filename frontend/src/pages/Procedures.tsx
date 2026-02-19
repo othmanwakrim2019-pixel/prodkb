@@ -4,9 +4,11 @@ import axios from '../utils/axios';
 import { Plus, Search as SearchIcon, Link as LinkIcon, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Procedure } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export const Procedures = () => {
     const { hasPermission } = useAuth();
+    const { t } = useTranslation();
     const [procedures, setProcedures] = useState<Procedure[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -17,7 +19,7 @@ export const Procedures = () => {
         const fetchProcedures = async () => {
             try {
                 const response = await axios.get('/api/procedures', { params: { search } });
-                setProcedures(response.data);
+                setProcedures(Array.isArray(response.data) ? response.data : response.data?.data || []);
             } catch (error) {
                 console.error('Failed to fetch procedures', error);
             } finally {
@@ -54,7 +56,7 @@ export const Procedures = () => {
                 <div className="bg-red-50 p-6 rounded-full mb-4">
                     <ShieldAlert className="h-12 w-12 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('common.accessDenied')}</h2>
                 <p className="text-slate-600 mt-2 max-w-md">
                     You do not have permission to view procedures. Please contact your administrator if you believe this is an error.
                 </p>
@@ -76,7 +78,7 @@ export const Procedures = () => {
             )}
 
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">Procedures</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{t('procedures.title')}</h1>
                 {hasPermission('PROCEDURE_CREATE') && !linkToIncidentId && (
                     <Link
                         to="/procedures/new"
@@ -194,3 +196,6 @@ export const Procedures = () => {
         </div>
     );
 };
+
+export default Procedures;
+

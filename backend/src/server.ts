@@ -4,24 +4,35 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
+import v1Routes from './modules/v1.routes';
 import apiRoutes from './modules/api.routes';
+import { slaEnforcementService } from './modules/sla/sla-enforcement.service';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';
 import { apiLimiter, authLimiter } from './common/middleware/rate-limiter.middleware';
 import { errorHandler } from './common/middleware/error.middleware';
 import { notFoundHandler } from './common/middleware/not-found.middleware';
+import { requestIdMiddleware } from './common/middleware/request-id.middleware';
+import { requestTimeout } from './common/middleware/timeout.middleware';
 import { prisma } from './common/utils/prisma';
 
 const app = express();
 
 // CORS configuration - MUST be first
-const allowedOrigins = [
-    env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:8080', // Docker Nginx
-    'http://localhost:3000', // Swagger UI
-    'http://127.0.0.1:3000'
-];
+// Production: use CORS_ORIGINS env var (comma-separated)
+// Development: fallback to localhost origins
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+    : isProduction
+        ? [env.FRONTEND_URL || '']
+        : [
+            env.FRONTEND_URL || 'http://localhost:5173',
+            'http://localhost:8080',
+            'http://localhost:3000',
+            'http://127.0.0.1:3000'
+        ];
 
 logger.info(`CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
 
@@ -73,6 +84,12 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '10mb' }));
 
+// Request ID for log correlation (must be early in the chain)
+app.use(requestIdMiddleware);
+
+// Request timeout — 30s default, prevents stalled connections
+app.use(requestTimeout(30000));
+
 // Health check (no rate limiting) — deep check verifies DB connectivity
 app.get('/health', async (req, res) => {
     const uptime = process.uptime();
@@ -94,10 +111,14 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// Auth routes with strict rate limiting
-app.use('/auth', authLimiter, authRoutes);
+// Auth routes with strict rate limiting — versioned
+app.use('/auth/v1', authLimiter, authRoutes);
+app.use('/auth', authLimiter, authRoutes); // backward compat
 
-// API routes with general rate limiting
+// API v1 routes with general rate limiting
+app.use('/api/v1', apiLimiter, v1Routes);
+
+// Backward compatibility: /api/* → same as /api/v1/*
 app.use('/api', apiLimiter, apiRoutes);
 
 // Swagger Documentation
@@ -119,6 +140,10 @@ if (require.main === module) {
         logger.info(` ProdKB server running on port ${PORT}`);
         logger.info(` Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
         logger.info(' Rate limiting: Enabled');
+        logger.info(' API version: v1 (with backward compat)');
+
+        // Start SLA enforcement cron
+        slaEnforcementService.start();
     });
 
     // Graceful shutdown

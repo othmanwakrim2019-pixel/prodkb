@@ -7,7 +7,29 @@ import { paginationMiddleware } from '../../common/middleware/pagination.middlew
 import multer from 'multer';
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+
+// ── File upload security ──
+const ALLOWED_MIME_TYPES = [
+    'text/plain', 'text/csv', 'text/html',
+    'application/json', 'application/xml',
+    'application/pdf',
+    'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+    'application/zip', 'application/gzip',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+];
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`File type '${file.mimetype}' is not allowed. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`));
+        }
+    },
+});
 
 // Stats & Search (Must come before :id)
 router.get('/stats', authenticate, checkPermission('DASHBOARD_VIEW'), IncidentController.getStats);
@@ -22,6 +44,7 @@ router.delete('/:id', authenticate, checkPermission('INCIDENT_DELETE'), Incident
 
 // Sub-resources
 router.put('/:id/status', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.updateIncidentStatus);
+router.post('/:id/acknowledge', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.acknowledgeIncident);
 router.post('/:id/logs', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.addIncidentLog);
 router.post('/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentController.uploadIncidentFile);
 router.get('/:id/files/:filename', authenticate, IncidentController.downloadFile);
