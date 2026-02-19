@@ -23,6 +23,11 @@ jest.mock('../src/common/utils/prisma', () => {
         auditLog: {
             create: jest.fn(),
         },
+        refreshToken: {
+            create: jest.fn(),
+            deleteMany: jest.fn(),
+            findUnique: jest.fn(),
+        },
         $transaction: jest.fn(),
     };
     mock.$transaction.mockImplementation((cb: Function) => cb(mock));

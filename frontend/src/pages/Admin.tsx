@@ -50,6 +50,7 @@ export const Admin = () => {
         if (!isAccessible && visibleTabs.length > 0) {
             setActiveTab(visibleTabs[0].key);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showUsers, showSystems, showTeams, showSLAs, showRoles, showAudit, activeTab]);
 
     const visibleTabs = tabs.filter(tab => tab.visible !== false);
