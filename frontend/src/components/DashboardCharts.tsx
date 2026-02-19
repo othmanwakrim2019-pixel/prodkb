@@ -22,14 +22,35 @@ interface TrendData {
     resolved: number;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadEntry {
+    name: string;
+    value: number;
+    color: string;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipPayloadEntry[];
+    label?: string;
+}
+
+interface PieLabelProps {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percent: number;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (!active || !payload?.length) return null;
     return (
         <div className="glass rounded-lg px-4 py-3 shadow-xl border border-white/30">
             <p className="text-xs font-semibold text-slate-600 mb-1.5">
                 {label?.split('-').slice(1).join('/')}
             </p>
-            {payload.map((entry: any, i: number) => (
+            {payload.map((entry: TooltipPayloadEntry, i: number) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ background: entry.color }} />
                     <span className="text-slate-500">{entry.name}:</span>
@@ -131,7 +152,7 @@ const STATUS_COLORS: Record<string, string> = {
     'Closed': '#64748b',
 };
 
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelProps) => {
     if (percent < 0.08) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;

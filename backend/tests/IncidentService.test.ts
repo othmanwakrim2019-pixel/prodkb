@@ -13,6 +13,7 @@ jest.mock('../src/common/utils/prisma', () => ({
             delete: jest.fn(),
             count: jest.fn(),
             groupBy: jest.fn(),
+            aggregate: jest.fn(),
         },
         auditLog: {
             create: jest.fn(),
@@ -25,6 +26,15 @@ jest.mock('../src/common/utils/prisma', () => ({
         },
         system: {
             findMany: jest.fn(),
+            findUnique: jest.fn(),
+        },
+        autoAssignmentRule: {
+            findFirst: jest.fn(),
+        },
+        sLA: {
+            findFirst: jest.fn(),
+        },
+        emailTemplate: {
             findUnique: jest.fn(),
         },
         $transaction: jest.fn(),
@@ -90,9 +100,9 @@ describe('IncidentService', () => {
 
     describe('getStats', () => {
         it('should return aggregated stats', async () => {
-            (prisma.incident.count as jest.Mock).mockResolvedValue(5);
             (prisma.incident.findMany as jest.Mock).mockResolvedValue([]);
             (prisma.incident.groupBy as jest.Mock).mockResolvedValue([]); // top systems
+            ((prisma.incident as any).aggregate as jest.Mock).mockResolvedValue({ _avg: { id: null } });
 
             // Mock separate count calls
             (prisma.incident.count as jest.Mock)
