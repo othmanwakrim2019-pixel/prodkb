@@ -172,7 +172,7 @@ export const IncidentDetails = () => {
                                         </div>
                                     )}
                                 </div>
-                                <IncidentLogTimeline logs={incident.logs || []} onDownloadFile={incident$.downloadFile} />
+                                <IncidentLogTimeline logs={incident.logs || []} incidentId={incident.id} onDownloadFile={incident$.downloadFile} />
                             </div>
                         </div>
                     </div>

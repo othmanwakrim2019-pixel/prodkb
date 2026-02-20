@@ -48,6 +48,7 @@ router.post('/:id/acknowledge', authenticate, checkPermission('INCIDENT_EDIT'), 
 router.post('/:id/logs', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.addIncidentLog);
 router.post('/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentController.uploadIncidentFile);
 router.get('/:id/files/:filename', authenticate, IncidentController.downloadFile);
+router.get('/:id/files/:filename/preview', authenticate, IncidentController.previewFile);
 router.post('/:id/link-procedure/:procedureId', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.linkProcedure);
 
 export const incidentRoutes = router;

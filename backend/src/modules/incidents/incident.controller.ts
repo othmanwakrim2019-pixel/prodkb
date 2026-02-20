@@ -244,6 +244,44 @@ export class IncidentController {
         }
     }
 
+    /**
+     * Preview a file inline (Content-Disposition: inline).
+     * Browsers will render images, PDFs, text, and video inline.
+     */
+    static async previewFile(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) throw new ValidationError('User not authenticated');
+
+            const { id, filename } = req.params;
+
+            if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+                throw new ValidationError('Invalid filename: path traversal characters are not allowed');
+            }
+
+            const fileLog = await incidentService.getFileLog(id, filename);
+
+            if (!fileLog.filePath) throw new NotFoundError('File path missing in log');
+
+            const exists = await fileUploadService.fileExists(fileLog.filePath);
+            if (!exists) throw new NotFoundError('File on disk');
+
+            // Inline disposition — browser will render supported types
+            res.setHeader('Content-Disposition', `inline; filename="${fileLog.fileName || 'preview'}"`);
+            res.setHeader('Content-Type', fileLog.mimeType || 'application/octet-stream');
+            if (fileLog.fileSize) res.setHeader('Content-Length', fileLog.fileSize);
+
+            const fileStream = await fileUploadService.getFileStream(fileLog.filePath);
+            fileStream.on('error', (error) => {
+                logger.error('Preview stream error', { error });
+                if (!res.headersSent) res.status(500).send('Could not preview file');
+            });
+            fileStream.pipe(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async linkProcedure(req: Request, res: Response, next: NextFunction) {
         try {
             const incident = await incidentService.linkProcedure(req.params.id, req.params.procedureId);
