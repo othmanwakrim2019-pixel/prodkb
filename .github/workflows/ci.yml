@@ -111,7 +111,7 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test -- --passWithNoTests
+        run: npm test -- --passWithNoTests --pool forks --no-file-parallelism
 
   # ── Docker build (verify images build successfully) ─────
   docker:
