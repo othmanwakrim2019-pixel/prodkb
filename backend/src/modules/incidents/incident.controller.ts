@@ -282,6 +282,28 @@ export class IncidentController {
         }
     }
 
+    /**
+     * Delete an uploaded file. Only the uploader or ADMIN can delete.
+     */
+    static async deleteFile(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user?.id;
+            const userRole = req.user?.role || '';
+            if (!userId) throw new ValidationError('User not authenticated');
+
+            const { id, filename } = req.params;
+
+            if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+                throw new ValidationError('Invalid filename: path traversal characters are not allowed');
+            }
+
+            await incidentService.deleteFileLog(id, filename, userId, userRole);
+            res.json(createResponse(true, null, 'File deleted successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async linkProcedure(req: Request, res: Response, next: NextFunction) {
         try {
             const incident = await incidentService.linkProcedure(req.params.id, req.params.procedureId);

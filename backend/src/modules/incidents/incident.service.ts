@@ -7,6 +7,7 @@
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { emailService } from '../../common/services/emailService';
+import { fileUploadService } from '../../common/services/fileUploadService';
 import { NotFoundError, ValidationError, ConflictError } from '../../common/errors/app.error';
 import { IncidentStatus } from '../../constants';
 import type { IncidentStatusType } from '../../constants';
@@ -404,6 +405,37 @@ export class IncidentService {
         });
 
         return log as unknown as IIncidentLog;
+    }
+
+    /**
+     * Delete a file log and its underlying file.
+     * Only the original uploader or an ADMIN can delete.
+     */
+    async deleteFileLog(incidentId: string, fileName: string, userId: string, userRole: string): Promise<void> {
+        const log = await prisma.incidentLog.findFirst({
+            where: { incidentId, fileName, logType: 'file' },
+        });
+
+        if (!log) throw new NotFoundError('File log not found');
+
+        // Ownership check: only the uploader or an ADMIN can delete
+        if (log.createdById !== userId && userRole !== 'ADMIN') {
+            throw new ValidationError('You can only delete files that you uploaded');
+        }
+
+        // Delete the file from disk/S3
+        if (log.filePath) {
+            try {
+                await fileUploadService.deleteFile(log.filePath);
+            } catch (err) {
+                logger.warn('Could not delete file from storage', { filePath: log.filePath, error: err });
+            }
+        }
+
+        // Delete the log record
+        await prisma.incidentLog.delete({ where: { id: log.id } });
+
+        logger.info('File deleted', { incidentId, fileName, deletedBy: userId });
     }
 
     async delete(id: string, userId: string): Promise<void> {

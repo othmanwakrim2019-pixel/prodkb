@@ -82,4 +82,7 @@ export const incidentService = {
     /** Returns the URL for inline file preview (Content-Disposition: inline) */
     getFilePreviewUrl: (id: string, fileName: string): string =>
         `/api/v1/incidents/${id}/files/${fileName}/preview`,
+
+    deleteFile: (id: string, fileName: string): Promise<void> =>
+        api.delete(`/api/v1/incidents/${id}/files/${fileName}`),
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paperclip, Download, Eye } from 'lucide-react';
+import { Paperclip, Download, Eye, Trash2 } from 'lucide-react';
 import type { Log } from '../../types';
 import { FilePreviewModal } from './FilePreviewModal';
 import { incidentService } from '../../services/incident.service';
@@ -27,10 +27,12 @@ function formatFullDate(dateString: string): string {
 interface Props {
     logs: Log[];
     incidentId: string;
+    currentUserId?: string;
     onDownloadFile: (fileName: string) => void;
+    onDeleteFile?: (fileName: string) => Promise<boolean>;
 }
 
-export const IncidentLogTimeline = ({ logs, incidentId, onDownloadFile }: Props) => {
+export const IncidentLogTimeline = ({ logs, incidentId, currentUserId, onDownloadFile, onDeleteFile }: Props) => {
     const [previewFile, setPreviewFile] = useState<{
         fileName: string;
         mimeType?: string;
@@ -86,6 +88,19 @@ export const IncidentLogTimeline = ({ logs, incidentId, onDownloadFile }: Props)
                                                 <Download className="h-3.5 w-3.5" />
                                                 Download
                                             </button>
+                                            {onDeleteFile && currentUserId && log.createdBy?.id === currentUserId && (
+                                                <button
+                                                    onClick={async () => {
+                                                        if (window.confirm(`Delete "${log.fileName}"? This cannot be undone.`)) {
+                                                            await onDeleteFile(log.fileName!);
+                                                        }
+                                                    }}
+                                                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                                                    title="Delete file"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                     {log.errorMessage && <p className="text-red-600 font-medium text-sm mb-2">{log.errorMessage}</p>}
