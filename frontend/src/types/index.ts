@@ -1,5 +1,6 @@
 import { Severity, Environment, IncidentStatus } from './enums';
 export * from './enums';
+export type { paths, components } from './api.generated';
 
 export interface User {
     id: string;

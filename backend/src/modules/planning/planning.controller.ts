@@ -1,59 +1,17 @@
 
 import { Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { planningInstanceService, planningJobService } from './planning.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit } from '../audit/audit.service';
-
-// --- Validation Schemas ---
-
-const periodEnum = z.enum(['monthly', 'quarterly', 'annual']);
-const statusEnum = z.enum(['pending', 'running', 'done']);
-const instanceStatusEnum = z.enum(['active', 'archived']);
-
-const createInstanceSchema = z.object({
-    name: z.string().min(2).max(200),
-    description: z.string().max(500).optional(),
-    period: periodEnum,
-    startDate: z.string().datetime(),
-    endDate: z.string().datetime(),
-});
-
-const createJobSchema = z.object({
-    instanceId: z.string().uuid(),
-    systemId: z.string().uuid(),
-    jobId: z.string().uuid(),
-    scheduledTime: z.string().datetime(),
-    dependencies: z.array(z.string().uuid()).default([]),
-    status: statusEnum.optional(),
-});
-
-const updateJobSchema = z.object({
-    systemId: z.string().uuid().optional(),
-    jobId: z.string().uuid().optional(),
-    scheduledTime: z.string().datetime().optional(),
-    dependencies: z.array(z.string().uuid()).optional(),
-});
-
-const updateStatusSchema = z.object({
-    status: statusEnum,
-});
-
-const updatePositionSchema = z.object({
-    positionX: z.number(),
-    positionY: z.number(),
-});
-
-const batchPositionsSchema = z.object({
-    positions: z.array(z.object({
-        id: z.string().uuid(),
-        positionX: z.number(),
-        positionY: z.number(),
-    })),
-});
+import {
+    periodEnum, instanceStatusEnum,
+    createInstanceSchema, createPlanningJobSchema, updatePlanningJobSchema,
+    updateStatusSchema, updatePositionSchema, batchPositionsSchema,
+} from './planning.schema';
 
 // --- Instance Controller ---
+
 
 export class PlanningController {
 
@@ -145,7 +103,7 @@ export class PlanningController {
 
     static async createJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const data = createJobSchema.parse(req.body);
+            const data = createPlanningJobSchema.parse(req.body);
             const job = await planningJobService.create({
                 ...data,
                 scheduledTime: new Date(data.scheduledTime),
@@ -169,7 +127,7 @@ export class PlanningController {
     static async updateJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const data = updateJobSchema.parse(req.body);
+            const data = updatePlanningJobSchema.parse(req.body);
 
             const updateData: Record<string, unknown> = { ...data };
             if (data.scheduledTime) updateData.scheduledTime = new Date(data.scheduledTime);

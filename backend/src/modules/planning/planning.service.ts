@@ -9,7 +9,7 @@ import { PlanningPeriod, PlanningStatus, InstanceStatus, type PlanningJob } from
 const ALLOWED_TRANSITIONS: Record<PlanningStatus, PlanningStatus[]> = {
     [PlanningStatus.pending]: [PlanningStatus.running, PlanningStatus.done],
     [PlanningStatus.running]: [PlanningStatus.done, PlanningStatus.pending],
-    [PlanningStatus.done]: [], // reopening requires explicit action, not allowed via updateStatus
+    [PlanningStatus.done]: [PlanningStatus.pending, PlanningStatus.running], // allow reopening
 };
 
 function validateTransition(from: PlanningStatus, to: PlanningStatus): void {

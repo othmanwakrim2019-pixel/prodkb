@@ -1,23 +1,11 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { userService } from './user.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { generateAuditDiff, logAudit } from '../audit/audit.service';
+import { updateUserSchema, changePasswordSchema } from './user.schema';
 
-
-const updateUserSchema = z.object({
-    name: z.string().min(2).max(100).optional(),
-    email: z.string().email().optional(),
-    role: z.string().optional(),
-    isActive: z.boolean().optional(),
-});
-
-const changePasswordSchema = z.object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
-});
 
 export class UserController {
     static async getAllUsers(req: AuthRequest, res: Response, next: NextFunction) {

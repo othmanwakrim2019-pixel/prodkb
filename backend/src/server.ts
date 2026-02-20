@@ -5,8 +5,7 @@ import helmet from 'helmet';
 import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
 import v1Routes from './modules/v1.routes';
-import apiRoutes from './modules/api.routes';
-import { slaEnforcementService } from './modules/sla/sla-enforcement.service';
+import { registerSLARepeatable } from './modules/sla/sla.queue';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';
@@ -16,6 +15,7 @@ import { notFoundHandler } from './common/middleware/not-found.middleware';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware';
 import { requestTimeout } from './common/middleware/timeout.middleware';
 import { prisma } from './common/utils/prisma';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -83,6 +83,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 
 // Request ID for log correlation (must be early in the chain)
 app.use(requestIdMiddleware);
@@ -118,8 +119,15 @@ app.use('/auth', authLimiter, authRoutes); // backward compat
 // API v1 routes with general rate limiting
 app.use('/api/v1', apiLimiter, v1Routes);
 
-// Backward compatibility: /api/* → same as /api/v1/*
-app.use('/api', apiLimiter, apiRoutes);
+// Backward compatibility: /api/* (not /api/v1/*) → 308 redirect to /api/v1/*
+app.use('/api', (req, res, next) => {
+    // Skip if already targeting /api/v1
+    if (req.originalUrl.startsWith('/api/v1')) {
+        return next();
+    }
+    const newUrl = req.originalUrl.replace(/^\/api/, '/api/v1');
+    res.redirect(308, newUrl);
+});
 
 // Swagger Documentation
 const swaggerDocument = yaml.load(path.join(__dirname, 'openapi.yaml'));
@@ -142,8 +150,10 @@ if (require.main === module) {
         logger.info(' Rate limiting: Enabled');
         logger.info(' API version: v1 (with backward compat)');
 
-        // Start SLA enforcement cron
-        slaEnforcementService.start();
+        // Register SLA enforcement repeatable job (processed by separate worker)
+        registerSLARepeatable().catch(err =>
+            logger.error('Failed to register SLA repeatable job', { error: err.message })
+        );
     });
 
     // Graceful shutdown

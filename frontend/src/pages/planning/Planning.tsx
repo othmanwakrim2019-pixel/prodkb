@@ -44,7 +44,7 @@ export const Planning = () => {
         try {
             const params: Record<string, string> = { period };
             if (statusFilter !== 'all') params.status = statusFilter;
-            const res = await axios.get('/api/planning/instances', { params });
+            const res = await axios.get('/api/v1/planning/instances', { params });
             const data = res.data;
             setInstances(Array.isArray(data) ? data : data?.data || []);
         } catch (err) {
@@ -76,7 +76,7 @@ export const Planning = () => {
         }
         setLoading(true);
         try {
-            const res = await axios.get(`/api/planning/instances/${selectedInstanceId}/jobs`);
+            const res = await axios.get(`/api/v1/planning/instances/${selectedInstanceId}/jobs`);
             const data = res.data;
             setJobs(Array.isArray(data) ? data : data?.data || []);
         } catch (err) {
@@ -93,7 +93,7 @@ export const Planning = () => {
     // -- Handlers --
     const handleStatusChange = useCallback(async (jobId: string, newStatus: PlanningStatusType) => {
         try {
-            await axios.patch(`/api/planning/jobs/${jobId}/status`, { status: newStatus });
+            await axios.patch(`/api/v1/planning/jobs/${jobId}/status`, { status: newStatus });
             await fetchJobs();
         } catch (err) {
             console.error('Failed to update status:', err);
@@ -104,7 +104,7 @@ export const Planning = () => {
     const handleDelete = useCallback(async (jobId: string) => {
         if (!confirm('Are you sure you want to remove this job from the plan?')) return;
         try {
-            await axios.delete(`/api/planning/jobs/${jobId}`);
+            await axios.delete(`/api/v1/planning/jobs/${jobId}`);
             await fetchJobs();
         } catch (err) {
             console.error('Failed to delete job:', err);
@@ -113,7 +113,7 @@ export const Planning = () => {
 
     const handleArchiveInstance = useCallback(async (instanceId: string) => {
         try {
-            await axios.patch(`/api/planning/instances/${instanceId}/archive`);
+            await axios.patch(`/api/v1/planning/instances/${instanceId}/archive`);
             await fetchInstances();
         } catch (err) {
             console.error('Failed to archive instance:', err);
@@ -122,7 +122,7 @@ export const Planning = () => {
 
     const handleReactivateInstance = useCallback(async (instanceId: string) => {
         try {
-            await axios.patch(`/api/planning/instances/${instanceId}/reactivate`);
+            await axios.patch(`/api/v1/planning/instances/${instanceId}/reactivate`);
             await fetchInstances();
         } catch (err) {
             console.error('Failed to reactivate instance:', err);

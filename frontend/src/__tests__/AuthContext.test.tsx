@@ -11,13 +11,14 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 vi.mock('../utils/axios', () => ({
     default: {
         get: vi.fn().mockResolvedValue({ data: {} }),
-        post: vi.fn(),
+        post: vi.fn().mockResolvedValue({ data: {} }),
         put: vi.fn(),
         delete: vi.fn(),
         defaults: {
             headers: {
                 common: {}
-            }
+            },
+            withCredentials: true,
         },
         interceptors: {
             request: { use: vi.fn() },
@@ -28,7 +29,6 @@ vi.mock('../utils/axios', () => ({
 
 describe('AuthContext', () => {
     beforeEach(() => {
-        localStorage.clear();
         vi.clearAllMocks();
     });
 
@@ -57,17 +57,18 @@ describe('AuthContext', () => {
         });
     });
 
-    it('should store token in localStorage on login', async () => {
+    it('should set user on login (tokens are in httpOnly cookies)', async () => {
         const TestComponent = () => {
 
-            const { login, token } = useAuth();
+            const { login, user, isAuthenticated } = useAuth();
 
             return (
                 <div>
-                    <button onClick={() => login('test-token', { id: '1', name: 'Test', email: 'test@test.com', role: 'ADMIN', permissions: [] })}>
+                    <button onClick={() => login({ id: '1', name: 'Test', email: 'test@test.com', role: 'ADMIN', permissions: [] })}>
                         Login
                     </button>
-                    <span data-testid="token">{token || 'none'}</span>
+                    <span data-testid="authenticated">{isAuthenticated ? 'yes' : 'no'}</span>
+                    <span data-testid="user-name">{user?.name || 'none'}</span>
                 </div>
             );
         };
@@ -84,21 +85,23 @@ describe('AuthContext', () => {
         await userEvent.click(loginButton);
 
         await waitFor(() => {
-            expect(localStorage.getItem('token')).toBe('test-token');
+            expect(screen.getByTestId('authenticated')).toHaveTextContent('yes');
+            expect(screen.getByTestId('user-name')).toHaveTextContent('Test');
         });
     });
 
-    it('should clear token on logout', async () => {
-        localStorage.setItem('token', 'existing-token');
-
+    it('should clear user on logout', async () => {
         const TestComponent = () => {
 
-            const { logout, token } = useAuth();
+            const { login, logout, isAuthenticated } = useAuth();
 
             return (
                 <div>
+                    <button onClick={() => login({ id: '1', name: 'Test', email: 'test@test.com', role: 'ADMIN', permissions: [] })}>
+                        Login
+                    </button>
                     <button onClick={logout}>Logout</button>
-                    <span data-testid="token">{token || 'none'}</span>
+                    <span data-testid="authenticated">{isAuthenticated ? 'yes' : 'no'}</span>
                 </div>
             );
         };
@@ -111,11 +114,17 @@ describe('AuthContext', () => {
             </BrowserRouter>
         );
 
-        const logoutButton = screen.getByRole('button', { name: /logout/i });
-        await userEvent.click(logoutButton);
+        // Login first
+        await userEvent.click(screen.getByRole('button', { name: /login/i }));
+        await waitFor(() => {
+            expect(screen.getByTestId('authenticated')).toHaveTextContent('yes');
+        });
+
+        // Then logout
+        await userEvent.click(screen.getByRole('button', { name: /logout/i }));
 
         await waitFor(() => {
-            expect(localStorage.getItem('token')).toBeNull();
+            expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
         });
     });
 });
@@ -127,7 +136,7 @@ describe('Permission Helpers', () => {
             const { login, canCreate, canEdit, canDelete } = useAuth();
 
             React.useEffect(() => {
-                login('test-token', {
+                login({
                     id: '1',
                     name: 'Test',
                     email: 'test@test.com',

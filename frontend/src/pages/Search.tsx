@@ -33,7 +33,7 @@ export const Search = () => {
 
         setLoading(true);
         try {
-            const response = await axios.get('/api/search', { params: { query } });
+            const response = await axios.get('/api/v1/search', { params: { query } });
             setResults(response.data);
         } catch (error) {
             console.error('Search failed', error);

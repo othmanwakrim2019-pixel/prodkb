@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Save, Send, ShieldCheck, AlertCircle, CheckCircle } from "lucide-react";
+import { configService } from '../../services/admin.service';
 
 export const Settings = () => {
     const [config, setConfig] = useState({
@@ -28,8 +28,8 @@ export const Settings = () => {
             const keys = ['INCIDENT', 'TEAM', 'USER', 'ROLE', 'PROCEDURE', 'SYSTEM']
                 .map(t => `audit.enabled.${t.toLowerCase()}`)
                 .join(',');
-            const response = await axios.get(`/api/config/params?keys=${keys}`);
-            setAuditConfig(response.data);
+            const data = await configService.getParams(keys.split(','));
+            setAuditConfig(data as unknown as Record<string, string>);
         } catch (error) {
             console.error("Failed to fetch audit config", error);
         }
@@ -37,8 +37,8 @@ export const Settings = () => {
 
     const fetchConfig = async () => {
         try {
-            const response = await axios.get("/api/config/smtp");
-            setConfig(response.data);
+            const data = await configService.getSmtp();
+            setConfig(data as any);
         } catch (error) {
             console.error("Failed to fetch SMTP config", error);
         } finally {
@@ -59,7 +59,7 @@ export const Settings = () => {
         setSaving(true);
         setMessage(null);
         try {
-            await axios.put("/api/config/smtp", config);
+            await configService.updateSmtp(config);
             setMessage({ type: 'success', text: 'Settings saved successfully' });
         } catch (error) {
             console.error("Failed to save settings", error);
@@ -77,7 +77,7 @@ export const Settings = () => {
         setTesting(true);
         setMessage(null);
         try {
-            await axios.post("/api/config/smtp/test", { email: testEmail });
+            await configService.testSmtp(testEmail);
             setMessage({ type: 'success', text: 'Test email sent successfully! Check your inbox.' });
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
@@ -248,7 +248,7 @@ export const Settings = () => {
                                         setAuditConfig(prev => ({ ...prev, [key]: value }));
 
                                         try {
-                                            await axios.put(`/api/config/${key}`, { value });
+                                            await configService.updateParam(key, value);
                                         } catch (error) {
                                             console.error('Failed to update audit config', error);
                                             // Revert on error

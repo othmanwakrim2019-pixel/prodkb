@@ -1,10 +1,10 @@
 /**
- * IncidentDetails — refactored from 609 lines to ~350
- * Leverages: useIncident hook, useToast, useConfirm, Modal component
+ * IncidentDetails — decomposed into sub-components
+ * Extracted: IncidentLogTimeline, IncidentSidebar
  */
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FileText, CheckCircle, Upload, Plus, Edit, Paperclip, Download, Trash2 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { CheckCircle, Upload, Plus, Edit } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useIncident } from '../hooks/useIncident';
 import { useToast } from '../components/ui/Toast';
@@ -13,27 +13,8 @@ import { Modal } from '../components/ui/Modal';
 import { SeverityBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/PageLoader';
 import { EmptyState } from '../components/ui/PageLoader';
-import type { Log } from '../types';
-
-// ── Helpers ──
-function groupLogsByDate(logs: Log[]): Record<string, Log[]> {
-    const groups: Record<string, Log[]> = {};
-    logs.forEach(log => {
-        const date = new Date(log.createdAt).toISOString().split('T')[0];
-        if (!groups[date]) groups[date] = [];
-        groups[date].push(log);
-    });
-    return Object.fromEntries(
-        Object.entries(groups).sort(([a], [b]) => b.localeCompare(a))
-    );
-}
-
-function formatFullDate(dateString: string): string {
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-}
+import { IncidentLogTimeline } from '../components/incidents/IncidentLogTimeline';
+import { IncidentSidebar } from '../components/incidents/IncidentSidebar';
 
 export const IncidentDetails = () => {
     const { id } = useParams();
@@ -51,7 +32,7 @@ export const IncidentDetails = () => {
     const [noteForm, setNoteForm] = useState({ logType: 'investigation', content: '' });
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
-    // ── Event Handlers (thin wrappers around hook methods) ──
+    // ── Event Handlers ──
     const handleStatusChange = async (newStatus: string) => {
         const ok = await incident$.updateStatus(newStatus);
         if (ok) toast.success('Status updated');
@@ -176,7 +157,7 @@ export const IncidentDetails = () => {
                                 <p className="text-slate-700 whitespace-pre-wrap">{incident.description}</p>
                             </div>
 
-                            {/* Logs & Files */}
+                            {/* Logs & Files — extracted component */}
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Logs, Notes & Files</h3>
@@ -191,123 +172,23 @@ export const IncidentDetails = () => {
                                         </div>
                                     )}
                                 </div>
-
-                                {incident.logs && incident.logs.length > 0 ? (
-                                    <div className="space-y-6">
-                                        {Object.entries(groupLogsByDate(incident.logs)).map(([date, logsForDate]) => (
-                                            <div key={date}>
-                                                <div className="mb-3">
-                                                    <h4 className="text-sm font-semibold text-slate-700 px-1">{formatFullDate(date)}</h4>
-                                                </div>
-                                                <div className="space-y-3">
-                                                    {logsForDate.map((log: Log) => (
-                                                        <div key={log.id} className="bg-slate-50 p-4 rounded-md border border-slate-200">
-                                                            <div className="flex items-start justify-between mb-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-xs font-medium text-slate-500 uppercase">{log.logType}</span>
-                                                                    {log.createdBy && <span className="text-xs text-slate-500 font-semibold">by {log.createdBy.name}</span>}
-                                                                </div>
-                                                                <span className="text-xs text-slate-400">
-                                                                    {new Date(log.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                                </span>
-                                                            </div>
-                                                            {log.fileName && (
-                                                                <div className="flex items-center text-sm text-accent mb-2">
-                                                                    <Paperclip className="h-4 w-4 mr-2" />
-                                                                    <button onClick={() => incident$.downloadFile(log.fileName!)} className="hover:underline text-left">
-                                                                        {log.fileName} ({Math.round((log.fileSize || 0) / 1024)}KB)
-                                                                    </button>
-                                                                    <Download className="h-3 w-3 ml-2" />
-                                                                </div>
-                                                            )}
-                                                            {log.errorMessage && <p className="text-red-600 font-medium text-sm mb-2">{log.errorMessage}</p>}
-                                                            {log.rawLog && <pre className="text-xs font-mono text-slate-600 whitespace-pre-wrap overflow-x-auto">{log.rawLog}</pre>}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-slate-500 text-center py-4">No logs or files yet.</p>
-                                )}
+                                <IncidentLogTimeline logs={incident.logs || []} onDownloadFile={incident$.downloadFile} />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar */}
-                <div className="space-y-6">
-                    {/* Status Card */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Status</h3>
-                        <select
-                            value={incident.status}
-                            onChange={(e) => handleStatusChange(e.target.value)}
-                            disabled={!canEdit()}
-                            className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border disabled:bg-slate-100 disabled:text-slate-500"
-                        >
-                            <option value="Open">Open</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Closed">Closed</option>
-                        </select>
-
-                        <div className="mt-6 space-y-3 text-sm">
-                            <div className="flex justify-between"><span className="text-slate-500">Environment</span><span className="font-medium text-slate-900">{incident.environment}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">System</span><span className="font-medium text-slate-900">{incident.system?.name || 'N/A'}</span></div>
-                            {incident.job && <div className="flex justify-between"><span className="text-slate-500">Job</span><span className="font-medium text-slate-900">{incident.job.name}</span></div>}
-                            <div className="flex justify-between"><span className="text-slate-500">Created By</span><span className="font-medium text-slate-900">{incident.createdBy?.name || 'Unknown'}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Created At</span><span className="font-medium text-slate-900">{new Date(incident.createdAt).toLocaleString()}</span></div>
-                            {incident.updatedBy && <div className="flex justify-between"><span className="text-slate-500">Updated By</span><span className="font-medium text-slate-900">{incident.updatedBy.name}</span></div>}
-                            {incident.updatedAt && incident.updatedAt !== incident.createdAt && (
-                                <div className="flex justify-between"><span className="text-slate-500">Updated At</span><span className="font-medium text-slate-900">{new Date(incident.updatedAt).toLocaleString()}</span></div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Procedure Card */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resolution Procedure</h3>
-                        {incident.linkedProcedure ? (
-                            <div className="bg-blue-50 p-4 rounded-md border border-blue-100 relative group">
-                                <Link to={`/procedures/${incident.linkedProcedure.id}`} className="flex items-start">
-                                    <FileText className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-blue-900 hover:underline">{incident.linkedProcedure.title}</p>
-                                        <p className="text-xs text-blue-700 mt-1">Click to view procedure</p>
-                                    </div>
-                                </Link>
-                                {canEdit() && (
-                                    <button onClick={handleUnlinkProcedure} className="absolute top-2 right-2 text-slate-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-full" title="Unlink Procedure">
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {canEdit() ? (
-                                    <>
-                                        <p className="text-sm text-slate-500">No procedure linked yet.</p>
-                                        <Link to={`/procedures?linkTo=${incident.id}`} className="block w-full text-center px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">
-                                            Link Existing Procedure
-                                        </Link>
-                                    </>
-                                ) : (
-                                    <p className="text-sm text-slate-500 max-w-xs">No procedure linked.</p>
-                                )}
-                                {hasPermission('PROCEDURE_CREATE') && (
-                                    <Link to={`/procedures/new?fromIncident=${incident.id}`} className="block w-full text-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800">
-                                        Draft Procedure from Incident
-                                    </Link>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                {/* Sidebar — extracted component */}
+                <IncidentSidebar
+                    incident={incident}
+                    canEdit={canEdit()}
+                    canCreateProcedure={hasPermission('PROCEDURE_CREATE')}
+                    onStatusChange={handleStatusChange}
+                    onUnlinkProcedure={handleUnlinkProcedure}
+                />
             </div>
 
-            {/* Edit Modal — uses shared Modal component */}
+            {/* Edit Modal */}
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Incident" size="lg" footer={
                 <>
                     <button onClick={() => setShowEditModal(false)} className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>

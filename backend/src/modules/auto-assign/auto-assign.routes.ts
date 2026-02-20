@@ -1,6 +1,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { autoAssignService, createAutoAssignRuleSchema, updateAutoAssignRuleSchema } from './auto-assign.service';
+import { autoAssignService } from './auto-assign.service';
+import { createAutoAssignRuleSchema, updateAutoAssignRuleSchema } from './auto-assign.schema';
 import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 

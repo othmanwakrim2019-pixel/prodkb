@@ -18,7 +18,7 @@ export const Procedures = () => {
     useEffect(() => {
         const fetchProcedures = async () => {
             try {
-                const response = await axios.get('/api/procedures', { params: { search } });
+                const response = await axios.get('/api/v1/procedures', { params: { search } });
                 setProcedures(Array.isArray(response.data) ? response.data : response.data?.data || []);
             } catch (error) {
                 console.error('Failed to fetch procedures', error);
@@ -41,7 +41,7 @@ export const Procedures = () => {
         if (!linkToIncidentId) return;
 
         try {
-            await axios.post(`/api/incidents/${linkToIncidentId}/link-procedure/${procedureId}`);
+            await axios.post(`/api/v1/incidents/${linkToIncidentId}/link-procedure/${procedureId}`);
             alert('Procedure linked successfully!');
             window.location.href = `/incidents/${linkToIncidentId}`;
         } catch (error) {

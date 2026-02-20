@@ -51,7 +51,7 @@ export const CreateProcedure = () => {
     useEffect(() => {
         const fetchSystems = async () => {
             try {
-                const response = await axios.get('/api/systems');
+                const response = await axios.get('/api/v1/systems');
                 setSystems(Array.isArray(response.data) ? response.data : response.data?.data || []);
             } catch (error) {
                 console.error('Failed to fetch systems', error);
@@ -87,7 +87,7 @@ export const CreateProcedure = () => {
         if (isEditMode) {
             const fetchProcedure = async () => {
                 try {
-                    const response = await axios.get(`/api/procedures/${id}`);
+                    const response = await axios.get(`/api/v1/procedures/${id}`);
                     const procedure = response.data;
 
                     setValue('title', procedure.title);
@@ -131,7 +131,7 @@ export const CreateProcedure = () => {
         if (!isEditMode && fromIncidentId) {
             const fetchIncident = async () => {
                 try {
-                    const response = await axios.get(`/api/incidents/${fromIncidentId}`);
+                    const response = await axios.get(`/api/v1/incidents/${fromIncidentId}`);
                     const incident = response.data;
 
                     setValue('title', `Resolution: ${incident.title || ''}`);
@@ -169,14 +169,14 @@ export const CreateProcedure = () => {
                 jobId: data.jobId || undefined,
             };
             if (isEditMode) {
-                await axios.put(`/api/procedures/${id}`, payload);
+                await axios.put(`/api/v1/procedures/${id}`, payload);
             } else {
-                const response = await axios.post('/api/procedures', payload);
+                const response = await axios.post('/api/v1/procedures', payload);
                 const newProcedure = response.data;
 
                 if (fromIncidentId && newProcedure.id) {
                     try {
-                        await axios.post(`/api/incidents/${fromIncidentId}/link-procedure/${newProcedure.id}`);
+                        await axios.post(`/api/v1/incidents/${fromIncidentId}/link-procedure/${newProcedure.id}`);
                     } catch (linkError) {
                         console.error('Failed to link procedure to incident', linkError);
                         alert('Procedure created, but failed to link to incident.');

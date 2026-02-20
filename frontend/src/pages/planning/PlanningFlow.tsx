@@ -57,7 +57,10 @@ function getLayoutedElements(
     const jobIdSet = new Set(jobs.map(j => j.id));
 
     jobs.forEach(job => {
-        (job.dependencies || []).forEach(depId => {
+        const deps = Array.isArray(job.dependencies)
+            ? job.dependencies
+            : (() => { try { return JSON.parse(job.dependencies as any) || []; } catch { return []; } })();
+        deps.forEach((depId: string) => {
             if (jobIdSet.has(depId)) {
                 edges.push({
                     id: `${depId}->${job.id}`,
@@ -134,7 +137,7 @@ export const PlanningFlow = ({ jobs, onStatusChange, onDelete, direction }: Plan
         if (positionTimerRef.current) clearTimeout(positionTimerRef.current);
         positionTimerRef.current = setTimeout(async () => {
             try {
-                await axios.patch(`/api/planning/jobs/${node.id}/position`, {
+                await axios.patch(`/api/v1/planning/jobs/${node.id}/position`, {
                     positionX: node.position.x,
                     positionY: node.position.y,
                 });

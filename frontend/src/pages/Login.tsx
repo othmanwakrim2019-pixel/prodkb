@@ -34,7 +34,7 @@ export const Login = () => {
         setIsLoading(true);
         try {
             const response = await axios.post('/auth/login', data);
-            login(response.data.token, response.data.user);
+            login(response.data.user);
             navigate('/');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {

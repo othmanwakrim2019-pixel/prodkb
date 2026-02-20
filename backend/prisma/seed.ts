@@ -430,8 +430,250 @@ async function main() {
         await prisma.emailTemplate.create({ data: t });
     }
 
+    // ── Escalation Rules (15 rules — 3 levels for 5 system/severity combos) ──
+    console.log('Creating escalation rules...');
+    const escalationConfigs = [
+        // Core Banking — Critical: 3-level escalation chain
+        { name: 'Core Banking Critical L1', systemId: systems[0].id, severity: 'Critical', level: 1, teamIdx: 0, delay: 15 },
+        { name: 'Core Banking Critical L2', systemId: systems[0].id, severity: 'Critical', level: 2, teamIdx: 1, delay: 30 },
+        { name: 'Core Banking Critical L3', systemId: systems[0].id, severity: 'Critical', level: 3, teamIdx: 2, delay: 60 },
+        // Payment Gateway — Critical
+        { name: 'Payment Critical L1', systemId: systems[1].id, severity: 'Critical', level: 1, teamIdx: 3, delay: 10 },
+        { name: 'Payment Critical L2', systemId: systems[1].id, severity: 'Critical', level: 2, teamIdx: 4, delay: 20 },
+        { name: 'Payment Critical L3', systemId: systems[1].id, severity: 'Critical', level: 3, teamIdx: 5, delay: 45 },
+        // ATM Network — High
+        { name: 'ATM High L1', systemId: systems[6].id, severity: 'High', level: 1, teamIdx: 6, delay: 30 },
+        { name: 'ATM High L2', systemId: systems[6].id, severity: 'High', level: 2, teamIdx: 7, delay: 60 },
+        // Fraud Detection — Critical
+        { name: 'Fraud Critical L1', systemId: systems[8].id, severity: 'Critical', level: 1, teamIdx: 8, delay: 5 },
+        { name: 'Fraud Critical L2', systemId: systems[8].id, severity: 'Critical', level: 2, teamIdx: 9, delay: 15 },
+        { name: 'Fraud Critical L3', systemId: systems[8].id, severity: 'Critical', level: 3, teamIdx: 10, delay: 30 },
+        // Wildcard — any system, any severity (catch-all)
+        { name: 'Default Catch-All L1', systemId: null, severity: null, level: 1, teamIdx: 11, delay: 60 },
+        { name: 'Default Catch-All L2', systemId: null, severity: null, level: 2, teamIdx: 12, delay: 120 },
+        // CRM — Medium (inactive example)
+        { name: 'CRM Medium L1 (Disabled)', systemId: systems[2].id, severity: 'Medium', level: 1, teamIdx: 13, delay: 120, inactive: true },
+        { name: 'CRM Medium L2 (Disabled)', systemId: systems[2].id, severity: 'Medium', level: 2, teamIdx: 14, delay: 240, inactive: true },
+    ];
+
+    for (const cfg of escalationConfigs) {
+        await prisma.escalationRule.create({
+            data: {
+                name: cfg.name,
+                systemId: cfg.systemId,
+                severity: cfg.severity,
+                level: cfg.level,
+                teamId: teams[cfg.teamIdx % teams.length].id,
+                delayMinutes: cfg.delay,
+                isActive: cfg.inactive ? false : true,
+            }
+        });
+    }
+
+    // ── Auto-Assignment Rules (12 rules with priority ordering) ──
+    console.log('Creating auto-assignment rules...');
+    const autoAssignConfigs = [
+        // Most specific rules (highest priority)
+        { name: 'Core Banking + Critical → DB Ops', systemId: systems[0].id, severity: 'Critical', teamIdx: 0, priority: 100 },
+        { name: 'Payment + Critical → Payment Ops', systemId: systems[1].id, severity: 'Critical', teamIdx: 1, priority: 100 },
+        { name: 'Fraud + Critical → Security Team', systemId: systems[8].id, severity: 'Critical', teamIdx: 2, priority: 100 },
+        { name: 'ATM + High → ATM Support', systemId: systems[6].id, severity: 'High', teamIdx: 3, priority: 90 },
+        { name: 'Loan Processing + High → Loan Ops', systemId: systems[7].id, severity: 'High', teamIdx: 4, priority: 90 },
+        // System-only rules (medium priority)
+        { name: 'Core Banking (any) → Banking Team', systemId: systems[0].id, severity: null, teamIdx: 5, priority: 50 },
+        { name: 'Mobile App (any) → Mobile Team', systemId: systems[5].id, severity: null, teamIdx: 6, priority: 50 },
+        { name: 'CRM (any) → CRM Support', systemId: systems[2].id, severity: null, teamIdx: 7, priority: 50 },
+        // Severity-only rules (lower priority)
+        { name: 'Any Critical → Critical Team', systemId: null, severity: 'Critical', teamIdx: 8, priority: 30 },
+        { name: 'Any High → Level 2 Support', systemId: null, severity: 'High', teamIdx: 9, priority: 20 },
+        // Catch-all (lowest priority)
+        { name: 'Default → General Support', systemId: null, severity: null, teamIdx: 10, priority: 0 },
+        // Inactive example
+        { name: 'Old DW Rule (Disabled)', systemId: systems[9].id, severity: null, teamIdx: 11, priority: 40, inactive: true },
+    ];
+
+    for (const cfg of autoAssignConfigs) {
+        await prisma.autoAssignmentRule.create({
+            data: {
+                name: cfg.name,
+                systemId: cfg.systemId,
+                severity: cfg.severity,
+                teamId: teams[cfg.teamIdx % teams.length].id,
+                priority: cfg.priority,
+                isActive: cfg.inactive ? false : true,
+            }
+        });
+    }
+
+    // ── Webhooks (4 webhooks with delivery history) ──
+    console.log('Creating webhooks and delivery history...');
+    const webhookConfigs = [
+        {
+            name: 'Slack Notifications',
+            url: 'https://hooks.slack.example.com/services/T00000000/B00000000/XXXXXXXX',
+            secret: 'slack-webhook-secret-key-min16',
+            events: 'incident.created,incident.resolved,incident.escalated',
+            isActive: true,
+        },
+        {
+            name: 'PagerDuty Integration',
+            url: 'https://events.pagerduty.example.com/v2/enqueue',
+            secret: 'pagerduty-integration-key16char',
+            events: 'incident.created,incident.sla_breached,incident.escalated',
+            isActive: true,
+        },
+        {
+            name: 'ServiceNow ITSM Sync',
+            url: 'https://instance.servicenow.example.com/api/sn_em_connector/em/inbound_event',
+            secret: 'servicenow-secret-key-here16c',
+            events: 'incident.created,incident.updated,incident.resolved',
+            isActive: true,
+        },
+        {
+            name: 'Old Monitoring (Disabled)',
+            url: 'https://old-monitoring.example.com/webhook',
+            secret: 'old-monitoring-key-16chars',
+            events: 'incident.created',
+            isActive: false,
+        },
+    ];
+
+    const webhookEvents = ['incident.created', 'incident.updated', 'incident.resolved', 'incident.escalated', 'incident.sla_breached'];
+
+    for (const cfg of webhookConfigs) {
+        const webhook = await prisma.webhook.create({ data: cfg });
+
+        // Generate 5-8 delivery logs per active webhook
+        if (cfg.isActive) {
+            const deliveryCount = faker.number.int({ min: 5, max: 8 });
+            for (let d = 0; d < deliveryCount; d++) {
+                const event = faker.helpers.arrayElement(webhookEvents);
+                const success = Math.random() > 0.2; // 80% success rate
+                const statusCode = success ? 200 : faker.helpers.arrayElement([500, 502, 503, 408, null]);
+                await prisma.webhookDelivery.create({
+                    data: {
+                        webhookId: webhook.id,
+                        event,
+                        payload: JSON.stringify({
+                            event,
+                            timestamp: faker.date.recent({ days: 30 }).toISOString(),
+                            data: { incidentId: faker.string.uuid(), title: faker.hacker.phrase(), severity: faker.helpers.arrayElement(['Critical', 'High', 'Medium', 'Low']) }
+                        }),
+                        statusCode,
+                        response: success ? '{"ok":true}' : (statusCode ? `Error ${statusCode}: Server internal error` : null),
+                        attemptCount: success ? 1 : faker.number.int({ min: 1, max: 3 }),
+                        success,
+                        error: success ? null : faker.helpers.arrayElement(['Connection timed out', 'HTTP 502: Bad Gateway', 'HTTP 503: Service Unavailable', 'ECONNREFUSED']),
+                        deliveredAt: success ? faker.date.recent({ days: 30 }) : null,
+                        createdAt: faker.date.recent({ days: 30 }),
+                    }
+                });
+            }
+        }
+    }
+
+    // ── Planning Instances & Jobs ──
+    console.log('Creating planning instances and jobs...');
+    const planningInstances = [
+        { name: 'February 2026 Monthly Plan', description: 'Standard monthly maintenance window', period: 'monthly' as const, startDate: new Date('2026-02-01'), endDate: new Date('2026-02-28'), status: 'active' as const },
+        { name: 'Q1 2026 Quarterly Plan', description: 'Major quarterly infrastructure upgrades', period: 'quarterly' as const, startDate: new Date('2026-01-01'), endDate: new Date('2026-03-31'), status: 'active' as const },
+        { name: 'January 2026 Monthly Plan', description: 'Completed January maintenance', period: 'monthly' as const, startDate: new Date('2026-01-01'), endDate: new Date('2026-01-31'), status: 'archived' as const },
+        { name: '2025 Annual Review', description: 'Year-end infrastructure review and cleanup', period: 'annual' as const, startDate: new Date('2025-01-01'), endDate: new Date('2025-12-31'), status: 'archived' as const },
+    ];
+
+    const pStatuses = ['pending', 'running', 'done'] as const;
+    for (const instCfg of planningInstances) {
+        const instance = await prisma.planningInstance.create({
+            data: {
+                name: instCfg.name,
+                description: instCfg.description,
+                period: instCfg.period,
+                startDate: instCfg.startDate,
+                endDate: instCfg.endDate,
+                status: instCfg.status,
+                createdById: admin.id,
+            }
+        });
+
+        // Add 4-6 planning jobs per instance (using unique jobs per instance)
+        const jobCount = faker.number.int({ min: 4, max: 6 });
+        const shuffledJobs = faker.helpers.shuffle([...jobs]).slice(0, jobCount);
+        let xPos = 100;
+        for (let j = 0; j < shuffledJobs.length; j++) {
+            const job = shuffledJobs[j];
+            const isArchived = instCfg.status === 'archived';
+            const status = isArchived ? 'done' : faker.helpers.arrayElement(pStatuses);
+            const scheduledTime = new Date(instCfg.startDate.getTime() + (j + 1) * 86400000 * 3);
+
+            await prisma.planningJob.create({
+                data: {
+                    instanceId: instance.id,
+                    systemId: job.systemId,
+                    jobId: job.id,
+                    scheduledTime,
+                    status,
+                    positionX: xPos,
+                    positionY: 50 + (j % 3) * 120,
+                    dependencies: '[]',
+                    completedAt: status === 'done' ? new Date(scheduledTime.getTime() + 3600000) : null,
+                    completedById: status === 'done' ? faker.helpers.arrayElement(experts).id : null,
+                }
+            });
+            xPos += 250;
+        }
+    }
+
+    // ── Audit Logs (80 entries) ──
+    console.log('Creating audit logs...');
+    const auditActions = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'STATUS_CHANGE', 'ASSIGN'];
+    const auditEntities = ['INCIDENT', 'PROCEDURE', 'TEAM', 'USER', 'SYSTEM', 'SLA', 'ROLE'];
+    const auditDetails: Record<string, string[]> = {
+        'CREATE': ['Created new record', 'Initial creation via seed', 'Auto-created by system'],
+        'UPDATE': ['Updated status to In Progress', 'Changed severity from Medium to High', 'Updated description', 'Modified resolution steps'],
+        'DELETE': ['Soft-deleted record', 'Permanently removed', 'Cleaned up stale entry'],
+        'LOGIN': ['Successful login from web UI', 'Login from mobile device', 'Login via SSO'],
+        'LOGOUT': ['User logged out', 'Session expired', 'Manual logout'],
+        'STATUS_CHANGE': ['Status changed: Open → In Progress', 'Status changed: In Progress → Resolved', 'Reopened incident', 'Status changed: Resolved → Closed'],
+        'ASSIGN': ['Assigned to team', 'Reassigned to new team', 'Auto-assigned by rule'],
+    };
+    const userAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+        'PostmanRuntime/7.32.3',
+    ];
+
+    for (let i = 0; i < 80; i++) {
+        const action = faker.helpers.arrayElement(auditActions);
+        const entity = faker.helpers.arrayElement(auditEntities);
+        await prisma.auditLog.create({
+            data: {
+                userId: faker.helpers.arrayElement(users).id,
+                actionType: action,
+                entityType: entity,
+                entityId: faker.string.uuid(),
+                details: faker.helpers.arrayElement(auditDetails[action] || ['Action performed']),
+                ipAddress: faker.internet.ip(),
+                userAgent: faker.helpers.arrayElement(userAgents),
+                result: Math.random() > 0.05 ? 'SUCCESS' : 'FAILURE',
+                timestamp: faker.date.recent({ days: 60 }),
+            }
+        });
+    }
+
     console.log('✅ Large scale seed completed successfully!');
     console.log('\nPlease login with: admin@prodkb.com / password123');
+    console.log('\n📊 Data summary:');
+    console.log('   • 52 users (admin + viewer + 50 random)');
+    console.log('   • 20 teams with members');
+    console.log('   • 10 systems, 50 jobs, 4 SLAs');
+    console.log('   • 55 procedures, 120 incidents with logs');
+    console.log('   • 15 escalation rules (3-level chains)');
+    console.log('   • 12 auto-assignment rules (priority-based)');
+    console.log('   • 4 webhooks with ~25 delivery logs');
+    console.log('   • 4 planning instances with ~20 jobs');
+    console.log('   • 80 audit log entries');
+    console.log('   • 4 email templates');
 }
 
 main()

@@ -1,5 +1,4 @@
 
-import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import { incidentService } from './incident.service';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
@@ -85,10 +84,6 @@ export class IncidentController {
 
             const result = await incidentService.findAll(filters, pagination);
 
-            res.json(createResponse(true, result.data, undefined, undefined));
-            // The meta data is lost in standard response? 
-            // We should probably include meta in data or extend createResponse. 
-            // For now, let's wrap data 
             res.json(createResponse(true, {
                 items: result.data,
                 meta: {
@@ -231,16 +226,14 @@ export class IncidentController {
 
             if (!fileLog.filePath) throw new NotFoundError('File path missing in log');
 
-            const exists = fileUploadService.fileExists(fileLog.filePath);
+            const exists = await fileUploadService.fileExists(fileLog.filePath);
             if (!exists) throw new NotFoundError('File on disk');
-
-            const absolutePath = fileUploadService.getAbsolutePath(fileLog.filePath);
 
             res.setHeader('Content-Disposition', `attachment; filename="${fileLog.fileName || 'download'}"`);
             res.setHeader('Content-Type', fileLog.mimeType || 'application/octet-stream');
             if (fileLog.fileSize) res.setHeader('Content-Length', fileLog.fileSize);
 
-            const fileStream = fs.createReadStream(absolutePath);
+            const fileStream = await fileUploadService.getFileStream(fileLog.filePath);
             fileStream.on('error', (error) => {
                 logger.error('Stream error', { error });
                 if (!res.headersSent) res.status(500).send('Could not download file');

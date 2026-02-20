@@ -5,7 +5,8 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { escalationService, createEscalationRuleSchema, updateEscalationRuleSchema } from './escalation.service';
+import { escalationService } from './escalation.service';
+import { createEscalationRuleSchema, updateEscalationRuleSchema } from './escalation.schema';
 import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 

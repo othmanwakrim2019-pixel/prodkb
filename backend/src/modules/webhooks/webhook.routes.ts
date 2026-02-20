@@ -1,6 +1,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { webhookService, createWebhookSchema, updateWebhookSchema } from './webhook.service';
+import { webhookService } from './webhook.service';
+import { createWebhookSchema, updateWebhookSchema } from './webhook.schema';
 import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 

@@ -10,19 +10,8 @@ import { logger } from '../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../common/errors/app.error';
 import { IncidentStatus } from '../../constants';
 import { z } from 'zod';
+import { createEscalationRuleSchema, updateEscalationRuleSchema } from './escalation.schema';
 
-// ── Zod schemas ──
-export const createEscalationRuleSchema = z.object({
-    name: z.string().min(2).max(100),
-    systemId: z.string().uuid().optional().nullable(),
-    severity: z.string().optional().nullable(),
-    level: z.number().int().min(1).max(10),
-    teamId: z.string().uuid(),
-    delayMinutes: z.number().int().min(1),
-    isActive: z.boolean().optional(),
-});
-
-export const updateEscalationRuleSchema = createEscalationRuleSchema.partial();
 
 export class EscalationService {
     /**

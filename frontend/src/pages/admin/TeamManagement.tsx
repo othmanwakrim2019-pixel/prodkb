@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { EditTeamModal } from '../../components/EditTeamModal';
 import { Team, User, TeamMember } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { teamService, userService } from '../../services/admin.service';
 
 export const TeamManagement = () => {
     const { canManageTeams } = useAuth();
@@ -25,8 +25,8 @@ export const TeamManagement = () => {
 
     const fetchTeams = async () => {
         try {
-            const response = await axios.get('/api/teams');
-            setTeams(Array.isArray(response.data) ? response.data : response.data?.data || []);
+            const data = await teamService.getAll();
+            setTeams(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch teams', error);
         }
@@ -34,8 +34,8 @@ export const TeamManagement = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('/api/users');
-            setUsers(Array.isArray(response.data) ? response.data : response.data?.data || []);
+            const data = await userService.getAll();
+            setUsers(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch users', error);
         }
@@ -44,7 +44,7 @@ export const TeamManagement = () => {
     const handleCreateTeam = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('/api/teams', newTeam);
+            await teamService.create(newTeam);
             setNewTeam({ name: '', description: '', emailDistribution: '', sendEmail: true });
             setShowTeamForm(false);
             await fetchTeams();
@@ -60,7 +60,7 @@ export const TeamManagement = () => {
     const handleUpdateTeam = async (updatedTeam: Team) => {
         if (!updatedTeam) return;
         try {
-            await axios.put(`/api/teams/${updatedTeam.id}`, {
+            await teamService.update(updatedTeam.id, {
                 name: updatedTeam.name,
                 description: updatedTeam.description,
                 emailDistribution: updatedTeam.emailDistribution,
@@ -80,7 +80,7 @@ export const TeamManagement = () => {
     const handleDeleteTeam = async (teamId: string, teamName: string) => {
         if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
         try {
-            await axios.delete(`/api/teams/${teamId}`);
+            await teamService.delete(teamId);
             await fetchTeams();
             alert('Team deleted successfully!');
             await fetchTeams();
@@ -99,10 +99,7 @@ export const TeamManagement = () => {
                 return;
             }
 
-            await axios.post(`/api/teams/${teamId}/members`, {
-                userId: newMember.userId,
-                role: newMember.role || 'MEMBER'
-            });
+            await teamService.addMember(teamId, newMember.userId, newMember.role || 'MEMBER');
 
             setNewMember({ userId: '', role: '' });
             setShowMemberForm(null);
@@ -118,7 +115,7 @@ export const TeamManagement = () => {
     const handleRemoveTeamMember = async (teamId: string, userId: string) => {
         if (!confirm('Are you sure you want to remove this team member?')) return;
         try {
-            await axios.delete(`/api/teams/${teamId}/members/${userId}`);
+            await teamService.removeMember(teamId, userId);
             await fetchTeams();
             alert('Team member removed successfully!');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

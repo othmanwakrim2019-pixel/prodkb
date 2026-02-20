@@ -1,32 +1,12 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { teamService } from './team.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
 import { prisma } from '../../common/utils/prisma';
+import { createTeamSchema, updateTeamSchema, addMemberSchema } from './team.schema';
 
-
-const createTeamSchema = z.object({
-    name: z.string().min(2).max(100),
-    description: z.string().max(500).optional(),
-    emailDistribution: z.string().email(),
-    sendEmail: z.boolean().optional(),
-});
-
-const updateTeamSchema = z.object({
-    name: z.string().min(2).max(100).optional(),
-    description: z.string().max(500).optional().nullable(),
-    emailDistribution: z.string().email().optional(),
-    isActive: z.boolean().optional(),
-    sendEmail: z.boolean().optional(),
-});
-
-const addMemberSchema = z.object({
-    userId: z.string().uuid(),
-    role: z.string().min(1).max(50),
-});
 
 export class TeamController {
     static async createTeam(req: AuthRequest, res: Response, next: NextFunction) {

@@ -12,8 +12,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    token: string | null;
-    login: (token: string, user: User) => void;
+    login: (user: User) => void;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -38,7 +37,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -49,34 +47,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
-            if (token) {
-                try {
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await axios.get('/auth/me');
-                    setUser(response.data);
-                } catch (error) {
-                    console.error('Failed to fetch user', error);
-                    logout();
-                }
+            try {
+                // The httpOnly cookie is sent automatically by the browser
+                // No need to set Authorization header manually
+                const response = await axios.get('/auth/me');
+                setUser(response.data);
+            } catch (error) {
+                console.error('Failed to fetch user', error);
+                setUser(null);
             }
             setIsLoading(false);
         };
 
         initAuth();
-    }, [token]);
+    }, []);
 
-    const login = (newToken: string, newUser: User) => {
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
+    const login = (newUser: User) => {
+        // Token is now stored in httpOnly cookie by the backend
+        // We only need to store the user info in React state
         setUser(newUser);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setToken(null);
+    const logout = async () => {
+        try {
+            // Call backend to clear cookies and revoke refresh token
+            await axios.post('/auth/v1/logout');
+        } catch (error) {
+            console.error('Logout API call failed', error);
+        }
         setUser(null);
-        delete axios.defaults.headers.common['Authorization'];
     };
 
     // Permission helper functions
@@ -104,7 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return (
         <AuthContext.Provider value={{
             user,
-            token,
             login,
             logout,
             isAuthenticated: !!user,

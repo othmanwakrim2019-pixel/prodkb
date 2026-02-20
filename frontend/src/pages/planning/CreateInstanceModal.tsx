@@ -63,7 +63,7 @@ export const CreateInstanceModal = ({ isOpen, onClose, onCreated, period }: Crea
         setError('');
 
         try {
-            await axios.post('/api/planning/instances', {
+            await axios.post('/api/v1/planning/instances', {
                 ...form,
                 startDate: new Date(form.startDate).toISOString(),
                 endDate: new Date(form.endDate).toISOString(),

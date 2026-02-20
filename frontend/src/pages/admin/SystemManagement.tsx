@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search as SearchIcon, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { System, Team, Job } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { systemService, teamService, jobService } from '../../services/admin.service';
 
 export const SystemManagement = () => {
     const { canManageSystems } = useAuth();
@@ -26,8 +26,8 @@ export const SystemManagement = () => {
 
     const fetchSystems = async () => {
         try {
-            const response = await axios.get('/api/systems');
-            setSystems(Array.isArray(response.data) ? response.data : response.data?.data || []);
+            const data = await systemService.getAll();
+            setSystems(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch systems', error);
         }
@@ -35,8 +35,8 @@ export const SystemManagement = () => {
 
     const fetchTeams = async () => {
         try {
-            const response = await axios.get('/api/teams');
-            setTeams(Array.isArray(response.data) ? response.data : response.data?.data || []);
+            const data = await teamService.getAll();
+            setTeams(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch teams', error);
         }
@@ -45,7 +45,7 @@ export const SystemManagement = () => {
     const handleCreateSystem = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('/api/systems', newSystem);
+            await systemService.create(newSystem);
             setNewSystem({ name: '', description: '' });
             setShowSystemForm(false);
             await fetchSystems();
@@ -58,10 +58,10 @@ export const SystemManagement = () => {
     const handleCreateJob = async (e: React.FormEvent, systemId: string) => {
         e.preventDefault();
         try {
-            await axios.post('/api/systems/jobs', {
+            await jobService.create({
                 ...newJob,
                 systemId,
-                teamId: newJob.teamId || null
+                teamId: newJob.teamId || undefined
             });
             setNewJob({ name: '', code: '', systemId: '', teamId: '' });
             setShowJobForm(null);
@@ -75,7 +75,7 @@ export const SystemManagement = () => {
     const handleUpdateSystem = async () => {
         if (!editingSystem) return;
         try {
-            await axios.put(`/api/systems/${editingSystem.id}`, {
+            await systemService.update(editingSystem.id, {
                 name: editingSystem.name,
                 description: editingSystem.description
             });
@@ -90,7 +90,7 @@ export const SystemManagement = () => {
     const handleDeleteSystem = async (systemId: string, systemName: string) => {
         if (!confirm(`Delete system "${systemName}"? This will fail if there are related incidents, jobs, or procedures.`)) return;
         try {
-            await axios.delete(`/api/systems/${systemId}`);
+            await systemService.delete(systemId);
             await fetchSystems();
             alert('System deleted successfully!');
         } catch (error) {
@@ -101,11 +101,11 @@ export const SystemManagement = () => {
     const handleUpdateJob = async () => {
         if (!editingJob) return;
         try {
-            await axios.put(`/api/systems/jobs/${editingJob.id}`, {
+            await jobService.update(editingJob.id, {
                 name: editingJob.name,
                 code: editingJob.code,
                 systemId: editingJob.systemId,
-                teamId: editingJob.teamId || null
+                teamId: editingJob.teamId || undefined
             });
             setEditingJob(null);
             await fetchSystems();
@@ -118,7 +118,7 @@ export const SystemManagement = () => {
     const handleDeleteJob = async (jobId: string, jobName: string) => {
         if (!confirm(`Delete job "${jobName}"? This will fail if there are related incidents or procedures.`)) return;
         try {
-            await axios.delete(`/api/systems/jobs/${jobId}`);
+            await jobService.delete(jobId);
             await fetchSystems();
             alert('Job deleted successfully!');
         } catch (error) {
