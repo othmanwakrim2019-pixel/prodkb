@@ -235,11 +235,11 @@ export const configService = {
         api.put(`/api/v1/config/${key}`, { value }).then(r => r.data),
 
     getSmtp: (): Promise<SmtpConfig> =>
-        api.get('/api/config/smtp').then(r => r.data),
+        api.get('/api/v1/config/smtp').then(r => r.data),
 
     updateSmtp: (data: Partial<SmtpConfig>): Promise<SmtpConfig> =>
-        api.put('/api/config/smtp', data).then(r => r.data),
+        api.put('/api/v1/config/smtp', data).then(r => r.data),
 
     testSmtp: (email: string): Promise<{ success: boolean; message: string }> =>
-        api.post('/api/config/smtp/test', { email }).then(r => r.data),
+        api.post('/api/v1/config/smtp/test', { email }).then(r => r.data),
 };

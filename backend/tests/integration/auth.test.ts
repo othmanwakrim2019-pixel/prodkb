@@ -56,8 +56,17 @@ describe('Auth Integration', () => {
             });
 
         expect(res.status).toBe(200);
-        expect(res.body.data).toHaveProperty('token');
+        // Token is now in httpOnly cookie, not in response body
+        expect(res.body.data).toHaveProperty('user');
         expect(res.body.data.user.email).toBe(testUser.email);
+
+        // Verify cookie is set
+        const cookies = res.headers['set-cookie'];
+        expect(cookies).toBeDefined();
+        const tokenCookie = Array.isArray(cookies)
+            ? cookies.find((c: string) => c.startsWith('access_token='))
+            : cookies;
+        expect(tokenCookie).toBeDefined();
     });
 
     it('should fail login with wrong password', async () => {

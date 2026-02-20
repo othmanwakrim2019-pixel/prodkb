@@ -72,8 +72,9 @@ export const AutoAssignManagement = () => {
             }
             setShowForm(false);
             fetchAll();
-        } catch (err: any) {
-            alert(err.response?.data?.error || 'Failed to save rule');
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { error?: string } } };
+            alert(axiosErr.response?.data?.error || 'Failed to save rule');
         }
     };
 

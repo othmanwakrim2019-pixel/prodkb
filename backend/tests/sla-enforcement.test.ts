@@ -13,6 +13,9 @@ jest.mock('../src/common/utils/prisma', () => ({
             findMany: jest.fn(),
             update: jest.fn(),
         },
+        incidentLog: {
+            create: jest.fn().mockResolvedValue({}),
+        },
         escalationRule: {
             findMany: jest.fn(),
         },
