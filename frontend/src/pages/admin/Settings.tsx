@@ -38,7 +38,8 @@ export const Settings = () => {
     const fetchConfig = async () => {
         try {
             const data = await configService.getSmtp();
-            setConfig(data as typeof config);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setConfig(data as any);
         } catch (error) {
             console.error("Failed to fetch SMTP config", error);
         } finally {
