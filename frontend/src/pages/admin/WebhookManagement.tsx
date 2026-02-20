@@ -99,8 +99,9 @@ export const WebhookManagement = () => {
             }
             setShowForm(false);
             fetchWebhooks();
-        } catch (err: any) {
-            alert(err.response?.data?.error || 'Failed to save webhook');
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { error?: string } } };
+            alert(axiosErr.response?.data?.error || 'Failed to save webhook');
         }
     };
 
@@ -175,8 +176,8 @@ export const WebhookManagement = () => {
                             {EVENTS.map(ev => (
                                 <button key={ev} type="button" onClick={() => toggleEvent(ev)}
                                     className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${selectedEvents.has(ev)
-                                            ? 'bg-purple-50 border-purple-300 text-purple-700'
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-purple-50 border-purple-300 text-purple-700'
+                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                                         }`}>
                                     {ev}
                                 </button>

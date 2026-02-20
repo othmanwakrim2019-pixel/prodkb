@@ -59,7 +59,7 @@ function getLayoutedElements(
     jobs.forEach(job => {
         const deps = Array.isArray(job.dependencies)
             ? job.dependencies
-            : (() => { try { return JSON.parse(job.dependencies as any) || []; } catch { return []; } })();
+            : (() => { try { return JSON.parse(job.dependencies as string) || []; } catch { return []; } })();
         deps.forEach((depId: string) => {
             if (jobIdSet.has(depId)) {
                 edges.push({

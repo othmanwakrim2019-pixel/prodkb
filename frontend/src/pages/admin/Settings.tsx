@@ -38,7 +38,7 @@ export const Settings = () => {
     const fetchConfig = async () => {
         try {
             const data = await configService.getSmtp();
-            setConfig(data as any);
+            setConfig(data as typeof config);
         } catch (error) {
             console.error("Failed to fetch SMTP config", error);
         } finally {

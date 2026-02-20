@@ -48,9 +48,14 @@ describe('Centralized Error Handling Integration', () => {
 
         // Create user
         await authService.register(testUser);
-        // Login
-        const loginRes = await authService.login(testUser.email, testUser.password);
-        token = loginRes.token;
+        // Login — token is now in httpOnly cookie
+        const loginRes = await request(app)
+            .post('/auth/login')
+            .send({ email: testUser.email, password: testUser.password });
+        const cookies = loginRes.headers['set-cookie'];
+        token = Array.isArray(cookies)
+            ? cookies.find((c: string) => c.startsWith('access_token='))!
+            : cookies;
     });
 
     afterAll(async () => {
@@ -60,8 +65,8 @@ describe('Centralized Error Handling Integration', () => {
 
     it('should return 500 for invalid UUID (Prisma error handled by middleware)', async () => {
         const res = await request(app)
-            .get('/api/incidents/invalid-uuid')
-            .set('Authorization', `Bearer ${token}`);
+            .get('/api/v1/incidents/invalid-uuid')
+            .set('Cookie', [token]);
 
         // Prisma usually throws a P2023 for invalid UUID input to findUnique
         // Our errorHandler might catch it as default (500) or if it's validation error it might vary.
@@ -73,8 +78,8 @@ describe('Centralized Error Handling Integration', () => {
     it('should return 404 for non-existent resource', async () => {
         const validUuid = '00000000-0000-0000-0000-000000000000';
         const res = await request(app)
-            .get(`/api/incidents/${validUuid}`)
-            .set('Authorization', `Bearer ${token}`);
+            .get(`/api/v1/incidents/${validUuid}`)
+            .set('Cookie', [token]);
 
         expect(res.status).toBe(404);
         expect(res.body.error.code).toBe('NOT_FOUND');

@@ -38,10 +38,10 @@ describe('Auth Cookie Integration', () => {
         const cookies = res.headers['set-cookie'];
         expect(cookies).toBeDefined();
 
-        // Find the token cookie
+        // Find the access_token cookie (the auth controller uses 'access_token' as cookie name)
         const tokenCookie = Array.isArray(cookies)
-            ? cookies.find((c: string) => c.startsWith('token='))
-            : typeof cookies === 'string' && cookies.startsWith('token=') ? cookies : undefined;
+            ? cookies.find((c: string) => c.startsWith('access_token='))
+            : typeof cookies === 'string' && cookies.startsWith('access_token=') ? cookies : undefined;
 
         expect(tokenCookie).toBeDefined();
         expect(tokenCookie).toContain('HttpOnly');
@@ -72,7 +72,7 @@ describe('Auth Cookie Integration', () => {
     it('should reject protected routes with invalid cookie', async () => {
         const res = await request(app)
             .get('/api/v1/users')
-            .set('Cookie', ['token=invalidjwttoken']);
+            .set('Cookie', ['access_token=invalidjwttoken']);
 
         expect(res.status).toBe(401);
     });
@@ -88,11 +88,11 @@ describe('Auth Cookie Integration', () => {
         const cookies = res.headers['set-cookie'];
         if (cookies) {
             const tokenCookie = Array.isArray(cookies)
-                ? cookies.find((c: string) => c.startsWith('token='))
+                ? cookies.find((c: string) => c.startsWith('access_token='))
                 : cookies;
             if (tokenCookie) {
                 // Cookie should be expired/empty
-                expect(tokenCookie).toMatch(/token=;|Max-Age=0|expires=/i);
+                expect(tokenCookie).toMatch(/access_token=;|Max-Age=0|expires=/i);
             }
         }
     });
