@@ -41,7 +41,7 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
                 setError(null);
             }
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || (err instanceof Error ? err.message : 'Failed to fetch incident');
             if (mountedRef.current) setError(msg);
         } finally {
@@ -52,7 +52,7 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
     useEffect(() => { refresh(); }, [refresh]);
 
     const handleError = (err: unknown, fallback: string): string => {
-        return (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        return (err as { response?: { data?: { message?: string } } })?.response?.data?.message
             || (err instanceof Error ? err.message : fallback);
     };
 

@@ -52,7 +52,7 @@ export function useAsync<T>(
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'An unexpected error occurred';
             // Extract axios error message if available
-            const axiosMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+            const axiosMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
             if (mountedRef.current) {
                 setState({ data: null, loading: false, error: axiosMsg || message });
             }

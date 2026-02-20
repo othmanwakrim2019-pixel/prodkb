@@ -43,7 +43,7 @@ export function useCrud<T>(service: CrudService<T>): UseCrudReturn<T> {
                 setError(null);
             }
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || 'Failed to fetch data';
             if (mountedRef.current) setError(msg);
         } finally {
@@ -60,7 +60,7 @@ export function useCrud<T>(service: CrudService<T>): UseCrudReturn<T> {
             await refresh();
             return true;
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || 'Failed to create';
             setError(msg);
             return false;
@@ -74,7 +74,7 @@ export function useCrud<T>(service: CrudService<T>): UseCrudReturn<T> {
             await refresh();
             return true;
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || 'Failed to update';
             setError(msg);
             return false;
@@ -88,7 +88,7 @@ export function useCrud<T>(service: CrudService<T>): UseCrudReturn<T> {
             await refresh();
             return true;
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || 'Failed to delete';
             setError(msg);
             return false;

@@ -37,7 +37,7 @@ export const SLAManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to create SLA', error);
-            alert(error.response?.data?.error || 'Failed to create SLA');
+            alert(error.response?.data?.message || 'Failed to create SLA');
         }
     };
 
@@ -57,7 +57,7 @@ export const SLAManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to update SLA', error);
-            alert(error.response?.data?.error || 'Failed to update SLA');
+            alert(error.response?.data?.message || 'Failed to update SLA');
         }
     };
 
@@ -70,7 +70,7 @@ export const SLAManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Failed to delete SLA', error);
-            alert(error.response?.data?.error || 'Failed to delete SLA');
+            alert(error.response?.data?.message || 'Failed to delete SLA');
         }
     };
 

@@ -72,7 +72,7 @@ export const UserManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to create user');
+            alert(error.response?.data?.message || 'Failed to create user');
         }
     };
 
@@ -90,7 +90,7 @@ export const UserManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to update user');
+            alert(error.response?.data?.message || 'Failed to update user');
         }
     };
 
@@ -103,7 +103,7 @@ export const UserManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to delete user');
+            alert(error.response?.data?.message || 'Failed to delete user');
         }
     };
 
@@ -116,7 +116,7 @@ export const UserManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to assign team');
+            alert(error.response?.data?.message || 'Failed to assign team');
         }
     };
 
@@ -129,7 +129,7 @@ export const UserManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to remove team');
+            alert(error.response?.data?.message || 'Failed to remove team');
         }
     };
 

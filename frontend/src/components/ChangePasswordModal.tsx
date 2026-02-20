@@ -41,8 +41,8 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
             setConfirmPassword('');
             setTimeout(() => onClose(), 1500);
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { error?: string } } };
-            setError(axiosErr.response?.data?.error || t('password.failed'));
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            setError(axiosErr.response?.data?.message || t('password.failed'));
         } finally {
             setLoading(false);
         }

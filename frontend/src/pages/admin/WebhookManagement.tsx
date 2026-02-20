@@ -100,8 +100,8 @@ export const WebhookManagement = () => {
             setShowForm(false);
             fetchWebhooks();
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { error?: string } } };
-            alert(axiosErr.response?.data?.error || 'Failed to save webhook');
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            alert(axiosErr.response?.data?.message || 'Failed to save webhook');
         }
     };
 
