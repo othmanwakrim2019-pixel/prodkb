@@ -34,7 +34,7 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
 
     const fetchSystems = async () => {
         try {
-            const res = await axios.get('/api/systems');
+            const res = await axios.get('/api/v1/systems');
             const data = res.data;
             setSystems(Array.isArray(data) ? data : data?.data || []);
         } catch (err) {
@@ -62,7 +62,7 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                 scheduledTime: new Date(scheduledTime).toISOString(),
                 dependencies,
             };
-            await axios.post('/api/planning/jobs', payload);
+            await axios.post('/api/v1/planning/jobs', payload);
             onCreated();
             onClose();
         } catch (err: unknown) {

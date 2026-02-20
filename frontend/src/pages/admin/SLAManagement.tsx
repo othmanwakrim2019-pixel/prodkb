@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { SLA, Severity } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { slaService } from '../../services/admin.service';
 
 export const SLAManagement = () => {
     const { canManageSLAs } = useAuth();
@@ -19,8 +19,8 @@ export const SLAManagement = () => {
 
     const fetchSlas = async () => {
         try {
-            const response = await axios.get('/api/slas');
-            setSlas(Array.isArray(response.data) ? response.data : response.data?.data || []);
+            const data = await slaService.getAll();
+            setSlas(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch SLAs', error);
         }
@@ -29,7 +29,7 @@ export const SLAManagement = () => {
     const handleCreateSla = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('/api/slas', newSla);
+            await slaService.create(newSla);
             setNewSla({ name: '', description: '', severity: 'Medium', acknowledgeTimeMinutes: 60, resolveTimeMinutes: 480 });
             setShowSlaForm(false);
             await fetchSlas();
@@ -44,7 +44,7 @@ export const SLAManagement = () => {
     const handleUpdateSla = async () => {
         if (!editingSla) return;
         try {
-            await axios.put(`/api/slas/${editingSla.id}`, {
+            await slaService.update(editingSla.id, {
                 name: editingSla.name,
                 description: editingSla.description,
                 severity: editingSla.severity,
@@ -64,7 +64,7 @@ export const SLAManagement = () => {
     const handleDeleteSla = async (slaId: string) => {
         if (!confirm('Are you sure you want to delete this SLA policy?')) return;
         try {
-            await axios.delete(`/api/slas/${slaId}`);
+            await slaService.delete(slaId);
             await fetchSlas();
             alert('SLA deleted successfully!');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

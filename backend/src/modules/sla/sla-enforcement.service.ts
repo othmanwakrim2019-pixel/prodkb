@@ -1,8 +1,14 @@
 
 /**
  * SLA Enforcement Engine
- * Cron job that checks for SLA breaches every 60 seconds.
- * Detects acknowledge + resolve time violations, marks incidents, and sends alerts.
+ * Core business logic for detecting SLA breaches and escalating incidents.
+ *
+ * This service is now stateless — it no longer manages its own scheduling.
+ * Scheduling is handled by BullMQ (see sla.queue.ts + workers/sla.worker.ts).
+ *
+ * The `check()` method is the main entry point, called by the BullMQ worker.
+ * It is idempotent and safe to retry on failure.
+ *
  * @module modules/sla/sla-enforcement.service
  */
 
@@ -10,112 +16,172 @@ import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { emailService } from '../../common/services/emailService';
 import { IncidentStatus } from '../../constants';
+import { escalationService } from '../escalation/escalation.service';
+import { webhookService } from '../webhooks/webhook.service';
 
 export class SLAEnforcementService {
-    private intervalId: NodeJS.Timeout | null = null;
-    private readonly CHECK_INTERVAL_MS = 60_000; // 60 seconds
-    private isRunning = false;
-
     /**
-     * Start the SLA enforcement cron
+     * Main enforcement check — called by the BullMQ worker.
+     * Idempotent, safe to retry on failure.
      */
-    start(): void {
-        if (this.intervalId) return; // already running
-        logger.info('SLA Enforcement Engine started (interval: 60s)');
-        this.intervalId = setInterval(() => this.check(), this.CHECK_INTERVAL_MS);
-        // Run immediately on start
-        this.check();
-    }
+    async check(): Promise<void> {
+        try {
+            const now = new Date();
 
-    /**
-     * Stop the SLA enforcement cron
-     */
-    stop(): void {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-            logger.info('SLA Enforcement Engine stopped');
+            // ── Pass 1: Detect NEW SLA breaches ──
+            await this.detectNewBreaches(now);
+
+            // ── Pass 2: Escalate already-breached incidents to next level ──
+            await this.escalateBreachedIncidents();
+        } catch (error: any) {
+            logger.error('SLA Enforcement check failed', { error: error.message });
+            // Re-throw so BullMQ can retry with backoff
+            throw error;
         }
     }
 
     /**
-     * Main enforcement loop — idempotent, safe to run concurrently
+     * Pass 1: Find incidents that just breached their SLA
+     * Mark them as breached, trigger L1 escalation, dispatch webhooks
      */
-    private async check(): Promise<void> {
-        if (this.isRunning) return; // skip if previous check still running
-        this.isRunning = true;
+    private async detectNewBreaches(now: Date): Promise<void> {
+        const incidents = await prisma.incident.findMany({
+            where: {
+                status: {
+                    in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS],
+                },
+                slaId: { not: null },
+                slaBreached: false,
+            },
+            include: {
+                sla: true,
+                system: { select: { id: true, name: true } },
+                assignedTeam: { select: { id: true, name: true, emailDistribution: true } },
+                createdBy: { select: { name: true, email: true } },
+            },
+        });
 
-        try {
-            const now = new Date();
+        let breachCount = 0;
 
-            // Find open incidents with SLAs that haven't been breached yet
-            const incidents = await prisma.incident.findMany({
-                where: {
-                    status: {
-                        in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS],
+        for (const incident of incidents) {
+            if (!incident.sla) continue;
+
+            const createdAt = new Date(incident.createdAt);
+            const minutesElapsed = (now.getTime() - createdAt.getTime()) / 60_000;
+
+            // Check acknowledge SLA breach
+            const ackBreached = !incident.acknowledgedAt &&
+                minutesElapsed > incident.sla.acknowledgeTimeMinutes;
+
+            // Check resolve SLA breach
+            const resolveBreached = !incident.resolvedAt &&
+                minutesElapsed > incident.sla.resolveTimeMinutes;
+
+            if (ackBreached || resolveBreached) {
+                breachCount++;
+
+                await prisma.incident.update({
+                    where: { id: incident.id },
+                    data: {
+                        slaBreached: true,
+                        slaBreachNotifiedAt: now,
                     },
-                    slaId: { not: null },
-                    slaBreached: false,
-                },
-                include: {
-                    sla: true,
-                    system: { select: { name: true } },
-                    assignedTeam: { select: { name: true, emailDistribution: true } },
-                    createdBy: { select: { name: true, email: true } },
-                },
-            });
+                });
 
-            let breachCount = 0;
+                // Log the breach
+                await prisma.incidentLog.create({
+                    data: {
+                        incidentId: incident.id,
+                        logType: 'note',
+                        rawLog: `SLA BREACH: ${ackBreached ? 'Acknowledge' : 'Resolution'} time exceeded. ` +
+                            `SLA "${incident.sla.name}" requires ${ackBreached ? incident.sla.acknowledgeTimeMinutes + 'min acknowledge' : incident.sla.resolveTimeMinutes + 'min resolution'}. ` +
+                            `Elapsed: ${Math.round(minutesElapsed)}min.`,
+                    },
+                });
 
-            for (const incident of incidents) {
-                if (!incident.sla) continue;
+                // Send breach notification email
+                this.notifyBreach(incident, ackBreached ? 'acknowledge' : 'resolve', minutesElapsed)
+                    .catch(err => logger.error('SLA breach notification failed', { error: err.message, incidentId: incident.id }));
 
-                const createdAt = new Date(incident.createdAt);
-                const minutesElapsed = (now.getTime() - createdAt.getTime()) / 60_000;
+                // Dispatch webhook: incident.sla_breached
+                webhookService.dispatch('incident.sla_breached', {
+                    incident: {
+                        id: incident.id,
+                        title: incident.title,
+                        severity: incident.severity,
+                        status: incident.status,
+                        system: incident.system,
+                        assignedTeam: incident.assignedTeam,
+                        sla: { name: incident.sla.name },
+                        breachType: ackBreached ? 'acknowledge' : 'resolve',
+                        minutesElapsed: Math.round(minutesElapsed),
+                    }
+                }).catch(() => { });
 
-                // Check acknowledge SLA breach
-                const ackBreached = !incident.acknowledgedAt &&
-                    minutesElapsed > incident.sla.acknowledgeTimeMinutes;
-
-                // Check resolve SLA breach
-                const resolveBreached = !incident.resolvedAt &&
-                    minutesElapsed > incident.sla.resolveTimeMinutes;
-
-                if (ackBreached || resolveBreached) {
-                    breachCount++;
-
-                    await prisma.incident.update({
-                        where: { id: incident.id },
-                        data: {
-                            slaBreached: true,
-                            slaBreachNotifiedAt: now,
-                        },
-                    });
-
-                    // Log the breach
-                    await prisma.incidentLog.create({
-                        data: {
-                            incidentId: incident.id,
-                            logType: 'note',
-                            rawLog: `SLA BREACH: ${ackBreached ? 'Acknowledge' : 'Resolution'} time exceeded. ` +
-                                `SLA "${incident.sla.name}" requires ${ackBreached ? incident.sla.acknowledgeTimeMinutes + 'min acknowledge' : incident.sla.resolveTimeMinutes + 'min resolution'}. ` +
-                                `Elapsed: ${Math.round(minutesElapsed)}min.`,
-                        },
-                    });
-
-                    // Send breach notification
-                    this.notifyBreach(incident, ackBreached ? 'acknowledge' : 'resolve', minutesElapsed)
-                        .catch(err => logger.error('SLA breach notification failed', { error: err.message, incidentId: incident.id }));
+                // Trigger L1 escalation immediately
+                try {
+                    await escalationService.escalateIncident(incident.id);
+                    logger.info('L1 escalation triggered after SLA breach', { incidentId: incident.id });
+                } catch (escErr: any) {
+                    logger.error('Escalation failed after breach', { error: escErr.message, incidentId: incident.id });
                 }
             }
+        }
 
-            if (breachCount > 0) {
-                logger.warn(`SLA Enforcement: ${breachCount} breach(es) detected`, { total: incidents.length, breached: breachCount });
+        if (breachCount > 0) {
+            logger.warn(`SLA Enforcement: ${breachCount} breach(es) detected`, { total: incidents.length, breached: breachCount });
+        }
+    }
+
+    /**
+     * Pass 2: Check already-breached incidents for next-level escalation
+     * The escalateIncident() method checks delayMinutes internally
+     */
+    private async escalateBreachedIncidents(): Promise<void> {
+        // Find active incidents that are already breached but not resolved
+        const breachedIncidents = await prisma.incident.findMany({
+            where: {
+                status: {
+                    in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS],
+                },
+                slaBreached: true,
+                slaBreachNotifiedAt: { not: null },
+            },
+            select: { id: true, escalationLevel: true, title: true, severity: true },
+        });
+
+        for (const incident of breachedIncidents) {
+            try {
+                const prevLevel = incident.escalationLevel;
+                await escalationService.escalateIncident(incident.id);
+
+                // Check if escalation actually happened by re-reading the incident
+                const updated = await prisma.incident.findUnique({
+                    where: { id: incident.id },
+                    select: { escalationLevel: true, assignedTeamId: true },
+                });
+
+                if (updated && updated.escalationLevel > prevLevel) {
+                    logger.info('Incident escalated to next level', {
+                        incidentId: incident.id,
+                        fromLevel: prevLevel,
+                        toLevel: updated.escalationLevel,
+                    });
+
+                    // Dispatch webhook: incident.escalated
+                    webhookService.dispatch('incident.escalated', {
+                        incident: {
+                            id: incident.id,
+                            title: incident.title,
+                            severity: incident.severity,
+                            escalationLevel: updated.escalationLevel,
+                            assignedTeamId: updated.assignedTeamId,
+                        }
+                    }).catch(() => { });
+                }
+            } catch (err: any) {
+                logger.error('Escalation check failed', { error: err.message, incidentId: incident.id });
             }
-        } catch (error: any) {
-            logger.error('SLA Enforcement check failed', { error: error.message });
-        } finally {
-            this.isRunning = false;
         }
     }
 

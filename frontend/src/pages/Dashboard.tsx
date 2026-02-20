@@ -122,8 +122,8 @@ const Dashboard = () => {
         const fetchFilters = async () => {
             try {
                 const [sysRes, teamRes] = await Promise.all([
-                    api.get('/api/systems'),
-                    api.get('/api/teams')
+                    api.get('/api/v1/systems'),
+                    api.get('/api/v1/teams')
                 ]);
                 setSystems(Array.isArray(sysRes.data) ? sysRes.data : sysRes.data?.data || []);
                 setTeams(Array.isArray(teamRes.data) ? teamRes.data : teamRes.data?.data || []);
@@ -154,7 +154,7 @@ const Dashboard = () => {
                 if (selectedSystem) params.systemId = selectedSystem;
                 if (selectedTeam) params.teamId = selectedTeam;
 
-                const response = await api.get('/api/incidents/stats', { params });
+                const response = await api.get('/api/v1/incidents/stats', { params });
                 setStats(response.data);
                 setLastRefresh(new Date());
             } catch (error) {

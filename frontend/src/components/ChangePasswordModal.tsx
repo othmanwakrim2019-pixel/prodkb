@@ -34,7 +34,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
 
         setLoading(true);
         try {
-            await api.put('/api/users/me/password', { currentPassword, newPassword });
+            await api.put('/api/v1/users/me/password', { currentPassword, newPassword });
             setSuccess(t('password.success'));
             setCurrentPassword('');
             setNewPassword('');

@@ -1,35 +1,11 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { systemService } from './system.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
+import { createSystemSchema, updateSystemSchema, createJobSchema, updateJobSchema } from './system.schema';
 
-// Schemas
-const createSystemSchema = z.object({
-    name: z.string().min(2).max(100),
-    description: z.string().max(500).optional(),
-});
-
-const updateSystemSchema = z.object({
-    name: z.string().min(2).max(100).optional(),
-    description: z.string().max(500).optional().nullable(),
-});
-
-const createJobSchema = z.object({
-    name: z.string().min(2).max(100),
-    code: z.string().min(1).max(50),
-    systemId: z.string().uuid(),
-    teamId: z.string().uuid().optional(),
-});
-
-const updateJobSchema = z.object({
-    name: z.string().min(2).max(100).optional(),
-    code: z.string().min(1).max(50).optional(),
-    systemId: z.string().uuid().optional(),
-    teamId: z.string().uuid().optional().nullable(),
-});
 
 export class SystemController {
     // --- Systems ---

@@ -2,9 +2,9 @@ name: ProdKB CI/CD
 
 on:
   push:
-    branches: [ main, develop, dev ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main, develop, dev ]
+    branches: [ main, dev ]
 
 jobs:
   backend-test:

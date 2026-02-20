@@ -21,7 +21,7 @@ export const Incidents = () => {
         }
 
         try {
-            await axios.delete(`/api/incidents/${id}`);
+            await axios.delete(`/api/v1/incidents/${id}`);
             setIncidents(incidents.filter(inc => inc.id !== id));
         } catch (error) {
             console.error('Failed to delete incident', error);
@@ -38,11 +38,13 @@ export const Incidents = () => {
                 if (!currentParams.get('page')) currentParams.set('page', '1');
                 if (!currentParams.get('limit')) currentParams.set('limit', '20');
 
-                const response = await axios.get(`/api/incidents?${currentParams.toString()}`);
+                const response = await axios.get(`/api/v1/incidents?${currentParams.toString()}`);
 
-                // Handle both paginated ({ data, meta }) and legacy array ([]) responses safely
-                const incidentData = response.data?.data || (Array.isArray(response.data) ? response.data : []);
-                const metaData = response.data?.meta || { total: incidentData.length, page: 1, limit: 20, totalPages: 1 };
+                // Axios interceptor already unwraps { success, data } → data
+                // So response.data is already { items: [...], meta: {...} }
+                const payload = response.data;
+                const incidentData = payload?.items || (Array.isArray(payload) ? payload : []);
+                const metaData = payload?.meta || { total: incidentData.length, page: 1, limit: 20, totalPages: 1 };
 
                 setIncidents(incidentData);
                 setMeta(metaData);

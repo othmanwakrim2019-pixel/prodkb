@@ -23,6 +23,22 @@ const loginSchema = z.object({
     password: z.string().min(1),
 });
 
+// ── Cookie configuration ──
+const isProduction = process.env.NODE_ENV === 'production';
+
+const ACCESS_TOKEN_COOKIE = 'access_token';
+const REFRESH_TOKEN_COOKIE = 'refresh_token';
+
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: isProduction,          // HTTPS only in production
+    sameSite: 'strict' as const,
+    path: '/',
+};
+
+const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;       // 15 minutes
+const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export class AuthController {
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
@@ -39,7 +55,23 @@ export class AuthController {
         try {
             const { email, password } = loginSchema.parse(req.body);
             const result = await authService.login(email, password);
-            res.json(createResponse(true, result, 'Login successful'));
+
+            // Set access token as httpOnly cookie
+            res.cookie(ACCESS_TOKEN_COOKIE, result.token, {
+                ...COOKIE_OPTIONS,
+                maxAge: ACCESS_TOKEN_MAX_AGE,
+            });
+
+            // Set refresh token as httpOnly cookie
+            res.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, {
+                ...COOKIE_OPTIONS,
+                maxAge: REFRESH_TOKEN_MAX_AGE,
+            });
+
+            // Return user info (but NOT the tokens — they're in cookies now)
+            res.json(createResponse(true, {
+                user: result.user,
+            }, 'Login successful'));
         } catch (error) {
             next(error);
         }
@@ -56,3 +88,5 @@ export class AuthController {
         }
     }
 }
+
+export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, COOKIE_OPTIONS };

@@ -31,7 +31,7 @@ export const EmailTemplates = () => {
 
     const fetchTemplates = async () => {
         try {
-            const res = await api.get('/api/email-templates');
+            const res = await api.get('/api/v1/email-templates');
             setTemplates(Array.isArray(res.data) ? res.data : res.data?.data || []);
         } catch (error) {
             console.error(' Failed to fetch templates:', error);
@@ -59,7 +59,10 @@ export const EmailTemplates = () => {
 
     const handleSave = async (id: string) => {
         try {
-            await api.put(`/api/email-templates/${id}`, editForm);
+            await api.put(`/api/v1/email-templates/${id}`, {
+                ...editForm,
+                cc: editForm.cc.trim() || null,
+            });
             setEditingId(null);
             fetchTemplates();
             setPreview(null);
@@ -71,7 +74,7 @@ export const EmailTemplates = () => {
 
     const handlePreview = async () => {
         try {
-            const res = await api.post('/api/email-templates/preview', editForm);
+            const res = await api.post('/api/v1/email-templates/preview', editForm);
             setPreview(res.data);
         } catch (error) {
             console.error('Failed to preview template:', error);

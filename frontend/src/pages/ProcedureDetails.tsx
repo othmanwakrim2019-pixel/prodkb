@@ -15,7 +15,7 @@ export const ProcedureDetails = () => {
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this procedure? This action cannot be undone.')) return;
         try {
-            await axios.delete(`/api/procedures/${id}`);
+            await axios.delete(`/api/v1/procedures/${id}`);
             alert('Procedure deleted successfully.');
             navigate('/procedures');
         } catch (error) {
@@ -27,7 +27,7 @@ export const ProcedureDetails = () => {
     useEffect(() => {
         const fetchProcedure = async () => {
             try {
-                const response = await axios.get(`/api/procedures/${id}`);
+                const response = await axios.get(`/api/v1/procedures/${id}`);
                 setProcedure(response.data);
             } catch (error) {
                 console.error('Failed to fetch procedure', error);

@@ -12,9 +12,9 @@ router.use(authenticate);
 // Looking at legacy: router.use('/email-templates', emailTemplateRoutes); which might have had middleware inside.
 // Assuming SYSTEM_MANAGE is safe for editing.
 
-router.get('/', checkPermission('SYSTEM_MANAGE'), EmailTemplateController.getAllTemplates);
-router.post('/preview', checkPermission('SYSTEM_MANAGE'), EmailTemplateController.previewTemplate);
-router.get('/:id', checkPermission('SYSTEM_MANAGE'), EmailTemplateController.getTemplate);
-router.put('/:id', checkPermission('SYSTEM_MANAGE'), EmailTemplateController.updateTemplate);
+router.get('/', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getAllTemplates);
+router.post('/preview', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.previewTemplate);
+router.get('/:id', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getTemplate);
+router.put('/:id', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.updateTemplate);
 
 export const emailTemplateRoutes = router;

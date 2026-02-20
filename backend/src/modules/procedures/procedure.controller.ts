@@ -1,36 +1,11 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { procedureService } from './procedure.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
+import { createProcedureSchema, updateProcedureSchema } from './procedure.schema';
 
-const createProcedureSchema = z.object({
-    title: z.string().min(3).max(200),
-    description: z.string().min(5),
-    resolutionSteps: z.string().min(5),
-    systemId: z.string().uuid(),
-    jobId: z.string().uuid().optional(),
-    rootCause: z.string().optional(),
-    workaround: z.string().optional(),
-    commands: z.string().optional(),
-    errorCode: z.string().optional(),
-    tags: z.string().optional(),
-});
-
-const updateProcedureSchema = z.object({
-    title: z.string().min(3).max(200).optional(),
-    description: z.string().min(5).optional(),
-    resolutionSteps: z.string().min(5).optional(),
-    systemId: z.string().uuid().optional(),
-    jobId: z.string().uuid().optional().nullable(),
-    rootCause: z.string().optional().nullable(),
-    workaround: z.string().optional().nullable(),
-    commands: z.string().optional().nullable(),
-    errorCode: z.string().optional().nullable(),
-    tags: z.string().optional().nullable(),
-});
 
 export class ProcedureController {
     static async getProcedures(req: Request, res: Response, next: NextFunction) {

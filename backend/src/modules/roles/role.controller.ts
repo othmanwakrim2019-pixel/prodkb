@@ -1,22 +1,11 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { roleService } from './role.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
+import { createRoleSchema, updateRoleSchema } from './role.schema';
 
-const createRoleSchema = z.object({
-    name: z.string().min(2).max(50),
-    description: z.string().max(500).optional(),
-    permissionIds: z.array(z.string().uuid()).min(1),
-});
-
-const updateRoleSchema = z.object({
-    name: z.string().min(2).max(50).optional(),
-    description: z.string().max(500).optional().nullable(),
-    permissionIds: z.array(z.string().uuid()).min(1),
-});
 
 export class RoleController {
     static async getAllRoles(req: Request, res: Response, next: NextFunction) {
