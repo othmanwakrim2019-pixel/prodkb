@@ -38,6 +38,7 @@ jest.mock('../src/common/utils/prisma', () => ({
             findUnique: jest.fn(),
         },
         $transaction: jest.fn(),
+        $queryRaw: jest.fn(),
     }
 }));
 
@@ -103,6 +104,7 @@ describe('IncidentService', () => {
             (prisma.incident.findMany as jest.Mock).mockResolvedValue([]);
             (prisma.incident.groupBy as jest.Mock).mockResolvedValue([]); // top systems
             ((prisma.incident as any).aggregate as jest.Mock).mockResolvedValue({ _avg: { id: null } });
+            (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
 
             // Mock separate count calls
             (prisma.incident.count as jest.Mock)
