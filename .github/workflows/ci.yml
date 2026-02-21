@@ -78,11 +78,11 @@ jobs:
 
       - name: Run tests (quick on dev push)
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-        run: npm test -- --testPathPattern="health|auth|api"
+        run: npx jest --forceExit --testPathPatterns="health|auth|api"
 
       - name: Run tests with coverage (full on PR or main)
         if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-        run: npm test -- --coverage
+        run: npm test
 
       - name: Build
         run: npm run build
@@ -123,7 +123,7 @@ jobs:
 
       - name: Run tests (quick on dev push)
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-        run: npm test -- --reporter=verbose --testNamePattern=""
+        run: npm test -- --reporter=verbose
 
       - name: Run tests (full on PR or main)
         if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
