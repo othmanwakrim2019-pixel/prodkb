@@ -7,6 +7,16 @@ export default defineConfig({
         globals: true,
         environment: 'happy-dom',
         setupFiles: './src/setupTests.ts',
+        pool: 'forks',
+        poolOptions: {
+            forks: {
+                isolate: true,
+                memoryLimit: '1GB',
+            },
+        },
+        maxWorkers: 1,
+        minWorkers: 1,
+        logHeapUsage: true,
     },
     server: {
         proxy: {
