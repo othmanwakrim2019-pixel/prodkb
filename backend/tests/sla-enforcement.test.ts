@@ -5,6 +5,8 @@
 import { SLAEnforcementService } from '../src/modules/sla/sla-enforcement.service';
 import { prisma } from '../src/common/utils/prisma';
 import { IncidentStatus } from '../src/constants';
+import { slaQueue } from '../src/modules/sla/sla.queue';
+import { redis } from '../src/common/utils/redis';
 
 // Mock all external dependencies
 jest.mock('../src/common/utils/prisma', () => ({
@@ -57,6 +59,11 @@ describe('SLAEnforcementService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         service = new SLAEnforcementService();
+    });
+
+    afterAll(async () => {
+        await slaQueue.close();
+        await redis.quit();
     });
 
     describe('check()', () => {
