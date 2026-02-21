@@ -61,6 +61,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules/.prisma
+          key: ${{ runner.os }}-prisma-${{ hashFiles('backend/prisma/schema.prisma') }}
+
       - name: Generate Prisma Client
         run: npx prisma generate
 
@@ -70,7 +76,12 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Run tests
+      - name: Run tests (quick on dev push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        run: npm test -- --testPathPattern="health|auth|api"
+
+      - name: Run tests with coverage (full on PR or main)
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         run: npm test -- --coverage
 
       - name: Build
@@ -110,7 +121,12 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Run tests
+      - name: Run tests (quick on dev push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        run: npm test -- --reporter=verbose --testNamePattern=""
+
+      - name: Run tests (full on PR or main)
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         run: npm test
 
       - name: Build
@@ -121,6 +137,7 @@ jobs:
     name: E2E Playwright Tests
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
@@ -155,7 +172,7 @@ jobs:
     name: Docker Build
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
