@@ -84,7 +84,8 @@
                     "legendFormat": "Backend",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Indicates if the main Node.js backend server is online and responding."
         },
         {
             "id": 2,
@@ -150,7 +151,8 @@
                     "legendFormat": "SLA Worker",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Indicates if the background worker responsible for SLA enforcement is running."
         },
         {
             "id": 3,
@@ -216,7 +218,8 @@
                     "legendFormat": "PostgreSQL",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Database connection status."
         },
         {
             "id": 4,
@@ -282,7 +285,8 @@
                     "legendFormat": "Redis",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Redis cache connection status (used for auth, rate limiting)."
         },
         {
             "id": 200,
@@ -342,12 +346,13 @@
                     "legendFormat": "Requests",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Total number of HTTP requests processed in the last 24 hours."
         },
         {
             "id": 6,
             "type": "stat",
-            "title": "Active Connections",
+            "title": "Users & Connections",
             "gridPos": {
                 "x": 4,
                 "y": 6,
@@ -393,11 +398,17 @@
             },
             "targets": [
                 {
-                    "expr": "prodkb_active_connections",
-                    "legendFormat": "Active",
+                    "expr": "prodkb_active_users",
+                    "legendFormat": "Users",
                     "refId": "A"
+                },
+                {
+                    "expr": "prodkb_active_connections",
+                    "legendFormat": "Connections",
+                    "refId": "B"
                 }
-            ]
+            ],
+            "description": "Shows the active authenticated users (sessions) and the raw open TCP HTTP connections."
         },
         {
             "id": 7,
@@ -452,7 +463,8 @@
                     "legendFormat": "Error %",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Percentage of requests returning an error (4xx or 5xx). A spike indicates users are experiencing failures."
         },
         {
             "id": 8,
@@ -507,7 +519,8 @@
                     "legendFormat": "P95",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "The time it takes for 95% of requests to complete. Spikes mean users are experiencing slow loads."
         },
         {
             "id": 9,
@@ -554,7 +567,8 @@
                     "legendFormat": "Req/s",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Current application traffic volume (Requests per second)."
         },
         {
             "id": 10,
@@ -601,7 +615,8 @@
                     "legendFormat": "DB Queries/s",
                     "refId": "A"
                 }
-            ]
+            ],
+            "description": "Current database load (Queries per second)."
         },
         {
             "id": 11,

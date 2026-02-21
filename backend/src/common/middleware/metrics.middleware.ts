@@ -9,6 +9,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import client from 'prom-client';
+import { redis } from '../utils/redis';
+import { logger } from '../utils/logger';
 
 // ── Default metrics (Node.js process metrics: CPU, memory, GC, event loop) ──
 client.collectDefaultMetrics({ prefix: 'prodkb_' });
@@ -59,6 +61,38 @@ export const requestSizeBytes = new client.Histogram({
     buckets: [100, 1000, 10000, 100000, 1000000],
 });
 
+export const activeUsers = new client.Gauge({
+    name: 'prodkb_active_users',
+    help: 'Number of active users based on recent API activity',
+});
+
+let metricsInterval: NodeJS.Timeout | null = null;
+
+export const startMetricsInterval = () => {
+    if (metricsInterval) return;
+    metricsInterval = setInterval(async () => {
+        try {
+            let cursor = '0';
+            let count = 0;
+            do {
+                const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', 'auth:*', 'COUNT', 1000);
+                cursor = nextCursor;
+                count += keys.length;
+            } while (cursor !== '0');
+            activeUsers.set(count);
+        } catch (error) {
+            logger.error('Failed to update active users metric', { error: (error as Error).message });
+        }
+    }, 15000); // every 15 seconds
+};
+
+export const stopMetricsInterval = () => {
+    if (metricsInterval) {
+        clearInterval(metricsInterval);
+        metricsInterval = null;
+    }
+};
+
 // ── Middleware ──
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
     // Skip metrics endpoint itself to avoid recursion
@@ -95,6 +129,8 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 
 /**
  * Returns the Prometheus metrics registry for use in the /metrics endpoint.
+ * In a clustered environment, this simple handler is insufficient.
+ * See server.ts for the cluster AggregatorRegistry implementation.
  */
 export const getMetricsHandler = async (_req: Request, res: Response) => {
     try {
@@ -104,3 +140,5 @@ export const getMetricsHandler = async (_req: Request, res: Response) => {
         res.status(500).end('Error collecting metrics');
     }
 };
+
+export { client };

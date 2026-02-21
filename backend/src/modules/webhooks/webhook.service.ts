@@ -5,12 +5,12 @@
  * @module modules/webhooks/webhook.service
  */
 
-import crypto from 'crypto';
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { NotFoundError } from '../../common/errors/app.error';
 import { z } from 'zod';
 import { WEBHOOK_EVENTS, createWebhookSchema, updateWebhookSchema } from './webhook.schema';
+import { webhookQueue } from './webhook.queue';
 
 
 export class WebhookService {
@@ -54,7 +54,7 @@ export class WebhookService {
     }
 
     /**
-     * Dispatch event to all matching active webhooks
+     * Dispatch event to all matching active webhooks via BullMQ
      */
     async dispatch(event: string, payload: Record<string, unknown>): Promise<void> {
         const webhooks = await prisma.webhook.findMany({
@@ -68,93 +68,13 @@ export class WebhookService {
 
         if (matching.length === 0) return;
 
-        logger.info(`Dispatching webhook event "${event}" to ${matching.length} webhook(s)`);
+        logger.info(`Enqueueing webhook event "${event}" for ${matching.length} webhook(s)`);
 
-        // Fire-and-forget — don't block the request
         for (const webhook of matching) {
-            this.deliver(webhook, event, payload).catch(err => {
-                logger.error('Webhook delivery failed', { webhookId: webhook.id, error: err.message });
+            webhookQueue.add('deliver', { webhook, event, payload }).catch(err => {
+                logger.error('Failed to enqueue webhook delivery', { webhookId: webhook.id, error: err.message });
             });
         }
-    }
-
-    /**
-     * Deliver payload to a single webhook with retry
-     */
-    private async deliver(
-        webhook: { id: string; url: string; secret: string },
-        event: string,
-        payload: Record<string, unknown>
-    ): Promise<void> {
-        const body = JSON.stringify({ event, timestamp: new Date().toISOString(), data: payload });
-        const signature = this.sign(body, webhook.secret);
-
-        let lastError: string | null = null;
-        let statusCode: number | null = null;
-        let responseBody: string | null = null;
-
-        for (let attempt = 0; attempt < this.MAX_RETRIES; attempt++) {
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
-
-                const response = await fetch(webhook.url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Webhook-Signature': signature,
-                        'X-Webhook-Event': event,
-                    },
-                    body,
-                    signal: controller.signal,
-                });
-
-                clearTimeout(timeout);
-                statusCode = response.status;
-                responseBody = await response.text().catch(() => '');
-
-                if (response.ok) {
-                    await this.logDelivery(webhook.id, event, body, statusCode, responseBody, attempt + 1, true);
-                    return;
-                }
-
-                lastError = `HTTP ${statusCode}: ${responseBody?.substring(0, 200)}`;
-            } catch (err: any) {
-                lastError = err.message;
-            }
-
-            // Wait before retry
-            if (attempt < this.MAX_RETRIES - 1) {
-                await new Promise(res => setTimeout(res, this.RETRY_DELAYS[attempt]));
-            }
-        }
-
-        // All retries exhausted
-        await this.logDelivery(webhook.id, event, body, statusCode, responseBody, this.MAX_RETRIES, false, lastError);
-    }
-
-    private sign(payload: string, secret: string): string {
-        return `sha256=${crypto.createHmac('sha256', secret).update(payload).digest('hex')}`;
-    }
-
-    private async logDelivery(
-        webhookId: string, event: string, payload: string,
-        statusCode: number | null, response: string | null,
-        attemptCount: number, success: boolean, error?: string | null
-    ): Promise<void> {
-        await prisma.webhookDelivery.create({
-            data: {
-                webhookId,
-                event,
-                payload,
-                statusCode,
-                response,
-                attemptCount,
-                success,
-                error,
-                deliveredAt: success ? new Date() : null,
-            },
-        });
     }
 }
 

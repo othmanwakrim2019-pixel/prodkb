@@ -5,12 +5,13 @@ export default defineConfig({
     plugins: [react()],
     test: {
         globals: true,
-        environment: 'happy-dom',
+        environment: 'jsdom',
         setupFiles: './src/setupTests.ts',
-        pool: 'threads',
+        pool: 'forks',
         poolOptions: {
-            threads: {
-                isolate: false,
+            forks: {
+                isolate: true,
+                memoryLimit: '512MB',
             },
         },
         maxWorkers: 1,
