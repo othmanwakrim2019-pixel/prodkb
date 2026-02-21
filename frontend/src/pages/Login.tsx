@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axios';
+import { authService } from '../services/auth.service';
 import { useAuth } from '../context/AuthContext';
 import { Lock, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -33,8 +33,8 @@ export const Login = () => {
         sessionStorage.removeItem('loginError'); // Clear persisted errors
         setIsLoading(true);
         try {
-            const response = await axios.post('/auth/login', data);
-            login(response.data.user);
+            const response = await authService.login(data.email, data.password);
+            login(response.user);
             navigate('/');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
