@@ -1,9 +1,12 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { incidentService } from './incident.service';
+import { incidentCrudService, FindAllFilters } from './services/incident-crud.service';
+import { incidentStatusService } from './services/incident-status.service';
+import { incidentAnalyticsService } from './services/incident-analytics.service';
+import { incidentFileService } from './services/incident-file.service';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
 import { fileUploadService } from '../../common/services/fileUploadService';
-import { createIncidentSchema, updateIncidentSchema } from './incident.schema';
+import { createIncidentSchema, updateIncidentSchema, addIncidentLogSchema } from './incident.schema';
 import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../common/errors/app.error';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
@@ -24,7 +27,7 @@ export class IncidentController {
                 userTeamIds: req.user?.teamIds || [],
             };
 
-            const stats = await incidentService.getStats(filters);
+            const stats = await incidentAnalyticsService.getStats(filters);
             res.json(createResponse(true, stats));
         } catch (error) {
             next(error);
@@ -39,7 +42,7 @@ export class IncidentController {
                 return;
             }
 
-            const incidents = await incidentService.searchSimilar(query as string);
+            const incidents = await incidentCrudService.searchSimilar(query as string);
             res.json(createResponse(true, incidents));
         } catch (error) {
             next(error);
@@ -51,7 +54,7 @@ export class IncidentController {
             // Pagination is now handled by middleware, but we need to pass it
             const pagination = req.pagination || { page: 1, limit: 50, sortBy: 'createdAt', sortOrder: 'desc' };
 
-            const filters: any = {
+            const filters: FindAllFilters = {
                 status: req.query.status as string,
                 severity: req.query.severity as string,
                 systemId: req.query.systemId as string,
@@ -82,7 +85,7 @@ export class IncidentController {
                 if (req.query.teamId) filters.teamId = req.query.teamId as string;
             }
 
-            const result = await incidentService.findAll(filters, pagination);
+            const result = await incidentCrudService.findAll(filters, pagination);
 
             res.json(createResponse(true, {
                 items: result.data,
@@ -100,7 +103,7 @@ export class IncidentController {
 
     static async getIncidentById(req: Request, res: Response, next: NextFunction) {
         try {
-            const incident = await incidentService.findById(req.params.id);
+            const incident = await incidentCrudService.findById(req.params.id);
             res.json(createResponse(true, incident));
         } catch (error) {
             next(error);
@@ -114,7 +117,7 @@ export class IncidentController {
 
             const data = createIncidentSchema.parse(req.body);
 
-            const incident = await incidentService.create(data as CreateIncidentDTO, userId);
+            const incident = await incidentCrudService.create(data as CreateIncidentDTO, userId);
 
             // Audit log
             await logAudit({
@@ -137,7 +140,7 @@ export class IncidentController {
             const userId = req.user?.id;
             if (!userId) throw new ValidationError('User not authenticated');
 
-            const existingIncident = await incidentService.findById(req.params.id);
+            const existingIncident = await incidentCrudService.findById(req.params.id);
             const data = updateIncidentSchema.parse(req.body);
 
             // Role-based workflow restrictions
@@ -148,7 +151,7 @@ export class IncidentController {
                 throw new ForbiddenError('Only Administrators, Experts or Operators can resolve incidents');
             }
 
-            const incident = await incidentService.update(req.params.id, data as UpdateIncidentDTO, userId);
+            const incident = await incidentCrudService.update(req.params.id, data as UpdateIncidentDTO, userId);
 
             // Audit log
             const changes = generateAuditDiff(existingIncident as unknown as Record<string, unknown>, incident as unknown as Record<string, unknown>);
@@ -174,10 +177,8 @@ export class IncidentController {
             const userId = req.user?.id;
             if (!userId) throw new ValidationError('User not authenticated');
 
-            const { logType, errorCode, errorMessage, rawLog, metadata } = req.body;
-            const log = await incidentService.addLog(req.params.id, {
-                logType, errorCode, errorMessage, rawLog, metadata
-            }, userId);
+            const data = addIncidentLogSchema.parse(req.body);
+            const log = await incidentFileService.addLog(req.params.id, data, userId);
             res.status(201).json(createResponse(true, log));
         } catch (error) {
             next(error);
@@ -197,7 +198,7 @@ export class IncidentController {
                 req.file.mimetype
             );
 
-            const log = await incidentService.addFileLog(req.params.id, {
+            const log = await incidentFileService.addFileLog(req.params.id, {
                 filePath: uploadedFile.filePath,
                 fileName: uploadedFile.fileName,
                 fileSize: uploadedFile.fileSize,
@@ -222,7 +223,7 @@ export class IncidentController {
                 throw new ValidationError('Invalid filename: path traversal characters are not allowed');
             }
 
-            const fileLog = await incidentService.getFileLog(id, filename);
+            const fileLog = await incidentFileService.getFileLog(id, filename);
 
             if (!fileLog.filePath) throw new NotFoundError('File path missing in log');
 
@@ -259,7 +260,7 @@ export class IncidentController {
                 throw new ValidationError('Invalid filename: path traversal characters are not allowed');
             }
 
-            const fileLog = await incidentService.getFileLog(id, filename);
+            const fileLog = await incidentFileService.getFileLog(id, filename);
 
             if (!fileLog.filePath) throw new NotFoundError('File path missing in log');
 
@@ -297,7 +298,7 @@ export class IncidentController {
                 throw new ValidationError('Invalid filename: path traversal characters are not allowed');
             }
 
-            await incidentService.deleteFileLog(id, filename, userId, userRole);
+            await incidentFileService.deleteFileLog(id, filename, userId, userRole);
             res.json(createResponse(true, null, 'File deleted successfully'));
         } catch (error) {
             next(error);
@@ -306,7 +307,7 @@ export class IncidentController {
 
     static async linkProcedure(req: Request, res: Response, next: NextFunction) {
         try {
-            const incident = await incidentService.linkProcedure(req.params.id, req.params.procedureId);
+            const incident = await incidentCrudService.linkProcedure(req.params.id, req.params.procedureId);
             res.json(createResponse(true, incident));
         } catch (error) {
             next(error);
@@ -322,7 +323,7 @@ export class IncidentController {
         try {
             const userId = req.user?.id;
             if (!userId) throw new ValidationError('User not authenticated');
-            const incident = await incidentService.acknowledge(req.params.id, userId);
+            const incident = await incidentStatusService.acknowledge(req.params.id, userId);
             res.json(createResponse(true, incident, 'Incident acknowledged'));
         } catch (error) {
             next(error);
@@ -338,7 +339,7 @@ export class IncidentController {
                 throw new ForbiddenError('Only Administrators can delete incidents');
             }
 
-            await incidentService.delete(req.params.id, userId);
+            await incidentCrudService.delete(req.params.id, userId);
             res.json(createResponse(true, null, 'Incident deleted successfully'));
         } catch (error) {
             next(error);

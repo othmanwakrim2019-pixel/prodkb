@@ -15,17 +15,10 @@ import { SLA_QUEUE_NAME } from '../modules/sla/sla.queue';
 import { slaEnforcementService } from '../modules/sla/sla-enforcement.service';
 import { logger } from '../common/utils/logger';
 import { prisma } from '../common/utils/prisma';
+import { parseRedisUrl } from '../common/utils/redis-url';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-function parseRedisUrl(url: string) {
-    const parsed = new URL(url);
-    return {
-        host: parsed.hostname || 'localhost',
-        port: parseInt(parsed.port || '6379', 10),
-        password: parsed.password || undefined,
-    };
-}
+const connection = parseRedisUrl(REDIS_URL);
 
 const worker = new Worker(
     SLA_QUEUE_NAME,
@@ -65,9 +58,20 @@ worker.on('error', (err) => {
     logger.error('SLA worker error', { error: err.message });
 });
 
+// ── Minimal HTTP Server for Prometheus Scrape checks ──
+import * as http from 'http';
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('up{job="prodkb-sla-worker"} 1\n');
+});
+server.listen(3000, '0.0.0.0', () => {
+    logger.info('SLA Worker health endpoint listening on port 3000');
+});
+
 // ── Graceful shutdown ──
 const shutdown = async (signal: string) => {
     logger.info(`SLA worker received ${signal}. Shutting down...`);
+    server.close();
     await worker.close();
     await prisma.$disconnect();
     logger.info('SLA worker stopped');

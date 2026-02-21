@@ -1,26 +1,18 @@
-# ─────────────────────────────────────────────────────────
-#  ProdKB CI — lint → typecheck → build → test
-#  Runs on every push/PR to main and develop
-# ─────────────────────────────────────────────────────────
 name: CI
 
 on:
   push:
     branches: [main, dev]
   pull_request:
-    branches: [main, dev]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main]
 
 env:
   NODE_VERSION: '20'
 
 jobs:
-  # ── Backend ─────────────────────────────────────────────
+  # ── Backend ──
   backend:
-    name: Backend (lint + build + test)
+    name: Backend CI
     runs-on: ubuntu-latest
 
     services:
@@ -32,7 +24,7 @@ jobs:
           POSTGRES_DB: prodkb_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U test"
+          --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -48,74 +40,119 @@ jobs:
 
     defaults:
       run:
-        working-directory: backend
+        working-directory: ./backend
 
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/prodkb_test?schema=public
-      JWT_SECRET: ci-test-secret-minimum-16-chars
+      JWT_SECRET: ci-test-jwt-secret-that-is-long-enough-for-validation
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      # Generate Prisma client (needed before tsc)
-      - run: npx prisma generate
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
-      # TypeScript type-check (no emit)
-      - name: Typecheck
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
+      - name: Type check
         run: npx tsc --noEmit
 
-      # Push schema to test DB & run tests
-      - name: Migrate test DB
-        run: npx prisma db push --skip-generate
-
       - name: Run tests
-        run: npm test -- --ci --passWithNoTests --forceExit
+        run: npm test -- --coverage
 
-  # ── Frontend ────────────────────────────────────────────
+      - name: Build
+        run: npm run build
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+
+  # ── Frontend ──
   frontend:
-    name: Frontend (lint + build + test)
+    name: Frontend CI
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: frontend
-
-    env:
-      NODE_OPTIONS: --max_old_space_size=4096
+        working-directory: ./frontend
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck + Build
-        run: npm run build
+      - name: Type check
+        run: npx tsc --noEmit
 
       - name: Run tests
-        run: npm test -- --passWithNoTests --pool forks --no-file-parallelism
+        run: npm test
 
-  # ── Docker build (verify images build successfully) ─────
+      - name: Build
+        run: npm run build
+
+  # ── E2E Tests ──
+  e2e:
+    name: E2E Playwright Tests
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start services via Docker Compose
+        run: docker compose up -d
+
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+
+      - name: Run E2E Tests
+        working-directory: ./frontend
+        run: npx playwright test
+        env:
+          BASE_URL: http://localhost:8080
+
+  # ── Docker Build ──
   docker:
-    name: Docker build
+    name: Docker Build
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     if: github.event_name == 'push'

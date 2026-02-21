@@ -1,5 +1,5 @@
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
     success: boolean;
     data: T | null;
     message?: string;
@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
     path?: string;
     error?: {
         code: string;
-        details?: any;
+        details?: unknown;
     };
 }
 
@@ -15,7 +15,7 @@ export const createResponse = <T>(
     success: boolean,
     data: T | null = null,
     message?: string,
-    error?: { code: string; details?: any }
+    error?: { code: string; details?: unknown }
 ): ApiResponse<T> => {
     return {
         success,
@@ -25,3 +25,4 @@ export const createResponse = <T>(
         error,
     };
 };
+

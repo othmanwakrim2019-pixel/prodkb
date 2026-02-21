@@ -1,0 +1,2509 @@
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+        "name": "ATM Network",
+        "description": "Cuppedia vulgaris clementia adulescens minima demum tunc veniam conspergo.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "86de1eed-bea4-40b4-9223-8b7aacde42e9",
+            "name": "ATM Network - Job 1",
+            "code": "ATM_JOB_OATW",
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "teamId": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+            "updatedById": null,
+            "team": {
+              "id": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+              "name": "Schaden, Gorczany and Denesik Team",
+              "description": "Optimized uniform structure",
+              "emailDistribution": "Dillan86@gmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.707Z",
+              "updatedAt": "2026-02-21T00:36:25.707Z"
+            }
+          },
+          {
+            "id": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+            "name": "ATM Network - Job 2",
+            "code": "ATM_JOB_IQBK",
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+            "updatedById": null,
+            "team": {
+              "id": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "name": "Hessel, Gibson and Gulgowski Team",
+              "description": "Advanced analyzing collaboration",
+              "emailDistribution": "Jalen_Will@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.755Z",
+              "updatedAt": "2026-02-21T00:36:25.755Z"
+            }
+          },
+          {
+            "id": "62a39ad9-3ad6-4691-a7b1-7cb1113abe25",
+            "name": "ATM Network - Job 3",
+            "code": "ATM_JOB_GUFV",
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+            "updatedById": null,
+            "team": {
+              "id": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "name": "Fisher - Prohaska Team",
+              "description": "Universal zero defect complexity",
+              "emailDistribution": "Baron_Runolfsson89@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.997Z",
+              "updatedAt": "2026-02-21T00:36:25.997Z"
+            }
+          },
+          {
+            "id": "8083145b-5ad4-4c9e-ac29-102c46e4aba0",
+            "name": "ATM Network - Job 4",
+            "code": "ATM_JOB_DSGJ",
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+            "updatedById": null,
+            "team": {
+              "id": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "name": "Pagac, Beatty and Russel Team",
+              "description": "Seamless systemic workforce",
+              "emailDistribution": "Jaren.Christiansen56@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.816Z",
+              "updatedAt": "2026-02-21T00:36:25.816Z"
+            }
+          },
+          {
+            "id": "8fd1946b-bf94-4323-8cef-6c46166663a5",
+            "name": "ATM Network - Job 5",
+            "code": "ATM_JOB_XFPE",
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+            "updatedById": null,
+            "team": {
+              "id": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "name": "Bashirian - Mills Team",
+              "description": "Open-architected full-range success",
+              "emailDistribution": "Rowland89@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.449Z",
+              "updatedAt": "2026-02-21T00:36:26.449Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "cd6a4dfb-c638-4061-ac67-28d61d076efd",
+            "title": "Resolution for open-source issue in ATM Network",
+            "description": "Attero talis adicio. Admoveo vacuus clarus vix. Blandior thema desino articulus ratione villa quaerat vomer.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. navigate the program\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "8083145b-5ad4-4c9e-ac29-102c46e4aba0",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.312Z",
+            "updatedAt": "2026-02-21T00:36:27.312Z",
+            "job": {
+              "id": "8083145b-5ad4-4c9e-ac29-102c46e4aba0",
+              "name": "ATM Network - Job 4",
+              "code": "ATM_JOB_DSGJ",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "d705360a-da50-4552-a65c-fc6aae16e2e5",
+            "title": "Resolution for mobile issue in ATM Network",
+            "description": "Versus aegrotatio aliqua artificiose canonicus baiulus stillicidium. Super canis despecto optio averto ex benigne confugo tristis. Conservo degusto bellicus xiphias.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.420Z",
+            "updatedAt": "2026-02-21T00:36:27.420Z",
+            "job": {
+              "id": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+              "name": "ATM Network - Job 2",
+              "code": "ATM_JOB_IQBK",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "6bcbce63-d47b-4aa1-8bcf-7a5535e9e20d",
+            "title": "Resolution for digital issue in ATM Network",
+            "description": "Ceno tamisium certe canis vitium ascit soleo commodo arceo. Tamquam brevis abeo custodia studio crux. Ait utrimque acies termes aegrus abundans.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. reboot the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.436Z",
+            "updatedAt": "2026-02-21T00:36:27.436Z",
+            "job": {
+              "id": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+              "name": "ATM Network - Job 2",
+              "code": "ATM_JOB_IQBK",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "eacc4391-b80d-4f29-ada0-9560befb8010",
+            "title": "Resolution for mobile issue in ATM Network",
+            "description": "Desino contabesco deleniti sit ventus depereo. Coaegresco suggero solio viscus voluptatum tricesimus amplitudo eius admitto. Unde demergo vilis capio torrens vulgaris contabesco creator vociferor clarus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. transmit the hard drive\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "8fd1946b-bf94-4323-8cef-6c46166663a5",
+            "createdById": "5b55f94f-e68e-42b6-8075-df6cca1f8970",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.556Z",
+            "updatedAt": "2026-02-21T00:36:27.556Z",
+            "job": {
+              "id": "8fd1946b-bf94-4323-8cef-6c46166663a5",
+              "name": "ATM Network - Job 5",
+              "code": "ATM_JOB_XFPE",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "a30a7d38-ccdf-4446-9aa8-e22d365f2bf2",
+            "title": "Resolution for solid state issue in ATM Network",
+            "description": "Angulus sordeo quasi cogo thymbra curto crebro. Assentator debitis carmen vobis ustilo arcus quo cohors vomica. Cilicium incidunt cui.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. connect the feed\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.588Z",
+            "updatedAt": "2026-02-21T00:36:27.588Z",
+            "job": {
+              "id": "1010ef61-b6ad-48f2-aa8a-ca4bc59366aa",
+              "name": "ATM Network - Job 2",
+              "code": "ATM_JOB_IQBK",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "2ad8ac71-7fac-47ae-9be5-810602f1ee1a",
+            "title": "Resolution for optical issue in ATM Network",
+            "description": "Cilicium molestias voro subvenio vix. Adulescens titulus arcus coaegresco sto censura. Capto tactus peccatus cado vesica celo clamo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. bypass the alarm\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "8fd1946b-bf94-4323-8cef-6c46166663a5",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.744Z",
+            "updatedAt": "2026-02-21T00:36:27.744Z",
+            "job": {
+              "id": "8fd1946b-bf94-4323-8cef-6c46166663a5",
+              "name": "ATM Network - Job 5",
+              "code": "ATM_JOB_XFPE",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "fce04654-9f9c-4264-b80f-41ce33696bfb",
+            "title": "Resolution for redundant issue in ATM Network",
+            "description": "Atqui uredo xiphias averto victoria. Deduco ante aetas. Calcar decet villa cohaero delicate conduco barba.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the feed\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "8083145b-5ad4-4c9e-ac29-102c46e4aba0",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.782Z",
+            "updatedAt": "2026-02-21T00:36:27.782Z",
+            "job": {
+              "id": "8083145b-5ad4-4c9e-ac29-102c46e4aba0",
+              "name": "ATM Network - Job 4",
+              "code": "ATM_JOB_DSGJ",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "625fd967-f72e-44d6-9b09-9d070f8950cb",
+            "title": "Resolution for digital issue in ATM Network",
+            "description": "Arcesso ut supra stultus vergo theatrum provident vivo. Quos modi excepturi ter suppono uter calcar super aspernatur. Vergo summopere volutabrum verus ratione.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. generate the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+            "jobId": "62a39ad9-3ad6-4691-a7b1-7cb1113abe25",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.791Z",
+            "updatedAt": "2026-02-21T00:36:27.791Z",
+            "job": {
+              "id": "62a39ad9-3ad6-4691-a7b1-7cb1113abe25",
+              "name": "ATM Network - Job 3",
+              "code": "ATM_JOB_GUFV",
+              "systemId": "5b0e14de-fb8c-42a5-bd9f-b0dffab3ff6a",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+        "name": "CRM",
+        "description": "Apparatus congregatio clibanus vomer.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "24fea697-26d7-439e-8815-e5f1a8d34df9",
+            "name": "CRM - Job 1",
+            "code": "CRM_JOB_E6YQ",
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "teamId": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+            "updatedById": null,
+            "team": {
+              "id": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+              "name": "Hoppe - Berge Team",
+              "description": "Customizable actuating success",
+              "emailDistribution": "Josie.Weber@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.953Z",
+              "updatedAt": "2026-02-21T00:36:25.953Z"
+            }
+          },
+          {
+            "id": "681fc3f3-5fe6-42cc-816a-e4c05c7bf946",
+            "name": "CRM - Job 2",
+            "code": "CRM_JOB_V2OM",
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+            "updatedById": null,
+            "team": {
+              "id": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "name": "Hessel, Gibson and Gulgowski Team",
+              "description": "Advanced analyzing collaboration",
+              "emailDistribution": "Jalen_Will@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.755Z",
+              "updatedAt": "2026-02-21T00:36:25.755Z"
+            }
+          },
+          {
+            "id": "ded89bd0-60f2-45a6-8e39-147c69b1c159",
+            "name": "CRM - Job 3",
+            "code": "CRM_JOB_OKPW",
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+            "updatedById": null,
+            "team": {
+              "id": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "name": "Beatty - Gleichner Team",
+              "description": "Phased data-driven migration",
+              "emailDistribution": "Brianne9@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.608Z",
+              "updatedAt": "2026-02-21T00:36:26.608Z"
+            }
+          },
+          {
+            "id": "f1ea7814-ac8c-4051-9a12-2248dfd94611",
+            "name": "CRM - Job 4",
+            "code": "CRM_JOB_MYGB",
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+            "updatedById": null,
+            "team": {
+              "id": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "name": "Pagac, Beatty and Russel Team",
+              "description": "Seamless systemic workforce",
+              "emailDistribution": "Jaren.Christiansen56@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.816Z",
+              "updatedAt": "2026-02-21T00:36:25.816Z"
+            }
+          },
+          {
+            "id": "a4e6a873-9587-4802-96fb-85d055c1bd35",
+            "name": "CRM - Job 5",
+            "code": "CRM_JOB_NJMC",
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+            "updatedById": null,
+            "team": {
+              "id": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "name": "Effertz - Cormier Team",
+              "description": "Sharable cohesive emulation",
+              "emailDistribution": "Jordy_Willms@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.531Z",
+              "updatedAt": "2026-02-21T00:36:26.531Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "f0429c2a-88c1-4b96-944a-6337ca7e2c65",
+            "title": "Resolution for open-source issue in CRM",
+            "description": "Odit consuasor ex. Deripio comis bellum. Curiositas cresco vos.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the interface\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "jobId": "f1ea7814-ac8c-4051-9a12-2248dfd94611",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.303Z",
+            "updatedAt": "2026-02-21T00:36:27.303Z",
+            "job": {
+              "id": "f1ea7814-ac8c-4051-9a12-2248dfd94611",
+              "name": "CRM - Job 4",
+              "code": "CRM_JOB_MYGB",
+              "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "4a943d58-95c4-49ef-a015-a5598b1c4644",
+            "title": "Resolution for solid state issue in CRM",
+            "description": "Tepidus angulus subiungo conculco solus necessitatibus verbum adflicto verbum tricesimus. Tyrannus deputo admiratio urbs. Verumtamen illo sit decretum admoveo creta amissio corona ubi.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. bypass the microchip\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "jobId": "ded89bd0-60f2-45a6-8e39-147c69b1c159",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.443Z",
+            "updatedAt": "2026-02-21T00:36:27.443Z",
+            "job": {
+              "id": "ded89bd0-60f2-45a6-8e39-147c69b1c159",
+              "name": "CRM - Job 3",
+              "code": "CRM_JOB_OKPW",
+              "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+              "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "5c5a9a77-7ecc-406e-974e-15267ca21ce7",
+            "title": "Resolution for online issue in CRM",
+            "description": "Laborum caecus curatio acidus accusamus. Nobis angustus ipsam claro argentum utilis suadeo. Demulceo deficio cubo turbo comparo vilicus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the array\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+            "jobId": "681fc3f3-5fe6-42cc-816a-e4c05c7bf946",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.497Z",
+            "updatedAt": "2026-02-21T00:36:27.497Z",
+            "job": {
+              "id": "681fc3f3-5fe6-42cc-816a-e4c05c7bf946",
+              "name": "CRM - Job 2",
+              "code": "CRM_JOB_V2OM",
+              "systemId": "6ae4a56c-722f-4883-b33c-cfb8b9886f44",
+              "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "089b8e09-64be-4ca0-a339-554413f20ed8",
+        "name": "Core Banking",
+        "description": "Convoco verumtamen decretum denuncio ut demoror currus a valetudo.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "6ae6a5bd-bfb8-40ad-a3d8-e83fb751fd6d",
+            "name": "Core Banking - Job 1",
+            "code": "COR_JOB_CG5U",
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+            "updatedById": null,
+            "team": {
+              "id": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "name": "Jenkins - White Team",
+              "description": "Seamless coherent initiative",
+              "emailDistribution": "Ursula94@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.610Z",
+              "updatedAt": "2026-02-21T00:36:25.610Z"
+            }
+          },
+          {
+            "id": "da278e3a-8fff-4053-979b-7290228e9634",
+            "name": "Core Banking - Job 2",
+            "code": "COR_JOB_8MLY",
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "teamId": "74615c0e-8714-4682-b548-0956cc60231c",
+            "updatedById": null,
+            "team": {
+              "id": "74615c0e-8714-4682-b548-0956cc60231c",
+              "name": "Schiller, Casper and Breitenberg Team",
+              "description": "Customer-focused attitude-oriented concept",
+              "emailDistribution": "Reed4@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.556Z",
+              "updatedAt": "2026-02-21T00:36:25.556Z"
+            }
+          },
+          {
+            "id": "ba26ed4f-0016-4f9e-8d10-ea6a282dc1d4",
+            "name": "Core Banking - Job 3",
+            "code": "COR_JOB_RRG2",
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+            "updatedById": null,
+            "team": {
+              "id": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "name": "Hauck, Ziemann and Hauck Team",
+              "description": "Fully-configurable intangible strategy",
+              "emailDistribution": "Virginie_Reynolds68@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.139Z",
+              "updatedAt": "2026-02-21T00:36:26.139Z"
+            }
+          },
+          {
+            "id": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+            "name": "Core Banking - Job 4",
+            "code": "COR_JOB_NS02",
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+            "updatedById": null,
+            "team": {
+              "id": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "name": "Effertz - Cormier Team",
+              "description": "Sharable cohesive emulation",
+              "emailDistribution": "Jordy_Willms@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.531Z",
+              "updatedAt": "2026-02-21T00:36:26.531Z"
+            }
+          },
+          {
+            "id": "76794d14-a420-49ca-9317-78bebe8650e0",
+            "name": "Core Banking - Job 5",
+            "code": "COR_JOB_FYTZ",
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "teamId": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+            "updatedById": null,
+            "team": {
+              "id": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+              "name": "Harris, Goldner and Renner Team",
+              "description": "Compatible directional approach",
+              "emailDistribution": "Breanne_Labadie@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.655Z",
+              "updatedAt": "2026-02-21T00:36:25.655Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "7f1857e3-e5b3-411c-9a54-742e928c19e7",
+            "title": "Resolution for redundant issue in Core Banking",
+            "description": "Via crapula quasi animi rerum claustrum. Sto a bellicus ultra nemo triduana cornu demoror color. Conitor curis hic benevolentia avaritia ascit sufficio expedita sto adstringo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the protocol\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "da278e3a-8fff-4053-979b-7290228e9634",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.295Z",
+            "updatedAt": "2026-02-21T00:36:27.295Z",
+            "job": {
+              "id": "da278e3a-8fff-4053-979b-7290228e9634",
+              "name": "Core Banking - Job 2",
+              "code": "COR_JOB_8MLY",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "74615c0e-8714-4682-b548-0956cc60231c",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "24f9e360-265f-4e0a-9437-911dcfb9e68b",
+            "title": "Resolution for back-end issue in Core Banking",
+            "description": "Arguo maiores creptio addo paulatim. Defaeco aduro terreo textor. Argumentum amissio una amplitudo similique admoveo studio quia vitiosus acquiro.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. generate the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "ba26ed4f-0016-4f9e-8d10-ea6a282dc1d4",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.339Z",
+            "updatedAt": "2026-02-21T00:36:27.339Z",
+            "job": {
+              "id": "ba26ed4f-0016-4f9e-8d10-ea6a282dc1d4",
+              "name": "Core Banking - Job 3",
+              "code": "COR_JOB_RRG2",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "781650b7-49eb-45aa-b245-e120ef03fb8c",
+            "title": "Resolution for open-source issue in Core Banking",
+            "description": "Thymbra stipes viriliter agnosco cohaero. Vere tametsi deficio comes. Suadeo laborum decet.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the card\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+            "createdById": "8b454a37-eb65-4c9c-b9b9-501e39bfd667",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.464Z",
+            "updatedAt": "2026-02-21T00:36:27.464Z",
+            "job": {
+              "id": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+              "name": "Core Banking - Job 4",
+              "code": "COR_JOB_NS02",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "283bbeaa-89d5-400e-be9f-ae79f53fde33",
+            "title": "Resolution for auxiliary issue in Core Banking",
+            "description": "Bos tum umerus candidus unus sum asperiores. Convoco benevolentia eius somniculosus arbor iste. Patruus textus abscido censura adduco curiositas claudeo adipiscor tripudio deripio.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. compress the microchip\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+            "createdById": "5b55f94f-e68e-42b6-8075-df6cca1f8970",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.522Z",
+            "updatedAt": "2026-02-21T00:36:27.522Z",
+            "job": {
+              "id": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+              "name": "Core Banking - Job 4",
+              "code": "COR_JOB_NS02",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "9af27796-da5c-4cdc-b633-d14960921a1d",
+            "title": "Resolution for multi-byte issue in Core Banking",
+            "description": "Supellex modi volutabrum absque iusto pecco. Sordeo victus ulciscor patior ara stultus studio tenetur. Adsuesco amitto usitas tempus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. reboot the array\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.547Z",
+            "updatedAt": "2026-02-21T00:36:27.547Z",
+            "job": {
+              "id": "ce23b86a-3b78-44c5-91c3-870899592dd1",
+              "name": "Core Banking - Job 4",
+              "code": "COR_JOB_NS02",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "bc76c245-ec13-4292-b207-356fe7dec5f3",
+            "title": "Resolution for auxiliary issue in Core Banking",
+            "description": "Ara blandior beneficium. Theologus amor arbor. Basium spiritus spiritus denego trucido patria cursus ara delectus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. override the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "ba26ed4f-0016-4f9e-8d10-ea6a282dc1d4",
+            "createdById": "8b454a37-eb65-4c9c-b9b9-501e39bfd667",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.631Z",
+            "updatedAt": "2026-02-21T00:36:27.631Z",
+            "job": {
+              "id": "ba26ed4f-0016-4f9e-8d10-ea6a282dc1d4",
+              "name": "Core Banking - Job 3",
+              "code": "COR_JOB_RRG2",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "1dd7a05e-7e85-4466-a732-643bee08f02c",
+            "title": "Resolution for solid state issue in Core Banking",
+            "description": "Esse sub coerceo benevolentia possimus impedit. Tantum summa degenero decipio turbo. Defleo voluptate verumtamen aperio curo ulterius aliqua usitas depono truculenter.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. transmit the application\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+            "jobId": "76794d14-a420-49ca-9317-78bebe8650e0",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.829Z",
+            "updatedAt": "2026-02-21T00:36:27.829Z",
+            "job": {
+              "id": "76794d14-a420-49ca-9317-78bebe8650e0",
+              "name": "Core Banking - Job 5",
+              "code": "COR_JOB_FYTZ",
+              "systemId": "089b8e09-64be-4ca0-a339-554413f20ed8",
+              "teamId": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+        "name": "Data Warehouse",
+        "description": "Creator architecto deinde eveniet modi cervus tubineus conduco crinis spero.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "f6aef02e-a8ee-4f0d-9893-4430780f40fc",
+            "name": "Data Warehouse - Job 1",
+            "code": "DAT_JOB_G21G",
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "teamId": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+            "updatedById": null,
+            "team": {
+              "id": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+              "name": "Schaden, Gorczany and Denesik Team",
+              "description": "Optimized uniform structure",
+              "emailDistribution": "Dillan86@gmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.707Z",
+              "updatedAt": "2026-02-21T00:36:25.707Z"
+            }
+          },
+          {
+            "id": "f6a29ed8-0212-4d6c-8303-45de431f7902",
+            "name": "Data Warehouse - Job 2",
+            "code": "DAT_JOB_O01V",
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "teamId": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+            "updatedById": null,
+            "team": {
+              "id": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+              "name": "Harris, Goldner and Renner Team",
+              "description": "Compatible directional approach",
+              "emailDistribution": "Breanne_Labadie@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.655Z",
+              "updatedAt": "2026-02-21T00:36:25.655Z"
+            }
+          },
+          {
+            "id": "e412487e-1216-4231-a2d1-4e91908874f4",
+            "name": "Data Warehouse - Job 3",
+            "code": "DAT_JOB_IWDP",
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+            "updatedById": null,
+            "team": {
+              "id": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "name": "Hauck, Ziemann and Hauck Team",
+              "description": "Fully-configurable intangible strategy",
+              "emailDistribution": "Virginie_Reynolds68@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.139Z",
+              "updatedAt": "2026-02-21T00:36:26.139Z"
+            }
+          },
+          {
+            "id": "d3c1c017-9773-4d55-acbc-cdc1b5000bef",
+            "name": "Data Warehouse - Job 4",
+            "code": "DAT_JOB_JUHP",
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+            "updatedById": null,
+            "team": {
+              "id": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "name": "Kuvalis - Toy Team",
+              "description": "Monitored attitude-oriented artificial intelligence",
+              "emailDistribution": "Pierce.Klein@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.899Z",
+              "updatedAt": "2026-02-21T00:36:25.899Z"
+            }
+          },
+          {
+            "id": "1a51a8dd-1c0d-44fb-8a2d-ed7b21308410",
+            "name": "Data Warehouse - Job 5",
+            "code": "DAT_JOB_AWN4",
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "teamId": "0b44b242-cc26-46de-96fe-396792e0ccc2",
+            "updatedById": null,
+            "team": {
+              "id": "0b44b242-cc26-46de-96fe-396792e0ccc2",
+              "name": "Torphy - Gerhold Team",
+              "description": "Profound cloud-native productivity",
+              "emailDistribution": "Alberta.Hettinger57@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.388Z",
+              "updatedAt": "2026-02-21T00:36:26.388Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "8aba13be-31eb-494c-b3a3-44c3e1e69b32",
+            "title": "Resolution for neural issue in Data Warehouse",
+            "description": "Curtus teneo utrimque laboriosam acidus degusto. Statua cilicium itaque voluptates pectus perferendis ventus administratio laudantium. Crur vomer theatrum illo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. synthesize the sensor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "jobId": "d3c1c017-9773-4d55-acbc-cdc1b5000bef",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.348Z",
+            "updatedAt": "2026-02-21T00:36:27.348Z",
+            "job": {
+              "id": "d3c1c017-9773-4d55-acbc-cdc1b5000bef",
+              "name": "Data Warehouse - Job 4",
+              "code": "DAT_JOB_JUHP",
+              "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+              "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "3f5450b9-d98c-4213-b8d9-463359b20f48",
+            "title": "Resolution for online issue in Data Warehouse",
+            "description": "Paulatim voco combibo. Accommodo antiquus acies denego. Aeneus contego aggero soluta cogo alo iste solutio angustus bonus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the sensor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "jobId": "e412487e-1216-4231-a2d1-4e91908874f4",
+            "createdById": "8b454a37-eb65-4c9c-b9b9-501e39bfd667",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.412Z",
+            "updatedAt": "2026-02-21T00:36:27.412Z",
+            "job": {
+              "id": "e412487e-1216-4231-a2d1-4e91908874f4",
+              "name": "Data Warehouse - Job 3",
+              "code": "DAT_JOB_IWDP",
+              "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+              "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "6d598bda-c305-4daa-b8f0-3873accae7cc",
+            "title": "Resolution for bluetooth issue in Data Warehouse",
+            "description": "Tantum velociter absens toties. Calcar quae cuius tolero crustulum bonus tepidus similique apto. Paens adamo clam aliquid amplexus accommodo dolore totidem sollicito crustulum.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the feed\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+            "jobId": "e412487e-1216-4231-a2d1-4e91908874f4",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.572Z",
+            "updatedAt": "2026-02-21T00:36:27.572Z",
+            "job": {
+              "id": "e412487e-1216-4231-a2d1-4e91908874f4",
+              "name": "Data Warehouse - Job 3",
+              "code": "DAT_JOB_IWDP",
+              "systemId": "990a94fe-bfb4-4a18-8b4b-f4fced4d1a3b",
+              "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "3bb3697f-bae1-4b30-bdbd-159460d43a9d",
+        "name": "E2E Test System 1771634803649",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "070659a4-40a7-4519-bf5b-694f6093b695",
+        "name": "E2E Test System 1771635072148",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "811f04c4-cf8d-4652-ba40-0b9bc9de868f",
+        "name": "E2E Test System 1771635196940",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "1b0a1659-eb28-4adc-a9b0-8e7ed76b2230",
+        "name": "E2E Test System 1771635328589",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "fd79bbb2-357e-48d7-ab23-e8e9a4634333",
+        "name": "E2E Test System 1771635625582",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "1c81569d-901d-4327-869b-9d33259ebd8c",
+        "name": "E2E Test System 1771635795674",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "6431cecb-2341-4f62-ae17-c28e34485af6",
+        "name": "E2E Test System 1771635943797",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "0cc7d858-2653-43c7-88b5-eb45d706862b",
+        "name": "E2E Test System 1771635986163",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "3fe62edf-ec39-44e2-b25a-afe2083df699",
+        "name": "E2E Test System 1771636048748",
+        "description": "Created by API Playwright Test",
+        "updatedById": null,
+        "jobs": [],
+        "procedures": []
+      },
+      {
+        "id": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+        "name": "Fraud Detection",
+        "description": "Verumtamen aspernatur enim beatus.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "fe56ca3f-e150-43e6-ae3a-d495a5974712",
+            "name": "Fraud Detection - Job 1",
+            "code": "FRA_JOB_LRLZ",
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "teamId": "a335f2cf-3db1-4294-86d3-be07a4af00c5",
+            "updatedById": null,
+            "team": {
+              "id": "a335f2cf-3db1-4294-86d3-be07a4af00c5",
+              "name": "Parker, Steuber and Hintz Team",
+              "description": "Profound mobile support",
+              "emailDistribution": "Tommie73@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.431Z",
+              "updatedAt": "2026-02-21T00:36:25.431Z"
+            }
+          },
+          {
+            "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "name": "Fraud Detection - Job 2",
+            "code": "FRA_JOB_9PEI",
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+            "updatedById": null,
+            "team": {
+              "id": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "name": "Fisher - Prohaska Team",
+              "description": "Universal zero defect complexity",
+              "emailDistribution": "Baron_Runolfsson89@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.997Z",
+              "updatedAt": "2026-02-21T00:36:25.997Z"
+            }
+          },
+          {
+            "id": "aa2b1f06-94d6-44ca-a3e7-a0913e199d53",
+            "name": "Fraud Detection - Job 3",
+            "code": "FRA_JOB_O1HE",
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "teamId": "c15e4f27-4445-4894-a24f-01d314877d8b",
+            "updatedById": null,
+            "team": {
+              "id": "c15e4f27-4445-4894-a24f-01d314877d8b",
+              "name": "Bednar and Sons Team",
+              "description": "Distributed bifurcated support",
+              "emailDistribution": "Alicia_Will@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.295Z",
+              "updatedAt": "2026-02-21T00:36:26.295Z"
+            }
+          },
+          {
+            "id": "71471575-05ee-4438-aa79-e4b55c711514",
+            "name": "Fraud Detection - Job 4",
+            "code": "FRA_JOB_IAQ4",
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+            "updatedById": null,
+            "team": {
+              "id": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "name": "Jenkins - White Team",
+              "description": "Seamless coherent initiative",
+              "emailDistribution": "Ursula94@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.610Z",
+              "updatedAt": "2026-02-21T00:36:25.610Z"
+            }
+          },
+          {
+            "id": "1532f195-ce8e-47f5-a3a2-3bc8424eba60",
+            "name": "Fraud Detection - Job 5",
+            "code": "FRA_JOB_F4K3",
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+            "updatedById": null,
+            "team": {
+              "id": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "name": "Jenkins - White Team",
+              "description": "Seamless coherent initiative",
+              "emailDistribution": "Ursula94@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.610Z",
+              "updatedAt": "2026-02-21T00:36:25.610Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "e6d3e8ec-6e3c-417b-b39d-661cbcaa134e",
+            "title": "Resolution for neural issue in Fraud Detection",
+            "description": "Verus deprecator volaticus deorsum suffoco aequus deporto. Turpis vomica laborum socius colo undique defero aduro video. Synagoga amo speciosus comminor credo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. program the transmitter\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "fe56ca3f-e150-43e6-ae3a-d495a5974712",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.386Z",
+            "updatedAt": "2026-02-21T00:36:27.386Z",
+            "job": {
+              "id": "fe56ca3f-e150-43e6-ae3a-d495a5974712",
+              "name": "Fraud Detection - Job 1",
+              "code": "FRA_JOB_LRLZ",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "a335f2cf-3db1-4294-86d3-be07a4af00c5",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "311460e3-b196-4626-a721-857d8b9557cb",
+            "title": "Resolution for back-end issue in Fraud Detection",
+            "description": "Carus dignissimos admoveo adamo despecto id toties tenus adduco cometes. Tamdiu baiulus venio. Crastinus uter templum solvo celebrer magni cupio.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. program the monitor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "aa2b1f06-94d6-44ca-a3e7-a0913e199d53",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.429Z",
+            "updatedAt": "2026-02-21T00:36:27.429Z",
+            "job": {
+              "id": "aa2b1f06-94d6-44ca-a3e7-a0913e199d53",
+              "name": "Fraud Detection - Job 3",
+              "code": "FRA_JOB_O1HE",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "c15e4f27-4445-4894-a24f-01d314877d8b",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "2181c909-0008-4f39-9ca3-67e7e2f843dc",
+            "title": "Resolution for haptic issue in Fraud Detection",
+            "description": "Deprecator viriliter textilis territo venustas. Arma depono optio. Consequuntur cur occaecati.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. bypass the interface\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.449Z",
+            "updatedAt": "2026-02-21T00:36:27.449Z",
+            "job": {
+              "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+              "name": "Fraud Detection - Job 2",
+              "code": "FRA_JOB_9PEI",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "ae49acf3-b453-40d3-bce9-c01654bee17a",
+            "title": "Resolution for mobile issue in Fraud Detection",
+            "description": "Aqua velociter ipsa qui pauper sustineo. Accommodo dicta apto pel aegrus corporis amplus attero facere beneficium. Audeo uberrime veniam alii amo tamquam tot vae cerno cogo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. calculate the circuit\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.516Z",
+            "updatedAt": "2026-02-21T00:36:27.516Z",
+            "job": {
+              "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+              "name": "Fraud Detection - Job 2",
+              "code": "FRA_JOB_9PEI",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "72b40d4d-c516-40fe-81b2-9603037ae4f2",
+            "title": "Resolution for solid state issue in Fraud Detection",
+            "description": "Carus summa tricesimus audax creator asperiores. Amita tertius vilitas via ter deputo catena virgo terga arca. Sopor aegrus cupiditate alii.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. connect the card\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "createdById": "f3b3f7db-67fc-4c36-8297-9635fdbb9d3c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.534Z",
+            "updatedAt": "2026-02-21T00:36:27.534Z",
+            "job": {
+              "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+              "name": "Fraud Detection - Job 2",
+              "code": "FRA_JOB_9PEI",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "952efd97-9250-4905-9de5-131a4f296b9f",
+            "title": "Resolution for auxiliary issue in Fraud Detection",
+            "description": "Temptatio contigo pauci adsum conicio studio comburo. Tempore arbitro victoria aestas anser celo via. Vilicus cito speciosus ascisco vaco thema adhuc confido amissio aperio.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the hard drive\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.620Z",
+            "updatedAt": "2026-02-21T00:36:27.620Z",
+            "job": {
+              "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+              "name": "Fraud Detection - Job 2",
+              "code": "FRA_JOB_9PEI",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "ff8dfedc-9705-4d35-882c-a080944177b5",
+            "title": "Resolution for auxiliary issue in Fraud Detection",
+            "description": "Condico ea trado debeo alveus asperiores stillicidium tempus alioqui contabesco. Cauda creber cohors defungo censura approbo defleo adsuesco. Vobis sonitus aegrotatio.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. override the feed\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "1532f195-ce8e-47f5-a3a2-3bc8424eba60",
+            "createdById": "f3b3f7db-67fc-4c36-8297-9635fdbb9d3c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.640Z",
+            "updatedAt": "2026-02-21T00:36:27.640Z",
+            "job": {
+              "id": "1532f195-ce8e-47f5-a3a2-3bc8424eba60",
+              "name": "Fraud Detection - Job 5",
+              "code": "FRA_JOB_F4K3",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "b6bfb51a-9d7b-4428-8e3b-20b2fabf455b",
+            "title": "Resolution for bluetooth issue in Fraud Detection",
+            "description": "Viscus appono synagoga assentator uberrime vere subvenio teres baiulus. Tergeo suppono officia. Dolore titulus concedo culpo laudantium catena delicate audeo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. transmit the circuit\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "71471575-05ee-4438-aa79-e4b55c711514",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.693Z",
+            "updatedAt": "2026-02-21T00:36:27.693Z",
+            "job": {
+              "id": "71471575-05ee-4438-aa79-e4b55c711514",
+              "name": "Fraud Detection - Job 4",
+              "code": "FRA_JOB_IAQ4",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "b7adb926-b959-4922-9a11-480e3687baab",
+            "title": "Resolution for back-end issue in Fraud Detection",
+            "description": "Validus infit antepono balbus. Adimpleo decerno vae coma tabernus assentator. Vulpes clamo spero.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. parse the firewall\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+            "jobId": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.767Z",
+            "updatedAt": "2026-02-21T00:36:27.767Z",
+            "job": {
+              "id": "852d8f86-615a-4c97-be75-cad662e2f4ec",
+              "name": "Fraud Detection - Job 2",
+              "code": "FRA_JOB_9PEI",
+              "systemId": "07340da6-cbcc-4928-ab7e-97a0fc4ed01b",
+              "teamId": "56f0386c-048e-422d-871a-ffb269fe06c4",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+        "name": "HR System",
+        "description": "Asporto color vulgaris subseco vulnero demitto debitis urbs venia.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "fc28fcfe-86f7-4f84-8633-2ac841745938",
+            "name": "HR System - Job 1",
+            "code": "HR _JOB_SSUJ",
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "teamId": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+            "updatedById": null,
+            "team": {
+              "id": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+              "name": "Nitzsche, Hintz and Miller Team",
+              "description": "Organized attitude-oriented definition",
+              "emailDistribution": "Tracy_Hilll99@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.053Z",
+              "updatedAt": "2026-02-21T00:36:26.053Z"
+            }
+          },
+          {
+            "id": "78b23220-258d-4703-bbce-87403be908ae",
+            "name": "HR System - Job 2",
+            "code": "HR _JOB_GITZ",
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "teamId": "74615c0e-8714-4682-b548-0956cc60231c",
+            "updatedById": null,
+            "team": {
+              "id": "74615c0e-8714-4682-b548-0956cc60231c",
+              "name": "Schiller, Casper and Breitenberg Team",
+              "description": "Customer-focused attitude-oriented concept",
+              "emailDistribution": "Reed4@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.556Z",
+              "updatedAt": "2026-02-21T00:36:25.556Z"
+            }
+          },
+          {
+            "id": "473c7502-4f0b-42af-a7b1-95b42f1b5c4f",
+            "name": "HR System - Job 3",
+            "code": "HR _JOB_SDJY",
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+            "updatedById": null,
+            "team": {
+              "id": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "name": "Kuvalis - Toy Team",
+              "description": "Monitored attitude-oriented artificial intelligence",
+              "emailDistribution": "Pierce.Klein@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.899Z",
+              "updatedAt": "2026-02-21T00:36:25.899Z"
+            }
+          },
+          {
+            "id": "96ae39f9-e15e-444b-9e4d-ed51886c7ada",
+            "name": "HR System - Job 4",
+            "code": "HR _JOB_YYH7",
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+            "updatedById": null,
+            "team": {
+              "id": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "name": "Hauck, Ziemann and Hauck Team",
+              "description": "Fully-configurable intangible strategy",
+              "emailDistribution": "Virginie_Reynolds68@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.139Z",
+              "updatedAt": "2026-02-21T00:36:26.139Z"
+            }
+          },
+          {
+            "id": "cd59d511-2a76-4b44-b693-36b5b4785345",
+            "name": "HR System - Job 5",
+            "code": "HR _JOB_84KD",
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+            "updatedById": null,
+            "team": {
+              "id": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "name": "Beatty - Gleichner Team",
+              "description": "Phased data-driven migration",
+              "emailDistribution": "Brianne9@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.608Z",
+              "updatedAt": "2026-02-21T00:36:26.608Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "91b205a2-6e0e-431e-a166-dc1685f94c8c",
+            "title": "Resolution for redundant issue in HR System",
+            "description": "Defetiscor solvo surculus terminatio aduro eius strues. Spargo admiratio mollitia centum numquam vulgo impedit. Valeo convoco pax ter doloremque capitulus vomito trucido.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the application\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "jobId": "fc28fcfe-86f7-4f84-8633-2ac841745938",
+            "createdById": "f3b3f7db-67fc-4c36-8297-9635fdbb9d3c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.396Z",
+            "updatedAt": "2026-02-21T00:36:27.396Z",
+            "job": {
+              "id": "fc28fcfe-86f7-4f84-8633-2ac841745938",
+              "name": "HR System - Job 1",
+              "code": "HR _JOB_SSUJ",
+              "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+              "teamId": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "2c1f6a01-5061-401e-bf0d-357ed5791eea",
+            "title": "Resolution for haptic issue in HR System",
+            "description": "Sit demoror succedo benigne vulgaris cedo caterva versus expedita asperiores. Defungo vacuus amitto suadeo tamen ventus. Tremo concido torqueo suasoria appositus vilicus careo aperiam certus velociter.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. reboot the hard drive\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "jobId": "78b23220-258d-4703-bbce-87403be908ae",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.482Z",
+            "updatedAt": "2026-02-21T00:36:27.482Z",
+            "job": {
+              "id": "78b23220-258d-4703-bbce-87403be908ae",
+              "name": "HR System - Job 2",
+              "code": "HR _JOB_GITZ",
+              "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+              "teamId": "74615c0e-8714-4682-b548-0956cc60231c",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "558d413b-05ec-4482-9336-78e16aa0b4ed",
+            "title": "Resolution for neural issue in HR System",
+            "description": "Arceo caelum studio pauci nostrum tonsor terga. Umquam aureus degenero alter vulgus vulpes tergeo thorax casus. Crepusculum apud ustulo censura ventito.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. bypass the pixel\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "jobId": "fc28fcfe-86f7-4f84-8633-2ac841745938",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.490Z",
+            "updatedAt": "2026-02-21T00:36:27.490Z",
+            "job": {
+              "id": "fc28fcfe-86f7-4f84-8633-2ac841745938",
+              "name": "HR System - Job 1",
+              "code": "HR _JOB_SSUJ",
+              "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+              "teamId": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "a194f9e6-bb63-4dfd-b98d-19c3c59c7c7e",
+            "title": "Resolution for optical issue in HR System",
+            "description": "Chirographum socius acsi coniuratio votum defendo. Capto tempore curiositas asper textor vito aperte atque articulus cruentus. Vulgaris absorbeo aequitas adhuc cena depono cohors laboriosam truculenter.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. hack the panel\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "jobId": "cd59d511-2a76-4b44-b693-36b5b4785345",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.504Z",
+            "updatedAt": "2026-02-21T00:36:27.504Z",
+            "job": {
+              "id": "cd59d511-2a76-4b44-b693-36b5b4785345",
+              "name": "HR System - Job 5",
+              "code": "HR _JOB_84KD",
+              "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+              "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "3c9ec19c-a4ff-4494-a948-17fe20f1997e",
+            "title": "Resolution for wireless issue in HR System",
+            "description": "Adipisci depulso fugiat cura suppono tui creta combibo. Caelestis vox una pecus aegre tantum vulgaris volaticus conitor clarus. Tantillus deorsum verecundia celebrer confugo alter avarus adficio succedo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. index the application\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+            "jobId": "473c7502-4f0b-42af-a7b1-95b42f1b5c4f",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.541Z",
+            "updatedAt": "2026-02-21T00:36:27.541Z",
+            "job": {
+              "id": "473c7502-4f0b-42af-a7b1-95b42f1b5c4f",
+              "name": "HR System - Job 3",
+              "code": "HR _JOB_SDJY",
+              "systemId": "b33ccb03-8909-4c3b-ac3e-ea9ee3d8cd86",
+              "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+        "name": "Loan Processing",
+        "description": "Ventosus vulariter sollers.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "392ac706-df73-462d-bb34-c47ee8b51278",
+            "name": "Loan Processing - Job 1",
+            "code": "LOA_JOB_K5OF",
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+            "updatedById": null,
+            "team": {
+              "id": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "name": "Beatty - Gleichner Team",
+              "description": "Phased data-driven migration",
+              "emailDistribution": "Brianne9@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.608Z",
+              "updatedAt": "2026-02-21T00:36:26.608Z"
+            }
+          },
+          {
+            "id": "525f43b2-eb5a-4b62-9933-631ea9384089",
+            "name": "Loan Processing - Job 2",
+            "code": "LOA_JOB_OEMV",
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+            "updatedById": null,
+            "team": {
+              "id": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "name": "Hauck, Ziemann and Hauck Team",
+              "description": "Fully-configurable intangible strategy",
+              "emailDistribution": "Virginie_Reynolds68@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.139Z",
+              "updatedAt": "2026-02-21T00:36:26.139Z"
+            }
+          },
+          {
+            "id": "e1098201-56d4-48e2-936a-56edf8c97530",
+            "name": "Loan Processing - Job 3",
+            "code": "LOA_JOB_Y4GS",
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+            "updatedById": null,
+            "team": {
+              "id": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "name": "Pagac, Beatty and Russel Team",
+              "description": "Seamless systemic workforce",
+              "emailDistribution": "Jaren.Christiansen56@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.816Z",
+              "updatedAt": "2026-02-21T00:36:25.816Z"
+            }
+          },
+          {
+            "id": "c2e3d088-530d-4601-a640-ce398dcfe609",
+            "name": "Loan Processing - Job 4",
+            "code": "LOA_JOB_BYYM",
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "teamId": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+            "updatedById": null,
+            "team": {
+              "id": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+              "name": "Hoppe - Berge Team",
+              "description": "Customizable actuating success",
+              "emailDistribution": "Josie.Weber@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.953Z",
+              "updatedAt": "2026-02-21T00:36:25.953Z"
+            }
+          },
+          {
+            "id": "b2c3b0e5-4b26-44b8-a366-3e1930e3f42b",
+            "name": "Loan Processing - Job 5",
+            "code": "LOA_JOB_OQ69",
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+            "updatedById": null,
+            "team": {
+              "id": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "name": "Kuvalis - Toy Team",
+              "description": "Monitored attitude-oriented artificial intelligence",
+              "emailDistribution": "Pierce.Klein@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.899Z",
+              "updatedAt": "2026-02-21T00:36:25.899Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "afd4025e-9d57-44ef-9aa1-08a3d11df5e3",
+            "title": "Resolution for neural issue in Loan Processing",
+            "description": "Voluntarius cruentus subnecto voluptatem cariosus cerno pecto. Antea synagoga suus. Aro patrocinor terga tabernus truculenter commodo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. back up the driver\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "jobId": "b2c3b0e5-4b26-44b8-a366-3e1930e3f42b",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.321Z",
+            "updatedAt": "2026-02-21T00:36:27.321Z",
+            "job": {
+              "id": "b2c3b0e5-4b26-44b8-a366-3e1930e3f42b",
+              "name": "Loan Processing - Job 5",
+              "code": "LOA_JOB_OQ69",
+              "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+              "teamId": "fc53e896-5f7a-4923-8e7c-35a195a42240",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "9ec7fcd9-6c1c-4835-ada3-9ce581487ba4",
+            "title": "Resolution for redundant issue in Loan Processing",
+            "description": "Suffoco tubineus tepidus. Atque vulpes esse denego demonstro conqueror defetiscor. Suffragium vulnus terminatio acceptus sapiente utilis.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. compress the bus\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "jobId": "392ac706-df73-462d-bb34-c47ee8b51278",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.331Z",
+            "updatedAt": "2026-02-21T00:36:27.331Z",
+            "job": {
+              "id": "392ac706-df73-462d-bb34-c47ee8b51278",
+              "name": "Loan Processing - Job 1",
+              "code": "LOA_JOB_K5OF",
+              "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+              "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "90467e81-920d-43d9-bf8c-62b2ccb12fb5",
+            "title": "Resolution for redundant issue in Loan Processing",
+            "description": "Uredo ullam porro cogito. Amor laudantium caput veritatis aestus confido nostrum alii molestias. Claudeo contigo color cotidie tempora utique vomito vester triduana.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. copy the system\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "jobId": "e1098201-56d4-48e2-936a-56edf8c97530",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.366Z",
+            "updatedAt": "2026-02-21T00:36:27.366Z",
+            "job": {
+              "id": "e1098201-56d4-48e2-936a-56edf8c97530",
+              "name": "Loan Processing - Job 3",
+              "code": "LOA_JOB_Y4GS",
+              "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "17e8eb4d-88b9-4e19-a724-e8e7c88ebf04",
+            "title": "Resolution for back-end issue in Loan Processing",
+            "description": "Ars alienus error voco desparatus. Caecus utique acer iste auditor. Unde deserunt thesaurus suasoria asperiores apparatus thesaurus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. quantify the port\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "jobId": "525f43b2-eb5a-4b62-9933-631ea9384089",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.405Z",
+            "updatedAt": "2026-02-21T00:36:27.405Z",
+            "job": {
+              "id": "525f43b2-eb5a-4b62-9933-631ea9384089",
+              "name": "Loan Processing - Job 2",
+              "code": "LOA_JOB_OEMV",
+              "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+              "teamId": "a9aea33f-b6e3-49ce-b215-e5befcc30eff",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "f9cfb342-d55f-44e8-a674-fc4153cdc4c1",
+            "title": "Resolution for redundant issue in Loan Processing",
+            "description": "Aetas solum tactus thema utique officia. Talis utroque odio decens. Autus ulciscor dicta aestas vestigium urbanus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. back up the bandwidth\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+            "jobId": "e1098201-56d4-48e2-936a-56edf8c97530",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.456Z",
+            "updatedAt": "2026-02-21T00:36:27.456Z",
+            "job": {
+              "id": "e1098201-56d4-48e2-936a-56edf8c97530",
+              "name": "Loan Processing - Job 3",
+              "code": "LOA_JOB_Y4GS",
+              "systemId": "3bc40296-5fa0-43a2-ad84-28201eb86c0e",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "8f6fa80c-434c-4439-899b-d987364df7b9",
+        "name": "Mobile App",
+        "description": "Adeo tepidus cauda advenio conduco usitas studio.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "f812829a-0a68-4228-be29-824b44efd4e0",
+            "name": "Mobile App - Job 1",
+            "code": "MOB_JOB_WUZG",
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "teamId": "a7890455-7b29-4574-8798-863f0df3a0f2",
+            "updatedById": null,
+            "team": {
+              "id": "a7890455-7b29-4574-8798-863f0df3a0f2",
+              "name": "Hessel, Gibson and Gulgowski Team",
+              "description": "Advanced analyzing collaboration",
+              "emailDistribution": "Jalen_Will@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.755Z",
+              "updatedAt": "2026-02-21T00:36:25.755Z"
+            }
+          },
+          {
+            "id": "da0fa2c1-85b9-4d52-bc58-29d5a5d92f84",
+            "name": "Mobile App - Job 2",
+            "code": "MOB_JOB_NEPI",
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "teamId": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+            "updatedById": null,
+            "team": {
+              "id": "a5a9a6f8-a5bc-42f3-8d0a-a6b43c7ab8f4",
+              "name": "Harris, Goldner and Renner Team",
+              "description": "Compatible directional approach",
+              "emailDistribution": "Breanne_Labadie@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.655Z",
+              "updatedAt": "2026-02-21T00:36:25.655Z"
+            }
+          },
+          {
+            "id": "d87ea690-ecae-419c-8d4d-df00e5f3abb6",
+            "name": "Mobile App - Job 3",
+            "code": "MOB_JOB_TGTX",
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+            "updatedById": null,
+            "team": {
+              "id": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "name": "Bashirian - Mills Team",
+              "description": "Open-architected full-range success",
+              "emailDistribution": "Rowland89@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.449Z",
+              "updatedAt": "2026-02-21T00:36:26.449Z"
+            }
+          },
+          {
+            "id": "52cb6144-7afd-4e96-b568-57c16bbccefc",
+            "name": "Mobile App - Job 4",
+            "code": "MOB_JOB_BTH2",
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+            "updatedById": null,
+            "team": {
+              "id": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "name": "Beatty - Gleichner Team",
+              "description": "Phased data-driven migration",
+              "emailDistribution": "Brianne9@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.608Z",
+              "updatedAt": "2026-02-21T00:36:26.608Z"
+            }
+          },
+          {
+            "id": "c3c251a8-f52b-481e-870e-b1eaa2a9d0a2",
+            "name": "Mobile App - Job 5",
+            "code": "MOB_JOB_OZEY",
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "teamId": "d5a4e02c-448a-4707-a11c-892a7251ef58",
+            "updatedById": null,
+            "team": {
+              "id": "d5a4e02c-448a-4707-a11c-892a7251ef58",
+              "name": "Grady - Stark Team",
+              "description": "Optimized radical leverage",
+              "emailDistribution": "Manuela.Lind36@gmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.506Z",
+              "updatedAt": "2026-02-21T00:36:25.506Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "313898be-dbc9-4e59-b54c-bf3684a4318b",
+            "title": "Resolution for solid state issue in Mobile App",
+            "description": "Voluntarius quisquam timor tabgo cognomen conitor doloribus commemoro venustas. Usus deripio blanditiis viriliter tam antepono derideo turba depromo. Stillicidium quibusdam admitto optio desolo vitiosus ut usque conservo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the protocol\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "jobId": "c3c251a8-f52b-481e-870e-b1eaa2a9d0a2",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.581Z",
+            "updatedAt": "2026-02-21T00:36:27.581Z",
+            "job": {
+              "id": "c3c251a8-f52b-481e-870e-b1eaa2a9d0a2",
+              "name": "Mobile App - Job 5",
+              "code": "MOB_JOB_OZEY",
+              "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+              "teamId": "d5a4e02c-448a-4707-a11c-892a7251ef58",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "ea23be3a-40cb-4ffa-a4ef-16eabf8c8d9f",
+            "title": "Resolution for virtual issue in Mobile App",
+            "description": "Pax ter autem dolorem. Paulatim bonus antepono degero. Cauda audacia attonbitus tribuo voro nulla torrens.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. program the alarm\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "jobId": "52cb6144-7afd-4e96-b568-57c16bbccefc",
+            "createdById": "21afaa27-108e-4bbd-ad1f-8f3f03a9ff39",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.609Z",
+            "updatedAt": "2026-02-21T00:36:27.609Z",
+            "job": {
+              "id": "52cb6144-7afd-4e96-b568-57c16bbccefc",
+              "name": "Mobile App - Job 4",
+              "code": "MOB_JOB_BTH2",
+              "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+              "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "bb95737c-3641-4daa-9f1b-11f90730a596",
+            "title": "Resolution for neural issue in Mobile App",
+            "description": "Curvo vorago callide tergum cui volubilis ara canto antepono carbo. Demens ad ultra. Commemoro admiratio demum textilis conforto vulnero torqueo abutor.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. override the bus\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "jobId": "d87ea690-ecae-419c-8d4d-df00e5f3abb6",
+            "createdById": "5b55f94f-e68e-42b6-8075-df6cca1f8970",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.651Z",
+            "updatedAt": "2026-02-21T00:36:27.651Z",
+            "job": {
+              "id": "d87ea690-ecae-419c-8d4d-df00e5f3abb6",
+              "name": "Mobile App - Job 3",
+              "code": "MOB_JOB_TGTX",
+              "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+              "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "f2b9853c-f1e9-4481-b3a2-d5ba24d58324",
+            "title": "Resolution for optical issue in Mobile App",
+            "description": "Temporibus pel ab commodi approbo suppellex. Triduana officiis solus antiquus adeptio terra nisi. Ipsa careo viduo suasoria pariatur aer.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. index the program\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "jobId": "52cb6144-7afd-4e96-b568-57c16bbccefc",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.720Z",
+            "updatedAt": "2026-02-21T00:36:27.720Z",
+            "job": {
+              "id": "52cb6144-7afd-4e96-b568-57c16bbccefc",
+              "name": "Mobile App - Job 4",
+              "code": "MOB_JOB_BTH2",
+              "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+              "teamId": "4d92d0f2-67f7-4ae2-8f87-9a7841fe7e84",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "0c3ef8a3-3c79-43cb-a6b8-bbde6522fb0b",
+            "title": "Resolution for open-source issue in Mobile App",
+            "description": "Explicabo cohaero caute caveo canto crapula. Vigilo neque ager totidem unde. Cursus collum odit temptatio decens audentia arbitro tenus.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. hack the driver\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+            "jobId": "d87ea690-ecae-419c-8d4d-df00e5f3abb6",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.801Z",
+            "updatedAt": "2026-02-21T00:36:27.801Z",
+            "job": {
+              "id": "d87ea690-ecae-419c-8d4d-df00e5f3abb6",
+              "name": "Mobile App - Job 3",
+              "code": "MOB_JOB_TGTX",
+              "systemId": "8f6fa80c-434c-4439-899b-d987364df7b9",
+              "teamId": "c9306943-b9bf-4d48-97ee-c217db084a9d",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+        "name": "Payment Gateway",
+        "description": "Urbanus cursim sodalitas statim tollo comprehendo alias.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "9f136ca6-3111-47ac-a8d9-b04cfe689fdc",
+            "name": "Payment Gateway - Job 1",
+            "code": "PAY_JOB_J0C2",
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "teamId": "c15e4f27-4445-4894-a24f-01d314877d8b",
+            "updatedById": null,
+            "team": {
+              "id": "c15e4f27-4445-4894-a24f-01d314877d8b",
+              "name": "Bednar and Sons Team",
+              "description": "Distributed bifurcated support",
+              "emailDistribution": "Alicia_Will@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.295Z",
+              "updatedAt": "2026-02-21T00:36:26.295Z"
+            }
+          },
+          {
+            "id": "69487135-0663-4030-84c1-e81ffcc2879d",
+            "name": "Payment Gateway - Job 2",
+            "code": "PAY_JOB_YCZZ",
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+            "updatedById": null,
+            "team": {
+              "id": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "name": "Effertz - Cormier Team",
+              "description": "Sharable cohesive emulation",
+              "emailDistribution": "Jordy_Willms@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.531Z",
+              "updatedAt": "2026-02-21T00:36:26.531Z"
+            }
+          },
+          {
+            "id": "21aa212b-8738-4e73-b312-d1a5eb3928be",
+            "name": "Payment Gateway - Job 3",
+            "code": "PAY_JOB_XFTI",
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "teamId": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+            "updatedById": null,
+            "team": {
+              "id": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+              "name": "Schaden, Gorczany and Denesik Team",
+              "description": "Optimized uniform structure",
+              "emailDistribution": "Dillan86@gmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.707Z",
+              "updatedAt": "2026-02-21T00:36:25.707Z"
+            }
+          },
+          {
+            "id": "8e075cfd-d2d2-43cc-b5e4-56f403c3a74d",
+            "name": "Payment Gateway - Job 4",
+            "code": "PAY_JOB_98CS",
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "teamId": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+            "updatedById": null,
+            "team": {
+              "id": "c4a82913-d333-46d2-afa1-4a90c1a2deeb",
+              "name": "Nitzsche, Hintz and Miller Team",
+              "description": "Organized attitude-oriented definition",
+              "emailDistribution": "Tracy_Hilll99@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.053Z",
+              "updatedAt": "2026-02-21T00:36:26.053Z"
+            }
+          },
+          {
+            "id": "65f4fc94-327c-4cb0-9aff-b199d8fb1f4d",
+            "name": "Payment Gateway - Job 5",
+            "code": "PAY_JOB_EY93",
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+            "updatedById": null,
+            "team": {
+              "id": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "name": "Pagac, Beatty and Russel Team",
+              "description": "Seamless systemic workforce",
+              "emailDistribution": "Jaren.Christiansen56@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.816Z",
+              "updatedAt": "2026-02-21T00:36:25.816Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "9e67df72-70a8-43e8-bb64-31a7a78f40ea",
+            "title": "Resolution for auxiliary issue in Payment Gateway",
+            "description": "Alienus cohibeo demoror nostrum arbitro autem demens cohaero thymum. Adinventitias expedita sordeo talis debeo cedo. Atque nostrum odit.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. synthesize the driver\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "21aa212b-8738-4e73-b312-d1a5eb3928be",
+            "createdById": "5b55f94f-e68e-42b6-8075-df6cca1f8970",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.375Z",
+            "updatedAt": "2026-02-21T00:36:27.375Z",
+            "job": {
+              "id": "21aa212b-8738-4e73-b312-d1a5eb3928be",
+              "name": "Payment Gateway - Job 3",
+              "code": "PAY_JOB_XFTI",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "c672e2b1-5aff-4647-bb4b-6eab74aa0c04",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "9ee36951-f20f-46ab-b996-ee5a5a839ca2",
+            "title": "Resolution for online issue in Payment Gateway",
+            "description": "Anser demonstro reprehenderit ambulo conduco titulus degero vindico pariatur perferendis. Somniculosus vitium totus cenaculum canis numquam. Utpote pel culpo atqui degusto molestiae certe vitae aggredior cui.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. hack the hard drive\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "69487135-0663-4030-84c1-e81ffcc2879d",
+            "createdById": "398eefba-ecd9-4d07-a647-7e4617294d1c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.472Z",
+            "updatedAt": "2026-02-21T00:36:27.472Z",
+            "job": {
+              "id": "69487135-0663-4030-84c1-e81ffcc2879d",
+              "name": "Payment Gateway - Job 2",
+              "code": "PAY_JOB_YCZZ",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "07f4207d-e876-45b7-9ec4-edbc0bba1ad1",
+            "title": "Resolution for optical issue in Payment Gateway",
+            "description": "Ullam consequuntur demitto spero decet contego ipsam. Talus bos desparatus dicta ulciscor arca amo summa trepide. Praesentium creta confero quo caute approbo pecus pauper.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. input the firewall\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "9f136ca6-3111-47ac-a8d9-b04cfe689fdc",
+            "createdById": "4d0488fe-c390-4581-92de-12576d331cfc",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.510Z",
+            "updatedAt": "2026-02-21T00:36:27.510Z",
+            "job": {
+              "id": "9f136ca6-3111-47ac-a8d9-b04cfe689fdc",
+              "name": "Payment Gateway - Job 1",
+              "code": "PAY_JOB_J0C2",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "c15e4f27-4445-4894-a24f-01d314877d8b",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "46b99373-5a64-4c72-814d-cbe2fc1ee438",
+            "title": "Resolution for online issue in Payment Gateway",
+            "description": "Cruentus amplus tamdiu animadverto deleniti coerceo vis depulso bene. Vesco aduro sulum decens quibusdam utpote tamisium. Corrumpo coadunatio enim distinctio depromo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. copy the interface\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "65f4fc94-327c-4cb0-9aff-b199d8fb1f4d",
+            "createdById": "f3b3f7db-67fc-4c36-8297-9635fdbb9d3c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.565Z",
+            "updatedAt": "2026-02-21T00:36:27.565Z",
+            "job": {
+              "id": "65f4fc94-327c-4cb0-9aff-b199d8fb1f4d",
+              "name": "Payment Gateway - Job 5",
+              "code": "PAY_JOB_EY93",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "12e78c23-f496-4aad-b72d-c8203cd3fd99",
+            "title": "Resolution for cross-platform issue in Payment Gateway",
+            "description": "Absorbeo placeat ter itaque bibo torrens adfectus voluptatibus tripudio. Abstergo auctus totidem curriculum angelus expedita cupiditas adficio asporto tripudio. Expedita velociter conitor sollicito adnuo ut capitulus cunctatio error.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. index the sensor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "65f4fc94-327c-4cb0-9aff-b199d8fb1f4d",
+            "createdById": "f3b3f7db-67fc-4c36-8297-9635fdbb9d3c",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.756Z",
+            "updatedAt": "2026-02-21T00:36:27.756Z",
+            "job": {
+              "id": "65f4fc94-327c-4cb0-9aff-b199d8fb1f4d",
+              "name": "Payment Gateway - Job 5",
+              "code": "PAY_JOB_EY93",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "ae18d2f7-3e46-48ca-a510-1ddd111997d4",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "ef63c99c-f23e-4b26-a429-d7bd5c101657",
+            "title": "Resolution for optical issue in Payment Gateway",
+            "description": "Animadverto amoveo bene conduco victoria. Stipes viridis adversus adstringo dapifer bos aureus ultio. Surculus conitor acervus sponte usus volubilis textor.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. program the monitor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+            "jobId": "69487135-0663-4030-84c1-e81ffcc2879d",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.821Z",
+            "updatedAt": "2026-02-21T00:36:27.821Z",
+            "job": {
+              "id": "69487135-0663-4030-84c1-e81ffcc2879d",
+              "name": "Payment Gateway - Job 2",
+              "code": "PAY_JOB_YCZZ",
+              "systemId": "cd61872f-dccd-46d8-bc40-a7a75553fe61",
+              "teamId": "86e7cbf8-80a9-47a9-b873-aac8753b7a64",
+              "updatedById": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+        "name": "Reporting",
+        "description": "Validus aureus eum voluptates delicate.",
+        "updatedById": null,
+        "jobs": [
+          {
+            "id": "d7014e1a-e175-4493-9f40-aeac2161a22d",
+            "name": "Reporting - Job 1",
+            "code": "REP_JOB_PX2M",
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "teamId": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+            "updatedById": null,
+            "team": {
+              "id": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+              "name": "Hoppe - Berge Team",
+              "description": "Customizable actuating success",
+              "emailDistribution": "Josie.Weber@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.953Z",
+              "updatedAt": "2026-02-21T00:36:25.953Z"
+            }
+          },
+          {
+            "id": "8a8c1d04-0fd3-4805-a9b1-804355d52563",
+            "name": "Reporting - Job 2",
+            "code": "REP_JOB_EOMD",
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "teamId": "0b44b242-cc26-46de-96fe-396792e0ccc2",
+            "updatedById": null,
+            "team": {
+              "id": "0b44b242-cc26-46de-96fe-396792e0ccc2",
+              "name": "Torphy - Gerhold Team",
+              "description": "Profound cloud-native productivity",
+              "emailDistribution": "Alberta.Hettinger57@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.388Z",
+              "updatedAt": "2026-02-21T00:36:26.388Z"
+            }
+          },
+          {
+            "id": "cf69b660-9872-4624-a574-03fcd89b5ef4",
+            "name": "Reporting - Job 3",
+            "code": "REP_JOB_TJLJ",
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "teamId": "74615c0e-8714-4682-b548-0956cc60231c",
+            "updatedById": null,
+            "team": {
+              "id": "74615c0e-8714-4682-b548-0956cc60231c",
+              "name": "Schiller, Casper and Breitenberg Team",
+              "description": "Customer-focused attitude-oriented concept",
+              "emailDistribution": "Reed4@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.556Z",
+              "updatedAt": "2026-02-21T00:36:25.556Z"
+            }
+          },
+          {
+            "id": "fb123221-be18-484e-afd5-90e3a3dbf82e",
+            "name": "Reporting - Job 4",
+            "code": "REP_JOB_KFZU",
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "teamId": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+            "updatedById": null,
+            "team": {
+              "id": "c0fd05ba-4f38-4c31-91be-2e1c5a41f9a6",
+              "name": "Jenkins - White Team",
+              "description": "Seamless coherent initiative",
+              "emailDistribution": "Ursula94@yahoo.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:25.610Z",
+              "updatedAt": "2026-02-21T00:36:25.610Z"
+            }
+          },
+          {
+            "id": "95b9e329-60b6-4dcf-b5cf-f9be92015aba",
+            "name": "Reporting - Job 5",
+            "code": "REP_JOB_K46A",
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "teamId": "5f9a860c-a6f6-42ea-95c2-80649fb06105",
+            "updatedById": null,
+            "team": {
+              "id": "5f9a860c-a6f6-42ea-95c2-80649fb06105",
+              "name": "Cummings - Hills Team",
+              "description": "Polarised executive portal",
+              "emailDistribution": "Emery75@hotmail.com",
+              "isActive": true,
+              "sendEmail": true,
+              "updatedById": null,
+              "createdAt": "2026-02-21T00:36:26.676Z",
+              "updatedAt": "2026-02-21T00:36:26.676Z"
+            }
+          }
+        ],
+        "procedures": [
+          {
+            "id": "1b10edd4-9ed6-4673-95b7-476f71b93ae1",
+            "title": "Resolution for back-end issue in Reporting",
+            "description": "Vomito arto terebro aurum ab. Ustulo thesis ter eligendi congregatio tubineus. Totus dolor utique tollo.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. compress the sensor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "jobId": "d7014e1a-e175-4493-9f40-aeac2161a22d",
+            "createdById": "4b70f9ec-8527-4eb7-9e21-32c80632bda1",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.278Z",
+            "updatedAt": "2026-02-21T00:36:27.278Z",
+            "job": {
+              "id": "d7014e1a-e175-4493-9f40-aeac2161a22d",
+              "name": "Reporting - Job 1",
+              "code": "REP_JOB_PX2M",
+              "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+              "teamId": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "0d9f9aca-13bd-4820-a781-8cadcaa6f7ed",
+            "title": "Resolution for back-end issue in Reporting",
+            "description": "Theatrum nam adstringo ab appositus terebro. Cupiditate currus sequi. Error textilis suadeo aliqua bonus appono.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. back up the monitor\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "jobId": "d7014e1a-e175-4493-9f40-aeac2161a22d",
+            "createdById": "5b55f94f-e68e-42b6-8075-df6cca1f8970",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.661Z",
+            "updatedAt": "2026-02-21T00:36:27.661Z",
+            "job": {
+              "id": "d7014e1a-e175-4493-9f40-aeac2161a22d",
+              "name": "Reporting - Job 1",
+              "code": "REP_JOB_PX2M",
+              "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+              "teamId": "86a4c98d-346f-426c-8d83-a6af7f1dcfeb",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "9b5e4410-4a72-497e-bc13-4a9e32782b98",
+            "title": "Resolution for neural issue in Reporting",
+            "description": "Rerum suppono confero dolorum astrum. Censura crur adfectus volubilis atrox. Contabesco vacuus surculus quo eveniet demonstro.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. parse the transmitter\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "jobId": "95b9e329-60b6-4dcf-b5cf-f9be92015aba",
+            "createdById": "6df4b3a3-9cd6-4025-95cf-272d601a5370",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.776Z",
+            "updatedAt": "2026-02-21T00:36:27.776Z",
+            "job": {
+              "id": "95b9e329-60b6-4dcf-b5cf-f9be92015aba",
+              "name": "Reporting - Job 5",
+              "code": "REP_JOB_K46A",
+              "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+              "teamId": "5f9a860c-a6f6-42ea-95c2-80649fb06105",
+              "updatedById": null
+            }
+          },
+          {
+            "id": "7ebc7d6b-2efd-4809-bed3-c6adc9d7437b",
+            "title": "Resolution for optical issue in Reporting",
+            "description": "Ter totus una quisquam. Undique allatus deduco stultus certus deputo. Angelus solvo vulgo aureus statim defessus confugo cattus asporto.",
+            "rootCause": null,
+            "resolutionSteps": "# Steps\n\n1. connect the alarm\n2. Check logs\n3. Restart service",
+            "workaround": null,
+            "commands": null,
+            "errorCode": null,
+            "tags": null,
+            "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+            "jobId": "95b9e329-60b6-4dcf-b5cf-f9be92015aba",
+            "createdById": "9c7b47ab-3412-4d02-b949-27719be11fd4",
+            "updatedById": null,
+            "createdAt": "2026-02-21T00:36:27.811Z",
+            "updatedAt": "2026-02-21T00:36:27.811Z",
+            "job": {
+              "id": "95b9e329-60b6-4dcf-b5cf-f9be92015aba",
+              "name": "Reporting - Job 5",
+              "code": "REP_JOB_K46A",
+              "systemId": "20afc16d-edb1-4d28-913c-7ab4f62a691f",
+              "teamId": "5f9a860c-a6f6-42ea-95c2-80649fb06105",
+              "updatedById": null
+            }
+          }
+        ]
+      }
+    ],
+    "total": 19,
+    "page": 1,
+    "limit": 100,
+    "totalPages": 1
+  },
+  "timestamp": "2026-02-21T01:07:28.914Z"
+}

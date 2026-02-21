@@ -16,7 +16,13 @@ test.describe('Incident Management Flow', () => {
     });
 
     test('should create new incident', async ({ page }) => {
+        page.on('dialog', dialog => console.log('DIALOG:', dialog.message()));
+
         await page.goto('/incidents/new');
+
+        // Select System (Required field) - Must do this first because the frontend clears 'title' when system changes!
+        await page.waitForTimeout(1000); // Wait for Systems API to answer
+        await page.locator('select[name="systemId"]').selectOption({ index: 1 });
 
         // Fill in incident form
         await page.fill('input[name="title"]', 'Test Incident - E2E');
@@ -31,15 +37,21 @@ test.describe('Incident Management Flow', () => {
         // Submit form
         await page.click('button[type="submit"]');
 
-        // Should redirect or show success
-        await expect(page.getByText(/created|success/i)).toBeVisible({ timeout: 10000 });
+        // Check for any validation errors
+        const errors = await page.locator('.text-red-500.text-xs').allTextContents();
+        if (errors.length > 0) {
+            console.error('PLAYWRIGHT FOUND VALIDATION ERRORS:', errors);
+        }
+
+        // Should redirect back to the incidents list
+        await expect(page).toHaveURL(/.*\/incidents(\?.*)?$/, { timeout: 10000 });
     });
 
     test('should view incident details', async ({ page }) => {
         await page.goto('/incidents');
 
         // Click on first incident
-        const firstIncident = page.locator('table tbody tr').first();
+        const firstIncident = page.locator('table tbody tr a').first();
         await firstIncident.click();
 
         // Should show incident details

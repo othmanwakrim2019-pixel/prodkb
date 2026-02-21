@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "PlanningPeriod" AS ENUM ('monthly', 'quarterly', 'annual');
 
 -- CreateEnum

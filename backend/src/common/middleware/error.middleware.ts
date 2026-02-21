@@ -5,6 +5,8 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../errors/app.error';
 import { createResponse } from '../types/api.response';
 import { logger } from '../../common/utils/logger';
+import * as Sentry from '@sentry/node';
+import { getRequestContext } from '../utils/request-context';
 
 export const errorHandler = (
     err: Error,
@@ -16,7 +18,7 @@ export const errorHandler = (
     let statusCode = 500;
     let message = 'Internal Server Error';
     let code = 'INTERNAL_ERROR';
-    let details: any = undefined;
+    let details: unknown = undefined;
 
     // AppError (Known operational errors)
     if (err instanceof AppError) {
@@ -60,9 +62,15 @@ export const errorHandler = (
         code = 'TOKEN_EXPIRED';
     }
 
-    // Log unexpected errors
+    // Log unexpected errors and send to Sentry
     if (statusCode === 500) {
         logger.error('Unexpected Error:', err);
+        const ctx = getRequestContext();
+        Sentry.withScope(scope => {
+            if (ctx?.userId) scope.setUser({ id: ctx.userId });
+            if (ctx?.requestId) scope.setTag('request_id', ctx.requestId);
+            Sentry.captureException(err);
+        });
     }
 
     res.status(statusCode).json(createResponse(false, null, message, { code, details }));

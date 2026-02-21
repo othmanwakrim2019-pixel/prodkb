@@ -7,18 +7,9 @@
 
 import { Queue } from 'bullmq';
 import { logger } from '../../common/utils/logger';
+import { parseRedisUrl } from '../../common/utils/redis-url';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-// Parse Redis URL into connection options for BullMQ
-function parseRedisUrl(url: string) {
-    const parsed = new URL(url);
-    return {
-        host: parsed.hostname || 'localhost',
-        port: parseInt(parsed.port || '6379', 10),
-        password: parsed.password || undefined,
-    };
-}
 
 export const SLA_QUEUE_NAME = 'sla-enforcement';
 

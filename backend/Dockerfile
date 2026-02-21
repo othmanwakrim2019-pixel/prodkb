@@ -13,6 +13,8 @@ COPY . .
 
 # Build TypeScript code
 RUN npm run build
+# Copy static assets that tsc doesn't handle
+RUN cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true
 # Compile seed script
 RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --target ES2022 --module commonjs --moduleResolution node --skipLibCheck
 # Generate Prisma Client
@@ -41,7 +43,6 @@ RUN npm ci --only=production && \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/src/openapi.yaml ./dist/src/
 COPY start.sh ./
 
 # Install OpenSSL (required for Prisma on Alpine)

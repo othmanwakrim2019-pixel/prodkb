@@ -11,6 +11,18 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 // inject an Authorization header.
 axios.defaults.withCredentials = true;
 
+// Request interceptor to attach CSRF token
+axios.interceptors.request.use(
+    (config) => {
+        const match = document.cookie.match(/(?:^|; )csrf_token=([^;]+)/);
+        if (match && match[1]) {
+            config.headers['x-csrf-token'] = match[1];
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 // Response interceptor to handle errors and unwrap data
 axios.interceptors.response.use(
     (response) => {

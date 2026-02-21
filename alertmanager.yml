@@ -1,0 +1,15 @@
+route:
+  receiver: 'slack-notifications'
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: 'slack-notifications'
+    # Normally you would configure a slack api_url here:
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
+    #     channel: '#alerts'
+    # For now, we will simply use a mock webhook so Alertmanager boots cleanly
+    webhook_configs:
+      - url: 'http://backend:3000/api/v1/health'

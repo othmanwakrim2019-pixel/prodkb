@@ -1,26 +1,69 @@
 
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
+import Redis from 'ioredis';
+import { logger } from '../utils/logger';
 
-// General API rate limiter - reasonable for production
-export const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // 500 requests per 15 minutes (reasonable for normal usage)
+// ── Redis client for rate limiting (separate from auth cache) ──
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+let redisClient: Redis | null = null;
+
+try {
+    redisClient = new Redis(REDIS_URL, {
+        maxRetriesPerRequest: 1,
+    });
+    redisClient.on('error', (err) => {
+        logger.warn('Rate limiter Redis error', { error: err.message });
+    });
+} catch {
+    logger.warn('Rate limiter Redis init failed — using in-memory store');
+}
+
+/**
+ * Create a rate limiter with Redis store (falls back to in-memory if Redis unavailable)
+ */
+function createLimiter(opts: { windowMs: number; max: number; message: string | object; skipSuccessfulRequests?: boolean; prefix: string }) {
+    const storeOpts = redisClient ? {
+        store: new RedisStore({
+            // @ts-expect-error — type mismatch between ioredis and rate-limit-redis
+            sendCommand: (...args: string[]) => redisClient!.call(...(args as [string, ...string[]])),
+            prefix: `rl:${opts.prefix}:`,
+        }),
+    } : {};
+
+    return rateLimit({
+        windowMs: opts.windowMs,
+        max: opts.max,
+        message: opts.message,
+        standardHeaders: true,
+        legacyHeaders: false,
+        skipSuccessfulRequests: opts.skipSuccessfulRequests,
+        ...storeOpts,
+    });
+}
+
+// General API rate limiter — reasonable for production
+export const apiLimiter = createLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
     message: 'Too many requests from this IP, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
+    prefix: 'api',
 });
 
 // Auth endpoints rate limiter (stricter to prevent brute force)
-export const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Only 10 login attempts per 15 minutes
+export const authLimiter = createLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     message: { error: 'Too many login attempts, please try again later.' },
-    skipSuccessfulRequests: true, // Don't count successful logins
+    skipSuccessfulRequests: true,
+    prefix: 'auth',
 });
 
 // File upload rate limiter
-export const uploadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20, // Limit to 20 file uploads per hour
+export const uploadLimiter = createLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 20,
     message: 'Too many file uploads, please try again later.',
+    prefix: 'upload',
 });
+
