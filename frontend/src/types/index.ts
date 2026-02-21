@@ -93,6 +93,8 @@ export interface Log {
     errorMessage?: string;
     fileName?: string;
     fileSize?: number;
+    filePath?: string;
+    mimeType?: string;
     createdAt: string;
     user?: User; // Legacy or specific log types?
     createdBy?: { id: string; name: string };

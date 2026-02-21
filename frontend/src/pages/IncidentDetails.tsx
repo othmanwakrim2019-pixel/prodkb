@@ -18,7 +18,7 @@ import { IncidentSidebar } from '../components/incidents/IncidentSidebar';
 
 export const IncidentDetails = () => {
     const { id } = useParams();
-    const { canEdit, hasPermission } = useAuth();
+    const { canEdit, hasPermission, user } = useAuth();
     const incident$ = useIncident(id);
     const toast = useToast();
     const { confirm } = useConfirm();
@@ -80,6 +80,13 @@ export const IncidentDetails = () => {
         const ok = await incident$.unlinkProcedure();
         if (ok) toast.success('Procedure unlinked');
         else toast.error(incident$.error || 'Failed to unlink');
+    };
+
+    const handleDeleteFile = async (fileName: string): Promise<boolean> => {
+        const ok = await incident$.deleteFile(fileName);
+        if (ok) toast.success('File deleted');
+        else toast.error(incident$.error || 'Failed to delete file');
+        return ok;
     };
 
     // ── Loading / Error / Not Found ──
@@ -172,7 +179,13 @@ export const IncidentDetails = () => {
                                         </div>
                                     )}
                                 </div>
-                                <IncidentLogTimeline logs={incident.logs || []} onDownloadFile={incident$.downloadFile} />
+                                <IncidentLogTimeline
+                                    logs={incident.logs || []}
+                                    incidentId={incident.id}
+                                    currentUserId={user?.id}
+                                    onDownloadFile={incident$.downloadFile}
+                                    onDeleteFile={canEdit() ? handleDeleteFile : undefined}
+                                />
                             </div>
                         </div>
                     </div>

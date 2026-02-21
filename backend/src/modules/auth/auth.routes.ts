@@ -4,6 +4,7 @@ import { AuthController, ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, COOKIE_OPTIO
 import { authenticate, authorize, invalidateAuthCache, AuthRequest } from '../../common/middleware/auth.middleware';
 import { refreshTokenService } from './refresh-token.service';
 import { createResponse } from '../../common/types/api.response';
+import { generateCsrfToken, setCsrfCookie, clearCsrfCookie } from '../../common/middleware/csrf.middleware';
 
 const router = Router();
 
@@ -36,6 +37,10 @@ router.post('/refresh', async (req: Request, res: Response, next: NextFunction) 
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         });
 
+        // Rotate CSRF token too
+        const csrfToken = generateCsrfToken();
+        setCsrfCookie(res, csrfToken);
+
         res.json(createResponse(true, null, 'Token refreshed'));
     } catch (error) { next(error); }
 });
@@ -57,6 +62,7 @@ router.post('/logout', authenticate, async (req: AuthRequest, res: Response, nex
         // Clear both cookies
         res.clearCookie(ACCESS_TOKEN_COOKIE, { ...COOKIE_OPTIONS });
         res.clearCookie(REFRESH_TOKEN_COOKIE, { ...COOKIE_OPTIONS });
+        clearCsrfCookie(res);
 
         res.json(createResponse(true, null, 'Logged out successfully'));
     } catch (error) { next(error); }

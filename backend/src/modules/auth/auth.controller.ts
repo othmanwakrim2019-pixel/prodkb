@@ -7,21 +7,9 @@ import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { logger } from '../../common/utils/logger';
 import { createResponse } from '../../common/types/api.response';
 import { ValidationError } from '../../common/errors/app.error';
+import { generateCsrfToken, setCsrfCookie } from '../../common/middleware/csrf.middleware';
 
-const registerSchema = z.object({
-    name: z.string().min(2).max(100),
-    email: z.string().email(),
-    password: z.string().min(6).max(100),
-    role: z.string().optional(),
-    teamId: z.string().uuid().optional(),
-    teamRole: z.string().optional(),
-    isActive: z.boolean().optional(),
-});
-
-const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(1),
-});
+import { registerSchema, loginSchema } from './auth.schema';
 
 // ── Cookie configuration ──
 const isProduction = process.env.NODE_ENV === 'production';
@@ -67,6 +55,10 @@ export class AuthController {
                 ...COOKIE_OPTIONS,
                 maxAge: REFRESH_TOKEN_MAX_AGE,
             });
+
+            // Set CSRF token (JS-readable cookie for double-submit pattern)
+            const csrfToken = generateCsrfToken();
+            setCsrfCookie(res, csrfToken);
 
             // Return user info (but NOT the tokens — they're in cookies now)
             res.json(createResponse(true, {

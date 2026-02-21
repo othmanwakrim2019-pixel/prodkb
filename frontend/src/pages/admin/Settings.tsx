@@ -83,7 +83,7 @@ export const Settings = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error("Test email failed", error);
-            const errorMsg = error.response?.data?.error || 'Failed to send test email. Check server logs.';
+            const errorMsg = error.response?.data?.message || 'Failed to send test email. Check server logs.';
             setMessage({ type: 'error', text: errorMsg });
         } finally {
             setTesting(false);

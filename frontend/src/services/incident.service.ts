@@ -78,4 +78,11 @@ export const incidentService = {
 
     search: (query: string): Promise<{ procedures: unknown[]; incidents: Incident[] }> =>
         api.get('/api/v1/search', { params: { query } }).then(r => r.data),
+
+    /** Returns the URL for inline file preview (Content-Disposition: inline) */
+    getFilePreviewUrl: (id: string, fileName: string): string =>
+        `/api/v1/incidents/${id}/files/${fileName}/preview`,
+
+    deleteFile: (id: string, fileName: string): Promise<void> =>
+        api.delete(`/api/v1/incidents/${id}/files/${fileName}`),
 };

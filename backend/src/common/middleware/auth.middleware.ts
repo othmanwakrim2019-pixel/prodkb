@@ -113,7 +113,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         }
 
         const roleName = user.role?.name || 'VIEWER';
-        const permissions = user.role?.permissions.map((p: any) => p.code) || [];
+        const permissions = user.role?.permissions.map(p => p.code) || [];
         const teamIds = user.teamMemberships.map((t: any) => t.teamId);
 
         // ── Store in Redis cache ──

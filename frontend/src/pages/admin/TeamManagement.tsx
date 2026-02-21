@@ -108,7 +108,7 @@ export const TeamManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to add member');
+            alert(error.response?.data?.message || 'Failed to add member');
         }
     };
 
@@ -121,7 +121,7 @@ export const TeamManagement = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.error || 'Failed to remove member');
+            alert(error.response?.data?.message || 'Failed to remove member');
         }
     };
 

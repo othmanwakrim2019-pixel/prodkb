@@ -17,6 +17,7 @@ export interface UseIncidentReturn {
     addLog: (logType: string, content: string) => Promise<boolean>;
     uploadFile: (file: File) => Promise<boolean>;
     downloadFile: (fileName: string) => Promise<void>;
+    deleteFile: (fileName: string) => Promise<boolean>;
     unlinkProcedure: () => Promise<boolean>;
 }
 
@@ -41,7 +42,7 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
                 setError(null);
             }
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || (err instanceof Error ? err.message : 'Failed to fetch incident');
             if (mountedRef.current) setError(msg);
         } finally {
@@ -52,7 +53,7 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
     useEffect(() => { refresh(); }, [refresh]);
 
     const handleError = (err: unknown, fallback: string): string => {
-        return (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        return (err as { response?: { data?: { message?: string } } })?.response?.data?.message
             || (err instanceof Error ? err.message : fallback);
     };
 
@@ -135,6 +136,18 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
         }
     }, [id]);
 
+    const deleteFile = useCallback(async (fileName: string): Promise<boolean> => {
+        if (!id) return false;
+        try {
+            await incidentService.deleteFile(id, fileName);
+            await refresh();
+            return true;
+        } catch (err) {
+            setError(handleError(err, 'Failed to delete file'));
+            return false;
+        }
+    }, [id, refresh]);
+
     const unlinkProcedure = useCallback(async (): Promise<boolean> => {
         if (!id) return false;
         try {
@@ -150,6 +163,6 @@ export function useIncident(id: string | undefined): UseIncidentReturn {
     return {
         incident, loading, error, refresh,
         updateStatus, update, acknowledge,
-        addLog, uploadFile, downloadFile, unlinkProcedure,
+        addLog, uploadFile, downloadFile, deleteFile, unlinkProcedure,
     };
 }

@@ -43,7 +43,7 @@ export function useIncidents(params?: IncidentQueryParams): UseIncidentsReturn {
                 setError(null);
             }
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || 'Failed to fetch incidents';
             if (mountedRef.current) setError(msg);
         } finally {

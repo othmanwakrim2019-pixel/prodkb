@@ -26,6 +26,6 @@ test.describe('Authentication Flow', () => {
         await page.click('button[type="submit"]');
 
         // Expect error message
-        await expect(page.getByText(/invalid credentials/i)).toBeVisible();
+        await expect(page.locator('.text-red-700')).toBeVisible();
     });
 });

@@ -36,9 +36,31 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_FORCE_PATH_STYLE: z.string().optional().default('false').transform(val => val === 'true'),
+
+  // ── Sentry (APM) ──
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional().default('development'),
 });
 
 export const env = envSchema.parse(process.env);
+
+// ── Production safety checks ──
+// Crash early if production is running with placeholder secrets
+if (env.NODE_ENV === 'production') {
+  const DANGEROUS_KEYWORDS = ['change', 'secret', 'default', 'placeholder', 'example', 'dummy', 'test'];
+  const jwtLower = env.JWT_SECRET.toLowerCase();
+  const hasDangerousKeyword = DANGEROUS_KEYWORDS.some(kw => jwtLower.includes(kw));
+  if (hasDangerousKeyword) {
+    console.error('\n🚨 FATAL: JWT_SECRET contains a placeholder/default keyword.');
+    console.error('   Generate a secure secret: openssl rand -base64 64');
+    console.error('   Current value looks like a development placeholder.\n');
+    process.exit(1);
+  }
+  if (env.JWT_SECRET.length < 32) {
+    console.error('\n🚨 FATAL: JWT_SECRET must be at least 32 characters in production.\n');
+    process.exit(1);
+  }
+}
 
 // Export the inferred type for use elsewhere
 export type Env = z.infer<typeof envSchema>;

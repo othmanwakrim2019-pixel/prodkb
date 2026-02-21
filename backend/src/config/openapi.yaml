@@ -1,0 +1,897 @@
+openapi: 3.0.0
+info:
+  title: ProdKB API
+  version: 1.0.0
+  description: |
+    ProdKB — Production Knowledge Base & Incident Management System.
+    All endpoints (except login) require cookie-based JWT authentication and a valid `x-csrf-token` header.
+  contact:
+    name: ProdKB Team
+
+servers:
+  - url: http://localhost:3000
+    description: Local development (direct backend)
+  - url: http://localhost:5173
+    description: Local development (via Vite proxy)
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+    csrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error: { type: string }
+        message: { type: string }
+
+    Pagination:
+      type: object
+      properties:
+        data: { type: array, items: {} }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN, USER, VIEWER] }
+        teamId: { type: string, format: uuid, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    Incident:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED] }
+        severity: { type: string, enum: [Low, Medium, High, Critical] }
+        environment: { type: string, enum: [PROD, PREPROD, RECETTE] }
+        systemId: { type: string, format: uuid, nullable: true }
+        assignedTeamId: { type: string, format: uuid, nullable: true }
+        createdById: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    System:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        teamId: { type: string, format: uuid, nullable: true }
+        jobs: { type: array, items: { $ref: '#/components/schemas/Job' } }
+
+    Job:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        code: { type: string }
+        systemId: { type: string, format: uuid }
+        teamId: { type: string, format: uuid, nullable: true }
+
+    Team:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        members: { type: array, items: { $ref: '#/components/schemas/User' } }
+
+    SLA:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        severity: { type: string, enum: [Low, Medium, High, Critical] }
+        responseTimeMinutes: { type: integer }
+        resolveTimeMinutes: { type: integer }
+
+    Procedure:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        resolutionSteps: { type: string }
+        systemId: { type: string, format: uuid, nullable: true }
+        errorCode: { type: string, nullable: true }
+        tags: { type: array, items: { type: string } }
+
+    Webhook:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        url: { type: string, format: uri }
+        events: { type: array, items: { type: string } }
+        enabled: { type: boolean }
+        secret: { type: string, nullable: true }
+
+    Role:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        permissions: { type: array, items: { type: string } }
+
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        action: { type: string }
+        entity: { type: string }
+        entityId: { type: string }
+        details: { type: object }
+        createdAt: { type: string, format: date-time }
+
+security:
+  - cookieAuth: []
+    csrfToken: []
+
+paths:
+
+  # ─── Health ───────────────────────────────────────────────────────────────
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        200:
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  uptime: { type: number }
+                  components:
+                    type: object
+                    properties:
+                      database: { type: string }
+                      redis: { type: string }
+                      slaWorker: { type: string }
+
+  /metrics:
+    get:
+      tags: [Observability]
+      summary: Prometheus metrics endpoint
+      security: []
+      responses:
+        200:
+          description: Prometheus text format metrics
+
+  # ─── Auth ─────────────────────────────────────────────────────────────────
+  /auth/v1/login:
+    post:
+      tags: [Authentication]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: admin@prodkb.com }
+                password: { type: string, format: password, example: password123 }
+      responses:
+        200:
+          description: Login successful — sets access_token + csrf_token cookies
+        401:
+          description: Invalid credentials
+
+  /auth/v1/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout — clears auth cookies
+      responses:
+        200:
+          description: Logged out
+
+  /auth/v1/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token using refresh_token cookie
+      security: []
+      responses:
+        200:
+          description: Token refreshed
+        401:
+          description: Refresh token expired or invalid
+
+  /auth/v1/me:
+    get:
+      tags: [Authentication]
+      summary: Get current authenticated user profile
+      responses:
+        200:
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /auth/v1/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password for the current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 8 }
+      responses:
+        200:
+          description: Password changed
+        400:
+          description: Validation error
+
+  # ─── Incidents ────────────────────────────────────────────────────────────
+  /api/v1/incidents:
+    get:
+      tags: [Incidents]
+      summary: List incidents (paginated, filterable)
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: severity, in: query, schema: { type: string } }
+        - { name: systemId, in: query, schema: { type: string } }
+        - { name: teamId, in: query, schema: { type: string } }
+      responses:
+        200:
+          description: Paginated incidents
+    post:
+      tags: [Incidents]
+      summary: Create a new incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, severity, environment]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                severity: { type: string, enum: [Low, Medium, High, Critical] }
+                environment: { type: string, enum: [PROD, PREPROD, RECETTE] }
+                impact: { type: string }
+                detectionSource: { type: string }
+                systemId: { type: string, format: uuid }
+                jobId: { type: string, format: uuid }
+                assignedTeamId: { type: string, format: uuid }
+                slaId: { type: string, format: uuid }
+      responses:
+        201:
+          description: Incident created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Incident' }
+
+  /api/v1/incidents/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Incidents]
+      summary: Get incident by ID
+      responses:
+        200:
+          description: Incident detail
+        404:
+          description: Not found
+    put:
+      tags: [Incidents]
+      summary: Update an incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED] }
+                severity: { type: string, enum: [Low, Medium, High, Critical] }
+      responses:
+        200:
+          description: Incident updated
+    delete:
+      tags: [Incidents]
+      summary: Delete an incident
+      responses:
+        200:
+          description: Incident deleted
+        403:
+          description: Forbidden
+
+  /api/v1/incidents/{id}/upload:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Incidents]
+      summary: Upload a file attachment to an incident
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        201:
+          description: File uploaded
+
+  /api/v1/incidents/{id}/files/{fileId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: fileId, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [Incidents]
+      summary: Delete a file attachment
+      responses:
+        200:
+          description: File deleted
+
+  /api/v1/incidents/{id}/logs:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Incidents]
+      summary: Add a log entry (note/comment) to an incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [logType, rawLog]
+              properties:
+                logType: { type: string, enum: [raw_log, resolution_note, escalation_note] }
+                rawLog: { type: string }
+                errorMessage: { type: string }
+      responses:
+        201:
+          description: Log entry added
+
+  # ─── Systems ──────────────────────────────────────────────────────────────
+  /api/v1/systems:
+    get:
+      tags: [Systems]
+      summary: List all systems (paginated)
+      parameters:
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        200:
+          description: Paginated systems
+    post:
+      tags: [Systems]
+      summary: Create a system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                teamId: { type: string, format: uuid }
+      responses:
+        201:
+          description: System created
+
+  /api/v1/systems/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Systems]
+      summary: Update a system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                teamId: { type: string, format: uuid }
+      responses:
+        200:
+          description: System updated
+    delete:
+      tags: [Systems]
+      summary: Delete a system
+      responses:
+        200:
+          description: System deleted
+
+  # ─── Teams ────────────────────────────────────────────────────────────────
+  /api/v1/teams:
+    get:
+      tags: [Teams]
+      summary: List all teams
+      responses:
+        200:
+          description: Teams list
+    post:
+      tags: [Teams]
+      summary: Create a team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        201:
+          description: Team created
+
+  /api/v1/teams/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Teams]
+      summary: Update a team
+      responses:
+        200:
+          description: Team updated
+    delete:
+      tags: [Teams]
+      summary: Delete a team
+      responses:
+        200:
+          description: Team deleted
+
+  /api/v1/teams/{id}/members:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Teams]
+      summary: Add a member to a team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        200:
+          description: Member added
+
+  /api/v1/teams/{id}/members/{userId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [Teams]
+      summary: Remove a member from a team
+      responses:
+        200:
+          description: Member removed
+
+  # ─── Users ────────────────────────────────────────────────────────────────
+  /api/v1/users:
+    get:
+      tags: [Users]
+      summary: List all users (admin only)
+      responses:
+        200:
+          description: Users list
+    post:
+      tags: [Users]
+      summary: Create a user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                role: { type: string, enum: [ADMIN, USER, VIEWER] }
+                teamId: { type: string, format: uuid }
+      responses:
+        201:
+          description: User created
+
+  /api/v1/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Users]
+      summary: Update a user
+      responses:
+        200:
+          description: User updated
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      responses:
+        200:
+          description: User deleted
+
+  # ─── Roles ────────────────────────────────────────────────────────────────
+  /api/v1/roles:
+    get:
+      tags: [Roles]
+      summary: List all roles and their permissions
+      responses:
+        200:
+          description: Roles list
+
+  /api/v1/users/{id}/role:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Roles]
+      summary: Assign a role to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [ADMIN, USER, VIEWER] }
+      responses:
+        200:
+          description: Role assigned
+
+  # ─── SLAs ─────────────────────────────────────────────────────────────────
+  /api/v1/slas:
+    get:
+      tags: [SLAs]
+      summary: List all SLA policies
+      responses:
+        200:
+          description: SLA list
+    post:
+      tags: [SLAs]
+      summary: Create an SLA policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, severity, responseTimeMinutes, resolveTimeMinutes]
+              properties:
+                name: { type: string }
+                severity: { type: string, enum: [Low, Medium, High, Critical] }
+                responseTimeMinutes: { type: integer }
+                resolveTimeMinutes: { type: integer }
+      responses:
+        201:
+          description: SLA created
+
+  /api/v1/slas/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [SLAs]
+      summary: Update an SLA policy
+      responses:
+        200:
+          description: SLA updated
+    delete:
+      tags: [SLAs]
+      summary: Delete an SLA policy
+      responses:
+        200:
+          description: SLA deleted
+
+  # ─── Procedures ───────────────────────────────────────────────────────────
+  /api/v1/procedures:
+    get:
+      tags: [Procedures]
+      summary: List all procedures (knowledge base)
+      parameters:
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: systemId, in: query, schema: { type: string } }
+      responses:
+        200:
+          description: Paginated procedures
+    post:
+      tags: [Procedures]
+      summary: Create a procedure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, resolutionSteps]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                resolutionSteps: { type: string }
+                systemId: { type: string, format: uuid }
+                errorCode: { type: string }
+                tags: { type: array, items: { type: string } }
+                rootCause: { type: string }
+                workaround: { type: string }
+                commands: { type: string }
+      responses:
+        201:
+          description: Procedure created
+
+  /api/v1/procedures/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Procedures]
+      summary: Get a procedure by ID
+      responses:
+        200:
+          description: Procedure detail
+    put:
+      tags: [Procedures]
+      summary: Update a procedure
+      responses:
+        200:
+          description: Procedure updated
+    delete:
+      tags: [Procedures]
+      summary: Delete a procedure
+      responses:
+        200:
+          description: Procedure deleted
+
+  # ─── Search ───────────────────────────────────────────────────────────────
+  /api/v1/search:
+    get:
+      tags: [Search]
+      summary: Full-text search across incidents and procedures
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string, enum: [incidents, procedures, all] } }
+      responses:
+        200:
+          description: Search results
+
+  # ─── Webhooks ─────────────────────────────────────────────────────────────
+  /api/v1/webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List all webhooks
+      responses:
+        200:
+          description: Webhooks list
+    post:
+      tags: [Webhooks]
+      summary: Create a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url, events]
+              properties:
+                name: { type: string }
+                url: { type: string, format: uri }
+                events: { type: array, items: { type: string } }
+                secret: { type: string }
+                enabled: { type: boolean, default: true }
+      responses:
+        201:
+          description: Webhook created
+
+  /api/v1/webhooks/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Webhooks]
+      summary: Update a webhook
+      responses:
+        200:
+          description: Webhook updated
+    delete:
+      tags: [Webhooks]
+      summary: Delete a webhook
+      responses:
+        200:
+          description: Webhook deleted
+
+  /api/v1/webhooks/{id}/test:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Webhooks]
+      summary: Send a test payload to the webhook URL
+      responses:
+        200:
+          description: Test sent
+
+  # ─── Escalation ───────────────────────────────────────────────────────────
+  /api/v1/escalation:
+    get:
+      tags: [Escalation]
+      summary: List all escalation policies
+      responses:
+        200:
+          description: Escalation policies
+
+  /api/v1/escalation/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Escalation]
+      summary: Update an escalation policy
+      responses:
+        200:
+          description: Updated
+
+  # ─── Auto-Assign ──────────────────────────────────────────────────────────
+  /api/v1/auto-assign:
+    get:
+      tags: [Auto-Assign]
+      summary: List auto-assignment rules
+      responses:
+        200:
+          description: Rules list
+    post:
+      tags: [Auto-Assign]
+      summary: Create an auto-assignment rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                systemId: { type: string, format: uuid }
+                teamId: { type: string, format: uuid }
+                severity: { type: string }
+      responses:
+        201:
+          description: Rule created
+
+  # ─── Email Templates ──────────────────────────────────────────────────────
+  /api/v1/email-templates:
+    get:
+      tags: [Email Templates]
+      summary: List all email notification templates
+      responses:
+        200:
+          description: Templates list
+
+  /api/v1/email-templates/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Email Templates]
+      summary: Update an email template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                body: { type: string }
+                cc: { type: array, items: { type: string, format: email } }
+                enabled: { type: boolean }
+      responses:
+        200:
+          description: Template updated
+
+  # ─── Audit Logs ───────────────────────────────────────────────────────────
+  /api/v1/audit:
+    get:
+      tags: [Audit]
+      summary: List audit logs (admin only)
+      parameters:
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: entity, in: query, schema: { type: string } }
+      responses:
+        200:
+          description: Paginated audit logs
+
+  # ─── Analytics ────────────────────────────────────────────────────────────
+  /api/v1/analytics/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Get dashboard summary statistics
+      parameters:
+        - { name: period, in: query, schema: { type: string, enum: [today, 7d, 30d] } }
+        - { name: systemId, in: query, schema: { type: string } }
+        - { name: teamId, in: query, schema: { type: string } }
+      responses:
+        200:
+          description: Dashboard stats
+
+  /api/v1/analytics/incidents:
+    get:
+      tags: [Analytics]
+      summary: Get incident trend analytics
+      responses:
+        200:
+          description: Incident analytics
+
+  # ─── Planning ─────────────────────────────────────────────────────────────
+  /api/v1/planning:
+    get:
+      tags: [Planning]
+      summary: List planning/maintenance jobs
+      responses:
+        200:
+          description: Planning list
+    post:
+      tags: [Planning]
+      summary: Create a planning job
+      responses:
+        201:
+          description: Planning job created
+
+  /api/v1/planning/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Planning]
+      summary: Get a planning job
+      responses:
+        200:
+          description: Planning job
+    put:
+      tags: [Planning]
+      summary: Update a planning job
+      responses:
+        200:
+          description: Updated
+    delete:
+      tags: [Planning]
+      summary: Delete a planning job
+      responses:
+        200:
+          description: Deleted

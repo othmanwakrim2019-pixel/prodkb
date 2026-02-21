@@ -59,14 +59,21 @@ function getS3Client(): S3Client {
 const useS3 = !!env.S3_BUCKET;
 
 export class FileUploadService {
-    private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private readonly ALLOWED_EXTENSIONS = ['.log', '.txt', '.png', '.jpg', '.jpeg', '.pdf'];
+    private readonly MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB (aligned with multer)
+    private readonly ALLOWED_EXTENSIONS = [
+        '.log', '.txt', '.csv', '.html', '.json', '.xml',
+        '.png', '.jpg', '.jpeg', '.gif', '.webp',
+        '.pdf', '.zip', '.gz',
+        '.xlsx', '.docx',
+    ];
     private readonly ALLOWED_MIME_TYPES = [
-        'text/plain',
-        'text/x-log',
-        'image/png',
-        'image/jpeg',
+        'text/plain', 'text/csv', 'text/html', 'text/x-log',
+        'application/json', 'application/xml',
         'application/pdf',
+        'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+        'application/zip', 'application/gzip',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     private readonly UPLOAD_BASE_DIR = path.join(process.cwd(), 'uploads');
 
@@ -113,6 +120,44 @@ export class FileUploadService {
         return { valid: true };
     }
 
+    /**
+     * Validate file content by checking magic bytes (binary signature).
+     * Catches spoofed Content-Type headers — e.g., executable uploaded as image/png.
+     */
+    async validateMagicBytes(buffer: Buffer, claimedMimeType: string): Promise<FileValidationResult> {
+        // file-type v16 is CommonJS compatible
+        const FileType = await import('file-type');
+        const detected = await FileType.fromBuffer(buffer);
+
+        // Text files don't have magic bytes — skip check for text types
+        const textTypes = ['text/plain', 'text/csv', 'text/html', 'text/x-log', 'application/json', 'application/xml'];
+        if (textTypes.includes(claimedMimeType)) {
+            return { valid: true };
+        }
+
+        if (!detected) {
+            // file-type couldn't detect — could be text or unknown binary
+            logger.warn('Magic byte detection returned no result', { claimedMimeType });
+            return { valid: true }; // Allow — extension/MIME already validated
+        }
+
+        // Check that detected MIME matches the claimed MIME
+        if (detected.mime !== claimedMimeType) {
+            // Allow close matches (e.g., image/jpeg vs image/jpg)
+            const isCloseMatch =
+                (detected.mime === 'application/x-cfb' && claimedMimeType.includes('officedocument')) || // Office files
+                (detected.mime === 'application/zip' && claimedMimeType.includes('officedocument')); // .xlsx/.docx are zip
+            if (!isCloseMatch) {
+                return {
+                    valid: false,
+                    error: `File content does not match claimed type. Claimed: ${claimedMimeType}, Detected: ${detected.mime}`,
+                };
+            }
+        }
+
+        return { valid: true };
+    }
+
     sanitizeFilename(filename: string): string {
         let sanitized = path.basename(filename);
         sanitized = sanitized.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -131,6 +176,12 @@ export class FileUploadService {
         const validation = this.validateFile(originalFilename, fileBuffer.length, mimeType);
         if (!validation.valid) {
             throw new Error(validation.error);
+        }
+
+        // Validate magic bytes — catch spoofed Content-Type headers
+        const magicValidation = await this.validateMagicBytes(fileBuffer, mimeType);
+        if (!magicValidation.valid) {
+            throw new Error(magicValidation.error);
         }
 
         const sanitizedOriginal = this.sanitizeFilename(originalFilename);
