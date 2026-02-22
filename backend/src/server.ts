@@ -213,112 +213,118 @@ const PORT = env.PORT || 3000;
 export { app };
 
 if (require.main === module) {
-    if (cluster.isPrimary) {
-        const numCPUs = os.cpus().length;
-        logger.info(`Primary process ${process.pid} is running`);
-        logger.info(`Starting cluster with ${numCPUs} workers...`);
+    if (require.main === module) {
+        if (cluster.isPrimary) {
+            // Railway servers can have 48+ virtual CPUs, which causes OOM (Out Of Memory)
+            // limits if we spawn a node process for each one. 
+            // We limit it to WEB_CONCURRENCY env var, or max 2 workers by default for safety.
+            const defaultWorkers = Math.min(os.cpus().length, 2);
+            const numCPUs = process.env.WEB_CONCURRENCY ? parseInt(process.env.WEB_CONCURRENCY, 10) : defaultWorkers;
 
-        // Start Prometheus Aggregator Registry on the primary process
-        // This combines metrics from all clustered workers into a single /metrics endpoint
-        const { client } = require('./common/middleware/metrics.middleware');
-        const aggregatorRegistry = new client.AggregatorRegistry();
+            logger.info(`Primary process ${process.pid} is running`);
+            logger.info(`Starting cluster with ${numCPUs} workers (Total CPUs available: ${os.cpus().length})...`);
 
-        const metricsApp = require('express')();
-        metricsApp.get('/metrics', async (_req: any, res: any) => {
-            try {
-                const metrics = await aggregatorRegistry.clusterMetrics();
-                res.set('Content-Type', aggregatorRegistry.contentType);
-                res.send(metrics);
-            } catch (ex: any) {
-                logger.error(`Error generating cluster metrics: ${ex.message}`, { stack: ex.stack });
-                res.status(500).send('Internal Server Error');
-            }
-        });
+            // Start Prometheus Aggregator Registry on the primary process
+            // This combines metrics from all clustered workers into a single /metrics endpoint
+            const { client } = require('./common/middleware/metrics.middleware');
+            const aggregatorRegistry = new client.AggregatorRegistry();
 
-        const METRICS_PORT = 3002;
-        metricsApp.listen(METRICS_PORT, () => {
-            logger.info(`Primary metrics aggregator listening on port ${METRICS_PORT}`);
-        });
-
-        // Register SLA enforcement repeatable job (runs only once via primary)
-        registerSLARepeatable().catch(err =>
-            logger.error('Failed to register SLA repeatable job', { error: err.message })
-        );
-
-        // Fork workers
-        for (let i = 0; i < numCPUs; i++) {
-            cluster.fork();
-        }
-
-        cluster.on('exit', (worker, code, signal) => {
-            logger.warn(`Worker ${worker.process.pid} died with code ${code} and signal ${signal}`);
-            logger.info('Starting a new worker...');
-            cluster.fork();
-        });
-
-        // Graceful shutdown array for primary
-        const shutdownPrimary = async (signal: string) => {
-            logger.info(`Primary received ${signal}. Shutting down all workers...`);
-            for (const id in cluster.workers) {
-                cluster.workers[id]?.kill(signal);
-            }
-            // Primary awaits workers dying then closes queues
-            await slaQueue.close();
-            await webhookQueue.close();
-            await prisma.$disconnect();
-            await redis.quit();
-            logger.info('Primary shutdown complete');
-            process.exit(0);
-        };
-
-        process.on('SIGTERM', () => shutdownPrimary('SIGTERM'));
-        process.on('SIGINT', () => shutdownPrimary('SIGINT'));
-
-    } else {
-        // Worker Process needs to import metrics so it hooks into cluster events
-        const { client } = require('./common/middleware/metrics.middleware');
-        // HUGE GOTCHA: prom-client only registers the worker IPC listener INSIDE the AggregatorRegistry constructor.
-        // Therefore, we MUST instantiate it once in the worker process too, even if we don't use it here.
-        new client.AggregatorRegistry();
-
-        const server = app.listen(PORT, () => {
-            logger.info(`Worker ${process.pid} started ProdKB server on port ${PORT}`);
-            if (cluster.worker?.id === 1) { // Log these only once
-                logger.info(` Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
-                logger.info(' Rate limiting: Enabled');
-                logger.info(' API version: v1 (with backward compat)');
-            }
-
-            // Start active users metric collection (worker 1 only to prevent duplicates)
-            if (cluster.worker?.id === 1) {
-                startMetricsInterval();
-            }
-        });
-
-        // Graceful shutdown array for worker
-        const shutdownWorker = async (signal: string) => {
-            logger.info(`Worker ${process.pid} received ${signal}. Shutting down gracefully...`);
-            server.close(async () => {
-                logger.info(`Worker ${process.pid} HTTP server closed`);
-                await prisma.$disconnect();
-
-                if (cluster.worker?.id === 1) {
-                    stopMetricsInterval();
+            const metricsApp = require('express')();
+            metricsApp.get('/metrics', async (_req: any, res: any) => {
+                try {
+                    const metrics = await aggregatorRegistry.clusterMetrics();
+                    res.set('Content-Type', aggregatorRegistry.contentType);
+                    res.send(metrics);
+                } catch (ex: any) {
+                    logger.error(`Error generating cluster metrics: ${ex.message}`, { stack: ex.stack });
+                    res.status(500).send('Internal Server Error');
                 }
-
-                await redis.quit();
-                logger.info(`Worker ${process.pid} disconnected`);
-                process.exit(0);
             });
 
-            // Force exit after 10 seconds if graceful shutdown fails
-            setTimeout(() => {
-                logger.error(`Worker ${process.pid} forced shutdown after timeout`);
-                process.exit(1);
-            }, 10000);
-        };
+            const METRICS_PORT = 3002;
+            metricsApp.listen(METRICS_PORT, () => {
+                logger.info(`Primary metrics aggregator listening on port ${METRICS_PORT}`);
+            });
 
-        process.on('SIGTERM', () => shutdownWorker('SIGTERM'));
-        process.on('SIGINT', () => shutdownWorker('SIGINT'));
+            // Register SLA enforcement repeatable job (runs only once via primary)
+            registerSLARepeatable().catch(err =>
+                logger.error('Failed to register SLA repeatable job', { error: err.message })
+            );
+
+            // Fork workers
+            for (let i = 0; i < numCPUs; i++) {
+                cluster.fork();
+            }
+
+            cluster.on('exit', (worker, code, signal) => {
+                logger.warn(`Worker ${worker.process.pid} died with code ${code} and signal ${signal}`);
+                logger.info('Starting a new worker...');
+                cluster.fork();
+            });
+
+            // Graceful shutdown array for primary
+            const shutdownPrimary = async (signal: string) => {
+                logger.info(`Primary received ${signal}. Shutting down all workers...`);
+                for (const id in cluster.workers) {
+                    cluster.workers[id]?.kill(signal);
+                }
+                // Primary awaits workers dying then closes queues
+                await slaQueue.close();
+                await webhookQueue.close();
+                await prisma.$disconnect();
+                await redis.quit();
+                logger.info('Primary shutdown complete');
+                process.exit(0);
+            };
+
+            process.on('SIGTERM', () => shutdownPrimary('SIGTERM'));
+            process.on('SIGINT', () => shutdownPrimary('SIGINT'));
+
+        } else {
+            // Worker Process needs to import metrics so it hooks into cluster events
+            const { client } = require('./common/middleware/metrics.middleware');
+            // HUGE GOTCHA: prom-client only registers the worker IPC listener INSIDE the AggregatorRegistry constructor.
+            // Therefore, we MUST instantiate it once in the worker process too, even if we don't use it here.
+            new client.AggregatorRegistry();
+
+            const server = app.listen(PORT, () => {
+                logger.info(`Worker ${process.pid} started ProdKB server on port ${PORT}`);
+                if (cluster.worker?.id === 1) { // Log these only once
+                    logger.info(` Email notifications: ${process.env.SMTP_HOST ? 'Enabled' : 'Disabled'}`);
+                    logger.info(' Rate limiting: Enabled');
+                    logger.info(' API version: v1 (with backward compat)');
+                }
+
+                // Start active users metric collection (worker 1 only to prevent duplicates)
+                if (cluster.worker?.id === 1) {
+                    startMetricsInterval();
+                }
+            });
+
+            // Graceful shutdown array for worker
+            const shutdownWorker = async (signal: string) => {
+                logger.info(`Worker ${process.pid} received ${signal}. Shutting down gracefully...`);
+                server.close(async () => {
+                    logger.info(`Worker ${process.pid} HTTP server closed`);
+                    await prisma.$disconnect();
+
+                    if (cluster.worker?.id === 1) {
+                        stopMetricsInterval();
+                    }
+
+                    await redis.quit();
+                    logger.info(`Worker ${process.pid} disconnected`);
+                    process.exit(0);
+                });
+
+                // Force exit after 10 seconds if graceful shutdown fails
+                setTimeout(() => {
+                    logger.error(`Worker ${process.pid} forced shutdown after timeout`);
+                    process.exit(1);
+                }, 10000);
+            };
+
+            process.on('SIGTERM', () => shutdownWorker('SIGTERM'));
+            process.on('SIGINT', () => shutdownWorker('SIGINT'));
+        }
     }
-}
