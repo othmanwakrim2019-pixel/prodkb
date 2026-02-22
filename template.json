@@ -4,6 +4,7 @@
     "description": "Full-stack Knowledge Base for Incident and SLA Management",
     "services": {
         "backend": {
+            "builder": "DOCKERFILE",
             "source": {
                 "directory": "backend"
             },
@@ -15,6 +16,7 @@
             }
         },
         "frontend": {
+            "builder": "DOCKERFILE",
             "source": {
                 "directory": "frontend"
             },
