@@ -1,5 +1,6 @@
 # ProdKB - Production Knowledge Base
-test
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/deploy?remote_url=https://github.com/othmanwakrim2019-pixel/prodkb&branch=dev)
 ProdKB is a comprehensive incident management and knowledge base system designed for IT operations teams. It streamlines the process of tracking production incidents and linking them to standard operating procedures (SOPs) for faster resolution.
 
 ## Project Overview

@@ -1,11 +1,25 @@
 # ProdKB: Railway Deployment Guide
 
-This guide addresses the **`DATABASE_URL resolved to an empty string`** error and provides steps for a successful Railway deployment.
+This guide explains how to deploy ProdKB using the **One-Click** method or manual setup.
 
 ---
 
-## 🛠️ The Fix: Setting the DATABASE_URL
-The error in your logs is because Prisma cannot find the database connection string. In Railway, you must explicitly link your database to your service.
+## 🚀 The One-Click Method (RECOMENDED)
+I have created a **Deploy to Railway** button in the `README.md`. This is the easiest way to deploy the entire stack:
+
+1.  Go to the [README.md](file:///c:/Users/a933556/.gemini/antigravity/scratch/prodkb/README.md) and click the **Deploy on Railway** button.
+2.  Log in to Railway.
+3.  The template will automatically create:
+    - **PostgreSQL Database**
+    - **Redis Cache**
+    - **Backend service** (API & Workers)
+    - **Frontend service**
+4.  It will also automatically link all the variables (no manual typing needed!).
+
+---
+
+## 🛠️ The Manual Fix: Setting the DATABASE_URL
+If you already have a project and don't want to start over, follow these steps:
 
 ### 1. Provision PostgreSQL
 If you haven't already:
