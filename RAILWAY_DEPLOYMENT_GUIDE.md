@@ -88,6 +88,24 @@ Once you click **Save** on your variables, Railway will start a new "Deploy".
    `Starting ProdKB server...`
 3. Then look for **Healthcheck Success**.
 
+### 4. Set the Final Secret (JWT_SECRET)
+If your backend crashes with `JWT_SECRET is required`, you must add it manually to secure your API logins.
+1. Go to your **prodkb-backend** service > **Variables**.
+2. Click **New Variable**.
+3. Name: **`JWT_SECRET`**
+4. Value: Type any long random string (e.g., `my-super-secret-random-key-2026`).
+5. Click **Add**.
+
+### 5. Link the Frontend to the Backend (VITE_API_URL)
+The frontend needs to know where the backend lives!
+1. Go to your **prodkb-backend** service > **Settings** > **Public Networking**.
+2. Click **Generate Domain** (if it doesn't have one). Copy this URL (e.g., `https://prodkb-backend-production...up.railway.app`).
+3. Go to your **prodkb-frontend** service > **Variables**.
+4. Click **New Variable**.
+5. Name: **`VITE_API_URL`**
+6. Value: Paste the backend URL you just copied.
+7. Click **Add**.
+
 ---
 
 ## ⚡ Step 3: Deployment Checklist
