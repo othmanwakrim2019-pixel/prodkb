@@ -7,7 +7,7 @@
     "test:changed": "jest --onlyChanged",
     "test:watch": "jest --watch",
     "dev": "ts-node src/server.ts",
-    "build": "tsc",
+    "build": "npx prisma generate && tsc && cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true",
     "start": "chmod +x ./start.sh && ./start.sh",
     "worker:sla": "tsx src/workers/sla.worker.ts",
     "sla:worker": "tsx src/workers/sla.worker.ts"

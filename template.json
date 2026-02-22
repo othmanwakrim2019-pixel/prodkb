@@ -5,7 +5,6 @@
     "services": {
         "backend": {
             "source": {
-                "repo": "prodkb",
                 "directory": "backend"
             },
             "env": {
@@ -17,7 +16,6 @@
         },
         "frontend": {
             "source": {
-                "repo": "prodkb",
                 "directory": "frontend"
             },
             "env": {
