@@ -18,7 +18,6 @@ fi
 echo "Applying database migrations..."
 if [ -z "$DATABASE_URL" ]; then
     echo "🚨 FATAL ERROR: DATABASE_URL is empty at runtime!"
-    echo "   Ensure you have linked the Postgres service to the Backend in Railway Variables."
     exit 1
 fi
 npx prisma migrate deploy
