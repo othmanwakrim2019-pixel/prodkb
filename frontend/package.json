@@ -11,6 +11,7 @@
         "test:e2e": "playwright test",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
+        "start": "vite preview",
         "preview": "vite preview",
         "api:types": "openapi-typescript ../backend/src/openapi.yaml -o src/types/api.generated.d.ts"
     },

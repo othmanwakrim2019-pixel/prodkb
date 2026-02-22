@@ -8,6 +8,7 @@
     "test:watch": "jest --watch",
     "dev": "ts-node src/server.ts",
     "build": "tsc",
+    "start": "chmod +x ./start.sh && ./start.sh",
     "worker:sla": "tsx src/workers/sla.worker.ts",
     "sla:worker": "tsx src/workers/sla.worker.ts"
   },
