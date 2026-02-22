@@ -28,6 +28,12 @@ If you haven't already:
 
 ---
 
+## Start Command Fix
+4. **Force Init**: If for some reason migrations are stuck, you can add an environment variable `SEED=true` to the backend to force the initial data setup.
+5. **Start Command Verification**: I have added a `"start": "..."` script to the `package.json` files. If Railway asks for a start command, it should now find it automatically.
+
+---
+
 ## 🚫 The Quote Problem (CRITICAL)
 In your Railway Variables list, I see you have quotes around the values:
 `DATABASE_URL="postgresql://..."`
