@@ -1,20 +1,23 @@
-# ProdKB: Railway Deployment Guide
-
-This guide explains how to deploy ProdKB using the **One-Click** method or manual setup.
+4.  It will also automatically link all the variables (no manual typing needed!).
 
 ---
 
-## 🚀 The One-Click Method (RECOMENDED)
-I have created a **Deploy to Railway** button in the `README.md`. This is the easiest way to deploy the entire stack:
+## 🚨 CRITICAL: Fix These Settings in Railway UI
+If you see `npm error Missing script: "dev"`, it is because your Railway settings are overriding the defaults.
 
-1.  Go to the [README.md](file:///c:/Users/a933556/.gemini/antigravity/scratch/prodkb/README.md) and click the **Deploy on Railway** button.
-2.  Log in to Railway.
-3.  The template will automatically create:
-    - **PostgreSQL Database**
-    - **Redis Cache**
-    - **Backend service** (API & Workers)
-    - **Frontend service**
-4.  It will also automatically link all the variables (no manual typing needed!).
+### 1. Clear the "Start Command"
+- Go to your service (e.g., `prodkb-backend`) > **Settings** > **Deploy**.
+- Empty the **Start Command** box (it should be blank) OR set it to **`npm start`**.
+- **DO NOT** use `npm run dev`.
+
+### 2. Fix the "Railway Config File"
+- Go to **Settings** > **Config-as-code**.
+- Ensure the **Railway config file path** is **EMPTY** or set to:
+  - Backend: `backend/railway.json`
+  - Frontend: `frontend/railway.json`
+- **DO NOT** point it to `/template.json`. That file is for the *entire project*, not individual services.
+
+---
 
 ---
 
