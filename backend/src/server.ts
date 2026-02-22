@@ -328,3 +328,4 @@ if (require.main === module) {
             process.on('SIGINT', () => shutdownWorker('SIGINT'));
         }
     }
+}
