@@ -1,10 +1,10 @@
 
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 import { logger } from './logger';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
-const redis = new Redis(REDIS_URL, {
+const options: RedisOptions = {
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
         const delay = Math.min(times * 200, 5000);
@@ -12,7 +12,11 @@ const redis = new Redis(REDIS_URL, {
         return delay;
     },
     lazyConnect: false,
-});
+    tls: REDIS_URL.startsWith('rediss://') ? {} : undefined,
+    family: 0 // Auto-detect IPv4/IPv6
+};
+
+const redis = new Redis(REDIS_URL, options);
 
 redis.on('connect', () => {
     logger.info('Redis connected');
