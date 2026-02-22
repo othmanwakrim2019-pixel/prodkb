@@ -1,0 +1,39 @@
+{
+    "version": 2,
+    "name": "prodkb",
+    "description": "Full-stack Knowledge Base for Incident and SLA Management",
+    "services": {
+        "backend": {
+            "source": {
+                "repo": "prodkb",
+                "directory": "backend"
+            },
+            "env": {
+                "NODE_ENV": "production",
+                "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
+                "REDIS_URL": "${{Redis.DATABASE_URL}}",
+                "JWT_SECRET": "${{RANDOM_STRING_32}}"
+            }
+        },
+        "frontend": {
+            "source": {
+                "repo": "prodkb",
+                "directory": "frontend"
+            },
+            "env": {
+                "VITE_API_URL": "${{backend.RAILWAY_STATIC_URL}}"
+            }
+        },
+        "Postgres": {
+            "image": "postgres:16-alpine",
+            "env": {
+                "POSTGRES_DB": "railway",
+                "POSTGRES_PASSWORD": "${{PASSWORD}}",
+                "POSTGRES_USER": "postgres"
+            }
+        },
+        "Redis": {
+            "image": "redis:7-alpine"
+        }
+    }
+}
