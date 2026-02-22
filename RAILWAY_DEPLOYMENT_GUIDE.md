@@ -5,7 +5,15 @@
 ## 🚨 CRITICAL: Fix These Settings in Railway UI
 If you see `npm error Missing script: "dev"`, it is because your Railway settings are overriding the defaults.
 
-### 1. Clear the "Start Command"
+### 1. Set the "Root Directory" (CRITICAL FIX)
+Because this project contains both a `backend` and a `frontend`, you must tell Railway which folder to build.
+- Go to your service > **Settings** > **Source**.
+- Find the **Root Directory** setting.
+- Click **Add Root Directory** (or edit the existing one).
+- Type **`/backend`** (for the backend service) or **`/frontend`** (for the frontend service).
+- Press Enter/Save.
+
+### 2. Clear the "Start Command"
 - Go to your service (e.g., `prodkb-backend`) > **Settings** > **Deploy**.
 - Empty the **Start Command** box (it should be blank) OR set it to **`npm start`**.
 - **DO NOT** use `npm run dev`.
