@@ -40,6 +40,7 @@ model User {
   createdInstances  PlanningInstance[] @relation("CreatedInstances")
   completedPlanningJobs PlanningJob[] @relation("CompletedPlanningJobs")
   refreshTokens     RefreshToken[]
+  notifications     Notification[]
 
   @@index([roleId])
 }
@@ -459,4 +460,20 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
+}
+
+// ── In-App Notifications ──
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String   // 'incident_created' | 'status_changed' | 'note_added' | 'file_uploaded'
+  title      String
+  message    String
+  incidentId String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

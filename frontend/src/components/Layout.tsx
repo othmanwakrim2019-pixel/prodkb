@@ -25,6 +25,7 @@ import {
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { UserProfileDropdown } from './UserProfileDropdown';
+import { NotificationBell } from './NotificationBell';
 
 // ── Collapsible group for sidebar sub-navigation ──
 interface NavChild {
@@ -327,6 +328,7 @@ export const Layout = () => {
                         )}
                     </div>
                     <div className="flex items-center gap-3">
+                        <NotificationBell />
                         <div className="flex items-center gap-1.5">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
