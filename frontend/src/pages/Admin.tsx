@@ -13,8 +13,21 @@ import { SLAManagement } from './admin/SLAManagement';
 import { EscalationManagement } from './admin/EscalationManagement';
 import { AutoAssignManagement } from './admin/AutoAssignManagement';
 import { WebhookManagement } from './admin/WebhookManagement';
-import { Tabs, type TabItem } from '../components/ui/Tabs';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
+import type { LucideIcon } from 'lucide-react';
+
+interface AdminTab {
+    key: string;
+    label: string;
+    icon: LucideIcon;
+    visible: boolean;
+}
+
+interface AdminGroup {
+    title: string;
+    tabs: AdminTab[];
+}
 
 export const Admin = () => {
     const { user, hasPermission } = useAuth();
@@ -24,20 +37,17 @@ export const Admin = () => {
     const [activeTab, setActiveTab] = useState(urlTab || 'users');
     const { t } = useTranslation();
 
-    // Sync activeTab with URL ?tab= param
     useEffect(() => {
         if (urlTab && urlTab !== activeTab) {
             setActiveTab(urlTab);
         }
     }, [urlTab]);
 
-    // Update URL when tab changes via the Tabs component
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setSearchParams({ tab });
     };
 
-    // Access control check
     useEffect(() => {
         if (!user) navigate('/');
     }, [user, navigate]);
@@ -55,32 +65,63 @@ export const Admin = () => {
     const showEmailTemplates = hasPermission('EMAIL_TEMPLATE_MANAGE') || user?.role === 'ADMIN';
     const showConfig = hasPermission('CONFIG_MANAGE') || user?.role === 'ADMIN';
 
-    const tabs: TabItem[] = [
-        { key: 'users', label: t('admin.tabs.users'), icon: Users, visible: showUsers },
-        { key: 'systems', label: t('admin.tabs.systems'), icon: Database, visible: showSystems },
-        { key: 'teams', label: t('admin.tabs.teams'), icon: UsersIcon, visible: showTeams },
-        { key: 'slas', label: t('admin.tabs.slas'), icon: Clock, visible: showSLAs },
-        { key: 'escalation', label: 'Escalation', icon: AlertTriangle, visible: showEscalation },
-        { key: 'auto-assign', label: 'Auto-Assign', icon: GitBranch, visible: showAutoAssign },
-        { key: 'webhooks', label: 'Webhooks', icon: Globe, visible: showWebhooks },
-        { key: 'roles', label: t('admin.tabs.roles'), icon: Shield, visible: showRoles },
-        { key: 'audit', label: t('admin.tabs.auditLogs'), icon: Activity, visible: showAudit },
-        { key: 'email-templates', label: t('admin.tabs.emailTemplates'), icon: FileEdit, visible: showEmailTemplates },
-        { key: 'settings', label: 'SMTP', icon: Settings, visible: showConfig },
+    // Grouped sections
+    const groups: AdminGroup[] = [
+        {
+            title: t('admin.groups.userManagement', 'User Management'),
+            tabs: [
+                { key: 'users', label: t('admin.tabs.users'), icon: Users, visible: showUsers },
+                { key: 'roles', label: t('admin.tabs.roles'), icon: Shield, visible: showRoles },
+            ]
+        },
+        {
+            title: t('admin.groups.systemConfig', 'System Configuration'),
+            tabs: [
+                { key: 'systems', label: t('admin.tabs.systems'), icon: Database, visible: showSystems },
+                { key: 'teams', label: t('admin.tabs.teams'), icon: UsersIcon, visible: showTeams },
+                { key: 'slas', label: t('admin.tabs.slas'), icon: Clock, visible: showSLAs },
+            ]
+        },
+        {
+            title: t('admin.groups.automation', 'Automation'),
+            tabs: [
+                { key: 'escalation', label: t('admin.tabs.escalation', 'Escalation'), icon: AlertTriangle, visible: showEscalation },
+                { key: 'auto-assign', label: t('admin.tabs.autoAssign', 'Auto-Assign'), icon: GitBranch, visible: showAutoAssign },
+                { key: 'webhooks', label: t('admin.tabs.webhooks', 'Webhooks'), icon: Globe, visible: showWebhooks },
+            ]
+        },
+        {
+            title: t('admin.groups.communication', 'Communication'),
+            tabs: [
+                { key: 'email-templates', label: t('admin.tabs.emailTemplates'), icon: FileEdit, visible: showEmailTemplates },
+                { key: 'settings', label: 'SMTP', icon: Settings, visible: showConfig },
+            ]
+        },
+        {
+            title: t('admin.groups.monitoring', 'Monitoring'),
+            tabs: [
+                { key: 'audit', label: t('admin.tabs.auditLogs'), icon: Activity, visible: showAudit },
+            ]
+        },
     ];
+
+    // Filter to only groups that have visible tabs
+    const visibleGroups = groups
+        .map(g => ({ ...g, tabs: g.tabs.filter(t => t.visible) }))
+        .filter(g => g.tabs.length > 0);
+
+    const allVisibleTabs = visibleGroups.flatMap(g => g.tabs);
 
     // Auto-select first visible tab if current is not accessible
     useEffect(() => {
-        const visibleTabs = tabs.filter(tab => tab.visible !== false);
-        const isAccessible = visibleTabs.some(tab => tab.key === activeTab);
-        if (!isAccessible && visibleTabs.length > 0) {
-            setActiveTab(visibleTabs[0].key);
+        const isAccessible = allVisibleTabs.some(tab => tab.key === activeTab);
+        if (!isAccessible && allVisibleTabs.length > 0) {
+            setActiveTab(allVisibleTabs[0].key);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showUsers, showSystems, showTeams, showSLAs, showRoles, showAudit, showEscalation, showAutoAssign, showWebhooks, activeTab]);
 
-    const visibleTabs = tabs.filter(tab => tab.visible !== false);
-    if (visibleTabs.length === 0) {
+    if (allVisibleTabs.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
                 <div className="bg-red-50 p-6 rounded-full mb-4">
@@ -109,11 +150,50 @@ export const Admin = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-slate-900">{t('admin.title')}</h1>
-            <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
-            <div className="py-4">
-                {TAB_PANELS[activeTab]}
+        <div className="space-y-0">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('admin.title')}</h1>
+            <div className="flex gap-6">
+                {/* Left Sidebar Navigation */}
+                <aside className="w-56 shrink-0">
+                    <nav className="space-y-5">
+                        {visibleGroups.map(group => (
+                            <div key={group.title}>
+                                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-3">
+                                    {group.title}
+                                </h3>
+                                <ul className="space-y-0.5">
+                                    {group.tabs.map(tab => {
+                                        const Icon = tab.icon;
+                                        const isActive = activeTab === tab.key;
+                                        return (
+                                            <li key={tab.key}>
+                                                <button
+                                                    onClick={() => handleTabChange(tab.key)}
+                                                    className={clsx(
+                                                        'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                                                        isActive
+                                                            ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300'
+                                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
+                                                    )}
+                                                >
+                                                    <Icon className="h-4 w-4" />
+                                                    {tab.label}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        ))}
+                    </nav>
+                </aside>
+
+                {/* Content Panel */}
+                <main className="flex-1 min-w-0">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+                        {TAB_PANELS[activeTab]}
+                    </div>
+                </main>
             </div>
         </div>
     );
