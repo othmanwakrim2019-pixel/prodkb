@@ -182,3 +182,45 @@
 .kpi-gradient-violet {
   background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
 }
+
+/* ── Popover animation (upward) ── */
+@keyframes popover-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-popover-up {
+  animation: popover-up 0.15s ease-out;
+}
+
+/* ── Custom sidebar scrollbar ── */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Focus visible for accessibility ── */
+*:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

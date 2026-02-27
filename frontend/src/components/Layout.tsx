@@ -4,12 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
-    LogOut,
     Settings as SettingsIcon,
     AlertCircle,
     BookOpen,
     Search,
-    Key,
     CalendarClock,
     Users,
     Shield,
@@ -26,7 +24,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { UserProfileDropdown } from './UserProfileDropdown';
 
 // ── Collapsible group for sidebar sub-navigation ──
 interface NavChild {
@@ -298,39 +296,51 @@ export const Layout = () => {
                     )}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
-                    <LanguageSwitcher />
-                    <div className="flex items-center mb-4 px-2 mt-3">
-                        <div className="flex-shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
-                                {user?.name.charAt(0)}
-                            </div>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm font-medium text-white">{user?.name}</p>
-                            <p className="text-xs text-white/60">{user?.role}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setShowPasswordModal(true)}
-                        className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors mb-1"
-                    >
-                        <Key className="mr-3 h-5 w-5" />
-                        {t('common.changePassword')}
-                    </button>
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white rounded-md transition-colors"
-                    >
-                        <LogOut className="mr-3 h-5 w-5" />
-                        {t('common.signOut')}
-                    </button>
-                </div>
+                {/* User Profile Dropdown */}
+                <UserProfileDropdown
+                    user={user}
+                    onChangePassword={() => setShowPasswordModal(true)}
+                    onLogout={handleLogout}
+                />
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 ml-64 p-8">
-                <Outlet />
+            <main className="flex-1 ml-64 min-h-screen flex flex-col">
+                {/* Top Header Bar */}
+                <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-8 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-400">ProdKB</span>
+                        <span className="text-slate-300">/</span>
+                        <span className="font-medium text-slate-700">
+                            {location.pathname === '/' && t('nav.dashboard')}
+                            {location.pathname.startsWith('/incidents') && t('nav.incidents')}
+                            {location.pathname.startsWith('/procedures') && t('nav.procedures')}
+                            {location.pathname === '/search' && t('nav.search')}
+                            {location.pathname === '/planning' && t('nav.planning')}
+                            {location.pathname === '/admin' && 'Administration'}
+                        </span>
+                        {location.pathname === '/admin' && currentTab && (
+                            <>
+                                <span className="text-slate-300">/</span>
+                                <span className="text-slate-500 capitalize">{currentTab.replace('-', ' ')}</span>
+                            </>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                            </span>
+                            <span className="text-xs text-slate-400">Online</span>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Page Content */}
+                <div className="flex-1 p-8">
+                    <Outlet />
+                </div>
             </main>
 
             {/* Password Change Modal */}
