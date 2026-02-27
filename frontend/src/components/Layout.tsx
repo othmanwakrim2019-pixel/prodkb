@@ -26,6 +26,7 @@ import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { NotificationBell } from './NotificationBell';
+import { ThemeToggle } from './ThemeToggle';
 
 // ── Collapsible group for sidebar sub-navigation ──
 interface NavChild {
@@ -211,9 +212,9 @@ export const Layout = () => {
     const checkPerm = (perm: string) => isAdmin || hasPermission(perm);
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-primary text-white flex flex-col fixed h-full">
+            <aside className="w-64 bg-primary dark:bg-slate-800 text-white flex flex-col fixed h-full z-30 transition-transform duration-200 -translate-x-full md:translate-x-0" id="sidebar">
                 <div className="p-6 border-b border-white/10">
                     <img src="/logo.png" alt="CIH Bank" className="w-full max-h-20 object-contain" />
                 </div>
@@ -306,13 +307,23 @@ export const Layout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 ml-64 min-h-screen flex flex-col">
+            <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
                 {/* Top Header Bar */}
-                <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-8 py-3 flex items-center justify-between">
+                <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-700/60 px-4 md:px-8 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm">
-                        <span className="text-slate-400">ProdKB</span>
-                        <span className="text-slate-300">/</span>
-                        <span className="font-medium text-slate-700">
+                        {/* Mobile hamburger */}
+                        <button
+                            className="md:hidden p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                            onClick={() => {
+                                const sb = document.getElementById('sidebar');
+                                sb?.classList.toggle('-translate-x-full');
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                        <span className="text-slate-400 dark:text-slate-500">ProdKB</span>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-200">
                             {location.pathname === '/' && t('nav.dashboard')}
                             {location.pathname.startsWith('/incidents') && t('nav.incidents')}
                             {location.pathname.startsWith('/procedures') && t('nav.procedures')}
@@ -322,25 +333,26 @@ export const Layout = () => {
                         </span>
                         {location.pathname === '/admin' && currentTab && (
                             <>
-                                <span className="text-slate-300">/</span>
-                                <span className="text-slate-500 capitalize">{currentTab.replace('-', ' ')}</span>
+                                <span className="text-slate-300 dark:text-slate-600">/</span>
+                                <span className="text-slate-500 dark:text-slate-400 capitalize">{currentTab.replace('-', ' ')}</span>
                             </>
                         )}
                     </div>
                     <div className="flex items-center gap-3">
+                        <ThemeToggle />
                         <NotificationBell />
                         <div className="flex items-center gap-1.5">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                             </span>
-                            <span className="text-xs text-slate-400">Online</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">Online</span>
                         </div>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                     <Outlet />
                 </div>
             </main>

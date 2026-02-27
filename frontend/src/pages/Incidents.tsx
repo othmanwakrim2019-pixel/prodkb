@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import axios from '../utils/axios';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IncidentFilters } from '../components/IncidentFilters';
 import { Incident } from '../types';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '../components/ui/Pagination';
+import { exportToCSV } from '../utils/exportCSV';
 
 export const Incidents = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -76,16 +77,31 @@ export const Incidents = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">{t('incidents.title')}</h1>
-                {canCreate() && (
-                    <Link
-                        to="/incidents/new"
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('incidents.title')}</h1>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => exportToCSV(incidents as any[], 'incidents', [
+                            { key: 'title', label: 'Title' },
+                            { key: 'severity', label: 'Severity' },
+                            { key: 'status', label: 'Status' },
+                            { key: 'environment', label: 'Environment' },
+                            { key: 'createdAt', label: 'Created At' },
+                        ])}
+                        className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                     >
-                        <Plus className="-ml-1 mr-2 h-5 w-5" />
-                        New Incident
-                    </Link>
-                )}
+                        <Download className="-ml-0.5 mr-1.5 h-4 w-4" />
+                        Export CSV
+                    </button>
+                    {canCreate() && (
+                        <Link
+                            to="/incidents/new"
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                        >
+                            <Plus className="-ml-1 mr-2 h-5 w-5" />
+                            New Incident
+                        </Link>
+                    )}
+                </div>
             </div>
 
             {/* Filters */}

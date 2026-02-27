@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { ShieldAlert } from 'lucide-react';
 import { SmartSolutionSearch } from '../components/SmartSolutionSearch';
+import { SimilarIncidents } from '../components/SimilarIncidents';
 import { LogEntryFields } from '../components/incidents/LogEntryFields';
 import { FileAttachmentSection } from '../components/incidents/FileAttachmentSection';
 import { useAuth } from '../context/AuthContext';
@@ -57,6 +58,7 @@ export const CreateIncident = () => {
     const selectedSystemId = watch('systemId');
     const selectedJobId = watch('jobId');
     const description = watch('description');
+    const watchTitle = watch('title');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -216,6 +218,7 @@ export const CreateIncident = () => {
                             disabled={!!selectedJobId}
                         />
                         {errors.title && <p className="text-red-500 text-xs mt-1">{String(errors.title.message)}</p>}
+                        <SimilarIncidents title={watchTitle} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
