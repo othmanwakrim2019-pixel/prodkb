@@ -5,6 +5,9 @@ import { authenticate, checkPermission } from '../../common/middleware/auth.midd
 import { uploadLimiter } from '../../common/middleware/rate-limiter.middleware';
 import { paginationMiddleware } from '../../common/middleware/pagination.middleware';
 import multer from 'multer';
+import os from 'os';
+import path from 'path';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -19,8 +22,15 @@ const ALLOWED_MIME_TYPES = [
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
 ];
 
+// Use diskStorage instead of memoryStorage to prevent RAM exhaustion from large uploads
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+        destination: os.tmpdir(),
+        filename: (_req, file, cb) => {
+            const uniqueSuffix = crypto.randomBytes(8).toString('hex');
+            cb(null, `upload-${uniqueSuffix}${path.extname(file.originalname)}`);
+        },
+    }),
     limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max
     fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
