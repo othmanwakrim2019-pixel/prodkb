@@ -181,6 +181,12 @@ export const Layout = () => {
             icon: CalendarClock,
             requiredPermission: 'PLANNING_VIEW'
         },
+        {
+            label: 'Service Health',
+            path: '/health',
+            icon: Activity,
+            requiredPermission: 'DASHBOARD_VIEW'
+        },
     ];
 
     const visibleTopNav = topNavItems.filter(item => hasPermission(item.requiredPermission));

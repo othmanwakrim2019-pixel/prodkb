@@ -23,6 +23,7 @@ import { autoAssignRoutes } from './auto-assign/auto-assign.routes';
 import { webhookRoutes } from './webhooks/webhook.routes';
 import { analyticsRoutes } from './analytics/analytics.routes';
 import { notificationRoutes } from './notifications/notification.routes';
+import { postMortemRoutes } from './postmortem/postmortem.routes';
 
 const router = Router();
 
@@ -46,5 +47,6 @@ router.use('/auto-assign-rules', autoAssignRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/incidents', postMortemRoutes);
 
 export default router;
