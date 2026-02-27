@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { User, TeamMembership } from '../../types';
+import { Pagination } from '../ui/Pagination';
 
 interface Props {
     users: User[];
@@ -9,11 +11,21 @@ interface Props {
     onDelete: (userId: string, userName: string) => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete }: Props) => {
+    const [page, setPage] = useState(1);
+
+    // Reset to page 1 when search changes
+    useEffect(() => { setPage(1); }, [searchTerm]);
+
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+    const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
     return (
         <div className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
@@ -29,7 +41,7 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                    {filteredUsers.map((u) => (
+                    {paginatedUsers.map((u) => (
                         <tr key={u.id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{u.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{u.email}</td>
@@ -74,6 +86,18 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                     ))}
                 </tbody>
             </table>
+
+            {filteredUsers.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: filteredUsers.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages,
+                    }}
+                    onPageChange={setPage}
+                />
+            )}
         </div>
     );
 };
