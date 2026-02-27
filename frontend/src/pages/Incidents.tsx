@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { IncidentFilters } from '../components/IncidentFilters';
 import { Incident } from '../types';
 import { useTranslation } from 'react-i18next';
+import { Pagination } from '../components/ui/Pagination';
 
 export const Incidents = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -179,70 +180,12 @@ export const Incidents = () => {
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-between sm:px-6">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                        <button
-                            onClick={() => handlePageChange(meta.page - 1)}
-                            disabled={meta.page === 1}
-                            className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(meta.page + 1)}
-                            disabled={meta.page === meta.totalPages}
-                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Next
-                        </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-4">
-                            <p className="text-sm text-slate-700">
-                                Showing <span className="font-medium">{incidents.length > 0 ? (meta.page - 1) * meta.limit + 1 : 0}</span> to <span className="font-medium">{Math.min(meta.page * meta.limit, meta.total)}</span> of{' '}
-                                <span className="font-medium">{meta.total}</span> results
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="limit" className="text-sm text-slate-600">Rows per page:</label>
-                                <select
-                                    id="limit"
-                                    value={meta.limit}
-                                    onChange={(e) => handleLimitChange(Number(e.target.value))}
-                                    className="block w-20 rounded-md border-slate-300 py-1.5 text-base focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <button
-                                    onClick={() => handlePageChange(meta.page - 1)}
-                                    disabled={meta.page === 1}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">Previous</span>
-                                    Previous
-                                </button>
-                                {/* Simple page counter for now, can be expanded to full pagination UI */}
-                                <span className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
-                                    Page {meta.page} of {meta.totalPages}
-                                </span>
-                                <button
-                                    onClick={() => handlePageChange(meta.page + 1)}
-                                    disabled={meta.page === meta.totalPages}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">Next</span>
-                                    Next
-                                </button>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <Pagination
+                    meta={meta}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
+                    limitOptions={[10, 20, 50, 100]}
+                />
             </div>
         </div>
     );

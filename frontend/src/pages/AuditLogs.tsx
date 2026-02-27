@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { Filter, Clock, User, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { Pagination } from '../components/ui/Pagination';
 
 interface AuditLog {
     id: string;
@@ -26,6 +27,8 @@ const AuditLogs = () => {
     // Filters
     const [actionType, setActionType] = useState('');
     const [entityType, setEntityType] = useState('');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
@@ -99,7 +102,7 @@ const AuditLogs = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y">
-                        {logs.map(log => (
+                        {logs.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(log => (
                             <tr key={log.id} className="hover:bg-slate-50">
                                 <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
@@ -141,6 +144,19 @@ const AuditLogs = () => {
                     </tbody>
                 </table>
                 {loading && <div className="p-4 text-center text-slate-500">{t('admin.auditLogs.loadingLogs')}</div>}
+
+                {/* Pagination */}
+                {logs.length > ITEMS_PER_PAGE && (
+                    <Pagination
+                        meta={{
+                            total: logs.length,
+                            page,
+                            limit: ITEMS_PER_PAGE,
+                            totalPages: Math.ceil(logs.length / ITEMS_PER_PAGE),
+                        }}
+                        onPageChange={setPage}
+                    />
+                )}
             </div>
         </div>
     );
