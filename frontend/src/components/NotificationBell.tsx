@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, X } from 'lucide-react';
 import { api } from '../lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface Notification {
     id: string;
@@ -21,6 +22,7 @@ export const NotificationBell = () => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // Fetch unread count (lightweight poll)
     const fetchUnreadCount = async () => {
@@ -124,7 +126,7 @@ export const NotificationBell = () => {
                 <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80">
-                        <h3 className="text-sm font-semibold text-slate-800">Notifications</h3>
+                        <h3 className="text-sm font-semibold text-slate-800">{t('common.notifications')}</h3>
                         <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
                                 <button
@@ -133,7 +135,7 @@ export const NotificationBell = () => {
                                     title="Mark all as read"
                                 >
                                     <CheckCheck className="h-3.5 w-3.5" />
-                                    Mark all read
+                                    {t('common.markAllRead')}
                                 </button>
                             )}
                             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -147,7 +149,7 @@ export const NotificationBell = () => {
                         {notifications.length === 0 ? (
                             <div className="py-12 text-center">
                                 <Bell className="h-8 w-8 mx-auto text-slate-300 mb-2" />
-                                <p className="text-sm text-slate-400">No notifications yet</p>
+                                <p className="text-sm text-slate-400">{t('common.noNotifications')}</p>
                             </div>
                         ) : (
                             notifications.map(n => (

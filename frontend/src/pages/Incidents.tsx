@@ -90,7 +90,7 @@ export const Incidents = () => {
                         className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                     >
                         <Download className="-ml-0.5 mr-1.5 h-4 w-4" />
-                        Export CSV
+                        {t('common.exportCSV')}
                     </button>
                     {canCreate() && (
                         <Link
@@ -98,7 +98,7 @@ export const Incidents = () => {
                             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
                         >
                             <Plus className="-ml-1 mr-2 h-5 w-5" />
-                            New Incident
+                            {t('common.newIncident')}
                         </Link>
                     )}
                 </div>

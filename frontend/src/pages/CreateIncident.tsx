@@ -163,31 +163,31 @@ export const CreateIncident = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900">{t('createIncident.title')}</h1>
-                <p className="text-sm text-slate-500 mt-1">Select the failing component to get started.</p>
+                <p className="text-sm text-slate-500 mt-1">{t('common.selectApplicationFirst')}</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
 
                 {/* 1. Context / Component Selection */}
                 <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">1. Component Context</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">1. {t('common.componentContext')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Environment <span className="text-red-500">*</span>
+                                {t('common.environment')} <span className="text-red-500">*</span>
                             </label>
                             <select {...register('environment')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
-                                <option value="PROD">Production</option>
-                                <option value="PREPROD">Pre-Production</option>
-                                <option value="RECETTE">Recette</option>
+                                <option value="PROD">{t('common.production')}</option>
+                                <option value="PREPROD">{t('common.preProduction')}</option>
+                                <option value="RECETTE">{t('common.recette')}</option>
                             </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Application (System) <span className="text-red-500">*</span>
+                                {t('common.application')} ({t('common.system')}) <span className="text-red-500">*</span>
                             </label>
                             <select {...register('systemId', { required: 'Application is required' })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
-                                <option value="">Select Application...</option>
+                                <option value="">{t('common.selectApplication')}</option>
                                 {systems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                             {errors.systemId && <p className="text-red-500 text-xs mt-1">{String(errors.systemId.message)}</p>}
@@ -195,26 +195,26 @@ export const CreateIncident = () => {
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Uproc (Job)</label>
                             <select {...register('jobId')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" disabled={!selectedSystemId}>
-                                <option value="">Select Uproc...</option>
+                                <option value="">{t('common.selectUproc')}</option>
                                 {jobs.map(j => <option key={j.id} value={j.id}>{j.name} ({j.code})</option>)}
                             </select>
-                            {!selectedSystemId && <p className="text-xs text-slate-500 mt-1">Select an application first</p>}
+                            {!selectedSystemId && <p className="text-xs text-slate-500 mt-1">{t('common.selectApplicationFirst')}</p>}
                         </div>
                     </div>
                 </div>
 
                 {/* 2. Incident Details */}
                 <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">2. Issue Details</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">2. {t('common.issueDetails')}</h2>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                             UPROC {!selectedJobId && <span className="text-red-500">*</span>}
-                            {selectedJobId && <span className="text-slate-400 text-xs ml-1">(auto-filled from job)</span>}
+                            {selectedJobId && <span className="text-slate-400 text-xs ml-1">({t('common.autoFilledFromJob')})</span>}
                         </label>
                         <input
                             {...register('title', { required: selectedJobId ? false : 'UPROC is required when no job is selected' })}
                             className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                            placeholder={selectedJobId ? "Auto-filled from selected job" : "e.g. UPROC_NAME or incident description"}
+                            placeholder={selectedJobId ? t('common.autoFilledFromUproc') : ""}
                             disabled={!!selectedJobId}
                         />
                         {errors.title && <p className="text-red-500 text-xs mt-1">{String(errors.title.message)}</p>}
@@ -224,7 +224,7 @@ export const CreateIncident = () => {
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                             Description <span className="text-red-500">*</span>
                         </label>
-                        <textarea {...register('description', { required: 'Description is required' })} rows={4} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" placeholder="Detailed description of what happened..." />
+                        <textarea {...register('description', { required: t('createIncident.descriptionRequired') })} rows={4} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" placeholder={t('common.detailedDescription')} />
                         {errors.description && <p className="text-red-500 text-xs mt-1">{String(errors.description.message)}</p>}
                         <SmartSolutionSearch query={description} systemId={selectedSystemId} />
                     </div>
@@ -232,7 +232,7 @@ export const CreateIncident = () => {
 
                 {/* 3. Classification & Assignment */}
                 <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">3. Assignment & SLA</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 border-b pb-2">3. {t('common.assignmentSLA')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Severity <span className="text-red-500">*</span></label>
@@ -246,15 +246,15 @@ export const CreateIncident = () => {
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Team</label>
                             <select {...register('assignedTeamId')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
-                                <option value="">No Team Assigned</option>
+                                <option value="">{t('common.noTeamAssigned')}</option>
                                 {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
-                            <p className="text-xs text-slate-500 mt-1">Auto-filled from Uproc</p>
+                            <p className="text-xs text-slate-500 mt-1">{t('common.autoFilledNote')}</p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">SLA Policy</label>
                             <select {...register('slaId')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
-                                <option value="">No SLA Policy</option>
+                                <option value="">{t('common.noSlaPolicy')}</option>
                                 {slas.map(sla => (
                                     <option key={sla.id} value={sla.id}>
                                         {sla.name} ({sla.severity} - {sla.resolveTimeMinutes}min)
@@ -264,8 +264,8 @@ export const CreateIncident = () => {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Detection Source</label>
-                        <input {...register('detectionSource')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" placeholder="e.g. Dollar Universe Console" />
+                        <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.detectionSource')}</label>
+                        <input {...register('detectionSource')} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" placeholder={t('common.detectionPlaceholder')} />
                     </div>
                 </div>
 
@@ -278,10 +278,10 @@ export const CreateIncident = () => {
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t">
                     <button type="button" onClick={() => navigate('/incidents')} className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none">
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button type="submit" className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                        Declare Incident
+                        {t('common.declareIncident')}
                     </button>
                 </div>
             </form>

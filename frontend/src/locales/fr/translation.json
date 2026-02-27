@@ -5,7 +5,9 @@
         "procedures": "Procédures",
         "search": "Recherche",
         "planning": "Planification",
-        "admin": "Administration"
+        "admin": "Administration",
+        "settings": "Paramètres",
+        "userManagement": "Gestion des utilisateurs"
     },
     "common": {
         "signOut": "Déconnexion",
@@ -58,7 +60,40 @@
         "user": "Utilisateur",
         "timestamp": "Horodatage",
         "accessDenied": "Accès refusé",
-        "accessDeniedMessage": "Vous n'avez pas la permission de voir cette page. Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur."
+        "accessDeniedMessage": "Vous n'avez pas la permission de voir cette page. Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.",
+        "online": "En ligne",
+        "notifications": "Notifications",
+        "markAllRead": "Tout marquer comme lu",
+        "noNotifications": "Aucune notification",
+        "exportCSV": "Exporter CSV",
+        "administration": "Administration",
+        "environment": "Environnement",
+        "production": "Production",
+        "preProduction": "Pré-Production",
+        "recette": "Recette",
+        "application": "Application",
+        "selectApplication": "Sélectionner l'application...",
+        "selectUproc": "Sélectionner l'Uproc...",
+        "selectApplicationFirst": "Sélectionnez d'abord une application",
+        "autoFilledFromJob": "rempli automatiquement depuis le job",
+        "autoFilledFromUproc": "Rempli automatiquement depuis le job sélectionné",
+        "detailedDescription": "Description détaillée de ce qui s'est passé...",
+        "assignedTeam": "Équipe assignée",
+        "noTeamAssigned": "Aucune équipe assignée",
+        "autoFilledNote": "Rempli automatiquement depuis l'Uproc",
+        "slaPolicy": "Politique SLA",
+        "noSlaPolicy": "Aucune politique SLA",
+        "detectionSource": "Source de détection",
+        "detectionPlaceholder": "ex. Console Dollar Universe",
+        "declareIncident": "Déclarer l'incident",
+        "componentContext": "Contexte du composant",
+        "issueDetails": "Détails de l'anomalie",
+        "assignmentSLA": "Assignation et SLA",
+        "newIncident": "Nouvel incident",
+        "download": "Télécharger",
+        "selectFirst": "Sélectionnez d'abord",
+        "similarIncidents": "incident(s) similaire(s) trouvé(s)",
+        "searching": "Recherche..."
     },
     "login": {
         "subtitle": "Système de Gestion des Incidents",
@@ -159,7 +194,14 @@
         "allSystems": "Tous les systèmes",
         "allTeams": "Toutes les équipes",
         "searchPlaceholder": "Rechercher des incidents...",
-        "backToIncidents": "Retour aux incidents"
+        "backToIncidents": "Retour aux incidents",
+        "logs": "Journaux et fichiers",
+        "addNote": "Ajouter une note",
+        "uploadFile": "Télécharger un fichier",
+        "linkProcedure": "Lier une procédure",
+        "unlinkProcedure": "Délier la procédure",
+        "noLogs": "Aucun journal ou fichier.",
+        "acknowledge": "Prendre en charge"
     },
     "createIncident": {
         "title": "Créer un nouvel incident",
@@ -243,9 +285,12 @@
             "teams": "Équipes",
             "systems": "Systèmes",
             "slas": "Politiques SLA",
-            "roles": "Rôles & Permissions",
+            "roles": "Rôles et Permissions",
             "emailTemplates": "Modèles d'email",
-            "auditLogs": "Journaux d'audit"
+            "auditLogs": "Journaux d'audit",
+            "escalation": "Règles d'escalade",
+            "autoAssign": "Auto-assignation",
+            "webhooks": "Webhooks"
         },
         "users": {
             "title": "Gestion des utilisateurs",

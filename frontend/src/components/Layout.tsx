@@ -329,7 +329,7 @@ export const Layout = () => {
                             {location.pathname.startsWith('/procedures') && t('nav.procedures')}
                             {location.pathname === '/search' && t('nav.search')}
                             {location.pathname === '/planning' && t('nav.planning')}
-                            {location.pathname === '/admin' && 'Administration'}
+                            {location.pathname === '/admin' && t('common.administration')}
                         </span>
                         {location.pathname === '/admin' && currentTab && (
                             <>
@@ -346,7 +346,7 @@ export const Layout = () => {
                                 <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                             </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500">Online</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">{t('common.online')}</span>
                         </div>
                     </div>
                 </header>
