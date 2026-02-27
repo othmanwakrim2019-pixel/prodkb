@@ -4,6 +4,7 @@ import { Plus, Search as SearchIcon, Pencil, Trash2, ChevronDown, ChevronUp } fr
 import { System, Team, Job } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { systemService, teamService, jobService } from '../../services/admin.service';
+import { Pagination } from '../../components/ui/Pagination';
 
 export const SystemManagement = () => {
     const { canManageSystems } = useAuth();
@@ -18,6 +19,8 @@ export const SystemManagement = () => {
     const [newJob, setNewJob] = useState({ name: '', code: '', systemId: '', teamId: '' });
     const [editingSystem, setEditingSystem] = useState<System | null>(null);
     const [editingJob, setEditingJob] = useState<Job | null>(null);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         fetchSystems();
@@ -200,7 +203,7 @@ export const SystemManagement = () => {
             )}
 
             <div className="space-y-4">
-                {filteredSystems.map((system) => (
+                {filteredSystems.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((system) => (
                     <div key={system.id} className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
                         <div className="px-6 py-4 flex items-center justify-between bg-slate-50">
                             <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedSystemId(expandedSystemId === system.id ? null : system.id)}>
@@ -346,6 +349,18 @@ export const SystemManagement = () => {
                     </div>
                 ))}
             </div>
+
+            {filteredSystems.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: filteredSystems.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages: Math.ceil(filteredSystems.length / ITEMS_PER_PAGE),
+                    }}
+                    onPageChange={setPage}
+                />
+            )}
 
             {/* Edit System Modal */}
             {editingSystem && (

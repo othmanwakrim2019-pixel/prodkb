@@ -123,8 +123,8 @@ export const Incidents = () => {
                         <tbody className="bg-white divide-y divide-slate-200">
                             {incidents.map((incident) => (
                                 <tr key={incident.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Link to={`/incidents/${incident.id}`} className="text-sm font-medium text-primary hover:text-accent">
+                                    <td className="px-6 py-4">
+                                        <Link to={`/incidents/${incident.id}`} className="text-sm font-medium text-primary hover:text-accent block max-w-xs truncate" title={incident.title}>
                                             {incident.title}
                                         </Link>
                                     </td>
