@@ -6,6 +6,7 @@ import { RoleManager } from './RoleManager';
 import AuditLogs from './AuditLogs';
 import { Settings as SmtpSettings } from './admin/Settings';
 import { AuditConfig } from './admin/AuditConfig';
+import HealthDashboard from './HealthDashboard';
 import { EmailTemplates } from './admin/EmailTemplates';
 import { UserManagement } from './admin/UserManagement';
 import { SystemManagement } from './admin/SystemManagement';
@@ -44,6 +45,7 @@ export const Admin = () => {
         'auto-assign': <AutoAssignManagement />,
         'webhooks': <WebhookManagement />,
         'roles': <RoleManager />,
+        'health': <HealthDashboard />,
         'audit': <AuditLogs />,
         'audit-config': <AuditConfig />,
         'email-templates': <EmailTemplates />,

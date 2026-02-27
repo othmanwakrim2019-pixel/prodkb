@@ -21,7 +21,6 @@ const CreateProcedure = lazy(() => import('./pages/CreateProcedure'));
 const Search = lazy(() => import('./pages/Search'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Planning = lazy(() => import('./pages/planning/Planning'));
-const HealthDashboard = lazy(() => import('./pages/HealthDashboard'));
 
 function App() {
     return (
@@ -99,11 +98,6 @@ function App() {
                                         <Route path="/planning" element={
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><Planning /></ErrorBoundary>
-                                            </Suspense>
-                                        } />
-                                        <Route path="/health" element={
-                                            <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><HealthDashboard /></ErrorBoundary>
                                             </Suspense>
                                         } />
                                     </Route>

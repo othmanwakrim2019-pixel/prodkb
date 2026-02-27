@@ -182,12 +182,6 @@ export const Layout = () => {
             icon: CalendarClock,
             requiredPermission: 'PLANNING_VIEW'
         },
-        {
-            label: 'Service Health',
-            path: '/health',
-            icon: Activity,
-            requiredPermission: 'DASHBOARD_VIEW'
-        },
     ];
 
     const visibleTopNav = topNavItems.filter(item => hasPermission(item.requiredPermission));
@@ -294,6 +288,7 @@ export const Layout = () => {
                             label={t('nav.monitoring', 'Monitoring')}
                             icon={Activity}
                             children={[
+                                { label: 'Service Health', tab: 'health', icon: Activity, permission: 'DASHBOARD_VIEW' },
                                 { label: t('admin.tabs.auditConfig', 'Audit Config'), tab: 'audit-config', icon: ShieldCheck, permission: 'CONFIG_MANAGE' },
                                 { label: t('admin.tabs.auditLogs', 'Audit Logs'), tab: 'audit', icon: Activity, permission: 'AUDIT_VIEW' },
                             ]}
