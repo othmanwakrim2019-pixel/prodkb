@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Users, Database, UsersIcon, Clock, Shield, Activity, FileEdit, Settings, AlertTriangle, GitBranch, Globe } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RoleManager } from './RoleManager';
 import AuditLogs from './AuditLogs';
 import { Settings as SmtpSettings } from './admin/Settings';
@@ -19,8 +19,23 @@ import { useTranslation } from 'react-i18next';
 export const Admin = () => {
     const { user, hasPermission } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('users');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlTab = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(urlTab || 'users');
     const { t } = useTranslation();
+
+    // Sync activeTab with URL ?tab= param
+    useEffect(() => {
+        if (urlTab && urlTab !== activeTab) {
+            setActiveTab(urlTab);
+        }
+    }, [urlTab]);
+
+    // Update URL when tab changes via the Tabs component
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        setSearchParams({ tab });
+    };
 
     // Access control check
     useEffect(() => {
@@ -96,7 +111,7 @@ export const Admin = () => {
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-slate-900">{t('admin.title')}</h1>
-            <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+            <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
             <div className="py-4">
                 {TAB_PANELS[activeTab]}
             </div>
