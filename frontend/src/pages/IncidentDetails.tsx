@@ -15,8 +15,6 @@ import { PageLoader } from '../components/ui/PageLoader';
 import { EmptyState } from '../components/ui/PageLoader';
 import { IncidentLogTimeline } from '../components/incidents/IncidentLogTimeline';
 import { IncidentSidebar } from '../components/incidents/IncidentSidebar';
-import { PostMortemTab } from '../components/incidents/PostMortemTab';
-
 export const IncidentDetails = () => {
     const { id } = useParams();
     const { canEdit, hasPermission, user } = useAuth();
@@ -130,13 +128,8 @@ export const IncidentDetails = () => {
                 </div>
             )}
 
-            {/* Post-Mortem / RCA */}
-            {(incident.status === 'Resolved' || incident.status === 'Closed') && (
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Post-Mortem / RCA</h3>
-                    <PostMortemTab incidentId={incident.id} canEdit={canEdit()} />
-                </div>
-            )}
+
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content */}
