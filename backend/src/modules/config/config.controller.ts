@@ -50,8 +50,8 @@ export class ConfigController {
 
             await configService.sendTestEmail(email);
             res.json({ message: 'Test email sent successfully' });
-        } catch (error: any) {
-            const msg = error?.message || 'Unknown error';
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : 'Unknown error';
             res.status(400).json({ error: `Failed to send test email: ${msg}` });
         }
     }

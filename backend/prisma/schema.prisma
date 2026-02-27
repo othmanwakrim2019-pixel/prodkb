@@ -258,6 +258,7 @@ model IncidentLog {
 
   @@index([incidentId])
   @@index([logType])
+  @@index([createdById])
 }
 
 model Procedure {
@@ -291,6 +292,7 @@ model Procedure {
   @@index([systemId])
   @@index([errorCode])
   @@index([title])
+  @@index([jobId])
 }
 
 model AuditLog {
@@ -310,6 +312,7 @@ model AuditLog {
   @@index([actionType])
   @@index([entityType])
   @@index([timestamp])
+  @@index([entityId])
 }
 
 enum PlanningPeriod {
@@ -372,6 +375,7 @@ model PlanningJob {
   @@index([instanceId])
   @@index([systemId])
   @@index([status])
+  @@index([jobId])
 }
 
 // ── Phase 2: Escalation Rules ──

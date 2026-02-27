@@ -36,13 +36,13 @@ export class TeamController {
             const result = await teamService.findAll();
 
             // Calculate system counts (presentation logic stays in controller)
-            const teamsWithSystemCount = result.data.map((team: any) => {
-                const uniqueSystemIds = new Set(team.jobs.map((j: any) => j.systemId));
+            const teamsWithSystemCount = result.data.map((team: { jobs: Array<{ systemId: string; system?: { id: string; name: string } }>;[key: string]: unknown }) => {
+                const uniqueSystemIds = new Set(team.jobs.map((j) => j.systemId));
                 return {
                     ...team,
                     systemCount: uniqueSystemIds.size,
                     systems: Array.from(uniqueSystemIds).map(sysId =>
-                        team.jobs.find((j: any) => j.systemId === sysId)?.system
+                        team.jobs.find((j) => j.systemId === sysId)?.system
                     ).filter(Boolean),
                 };
             });

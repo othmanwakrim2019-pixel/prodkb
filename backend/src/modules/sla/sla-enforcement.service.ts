@@ -33,8 +33,9 @@ export class SLAEnforcementService {
 
             // ── Pass 2: Escalate already-breached incidents to next level ──
             await this.escalateBreachedIncidents();
-        } catch (error: any) {
-            logger.error('SLA Enforcement check failed', { error: error.message });
+        } catch (error: unknown) {
+            const errMsg = error instanceof Error ? error.message : String(error);
+            logger.error('SLA Enforcement check failed', { error: errMsg });
             // Re-throw so BullMQ can retry with backoff
             throw error;
         }
@@ -122,8 +123,9 @@ export class SLAEnforcementService {
                 try {
                     await escalationService.escalateIncident(incident.id);
                     logger.info('L1 escalation triggered after SLA breach', { incidentId: incident.id });
-                } catch (escErr: any) {
-                    logger.error('Escalation failed after breach', { error: escErr.message, incidentId: incident.id });
+                } catch (escErr: unknown) {
+                    const errMsg = escErr instanceof Error ? escErr.message : String(escErr);
+                    logger.error('Escalation failed after breach', { error: errMsg, incidentId: incident.id });
                 }
             }
         }
@@ -179,13 +181,18 @@ export class SLAEnforcementService {
                         }
                     }).catch(() => { });
                 }
-            } catch (err: any) {
-                logger.error('Escalation check failed', { error: err.message, incidentId: incident.id });
+            } catch (err: unknown) {
+                const errMsg = err instanceof Error ? err.message : String(err);
+                logger.error('Escalation check failed', { error: errMsg, incidentId: incident.id });
             }
         }
     }
 
-    private async notifyBreach(incident: any, type: 'acknowledge' | 'resolve', minutesElapsed: number): Promise<void> {
+    private async notifyBreach(
+        incident: { id: string; title: string; severity: string; status: string; sla?: { name: string } | null;[key: string]: unknown },
+        type: 'acknowledge' | 'resolve',
+        minutesElapsed: number
+    ): Promise<void> {
         try {
             await emailService.sendIncidentUpdated({
                 incident: {

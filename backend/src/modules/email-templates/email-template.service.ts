@@ -17,7 +17,7 @@ export class EmailTemplateService {
         return template;
     }
 
-    async update(id: string, data: any) {
+    async update(id: string, data: Partial<{ subject: string; body: string; enabled: boolean; cc: string | null; variables: string }>) {
         return prisma.emailTemplate.update({
             where: { id },
             data
@@ -46,11 +46,11 @@ export class EmailTemplateService {
         let renderedSubject = subject;
         let renderedBody = body;
 
-        const flatten = (obj: any, prefix = '') => {
-            return Object.keys(obj).reduce((acc: any, k) => {
+        const flatten = (obj: Record<string, unknown>, prefix = ''): Record<string, unknown> => {
+            return Object.keys(obj).reduce((acc: Record<string, unknown>, k) => {
                 const pre = prefix.length ? prefix + '.' : '';
                 if (typeof obj[k] === 'object' && obj[k] !== null && !(obj[k] instanceof Date)) {
-                    Object.assign(acc, flatten(obj[k], pre + k));
+                    Object.assign(acc, flatten(obj[k] as Record<string, unknown>, pre + k));
                 } else {
                     acc[pre + k] = obj[k];
                 }

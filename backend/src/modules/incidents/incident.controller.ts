@@ -11,7 +11,7 @@ import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
 import { logger } from '../../common/utils/logger';
-import { UserRole } from '../../constants';
+import { UserRole, UserRoleType } from '../../constants';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 
 export class IncidentController {
@@ -65,7 +65,7 @@ export class IncidentController {
 
             // Role-based visibility
             const user = (req as AuthRequest).user;
-            const canViewAll = [UserRole.ADMIN, UserRole.OPERATOR, UserRole.EXPERT].includes(user?.role as any);
+            const canViewAll = ([UserRole.ADMIN, UserRole.OPERATOR, UserRole.EXPERT] as readonly string[]).includes(user?.role ?? '');
 
             if (user && !canViewAll) {
                 if (user.teamIds && user.teamIds.length > 0) {
@@ -147,7 +147,7 @@ export class IncidentController {
             if (data.status === 'Closed' && req.user?.role !== UserRole.ADMIN) {
                 throw new ForbiddenError('Only Administrators can close incidents');
             }
-            if (data.status === 'Resolved' && ![UserRole.ADMIN, UserRole.OPERATOR, UserRole.EXPERT].includes(req.user?.role as any)) {
+            if (data.status === 'Resolved' && !([UserRole.ADMIN, UserRole.OPERATOR, UserRole.EXPERT] as readonly string[]).includes(req.user?.role ?? '')) {
                 throw new ForbiddenError('Only Administrators, Experts or Operators can resolve incidents');
             }
 
