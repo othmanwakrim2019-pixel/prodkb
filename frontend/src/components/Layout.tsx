@@ -20,7 +20,8 @@ import {
     GitBranch,
     Globe,
     FileEdit,
-    Mail
+    Mail,
+    ShieldCheck
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
@@ -287,20 +288,22 @@ export const Layout = () => {
                         />
                     )}
 
-                    {/* Audit Logs — standalone */}
+                    {/* Monitoring group — Audit Config + Audit Logs */}
                     {showAudit && (
-                        <button
-                            onClick={() => navigateToAdminTab('audit')}
-                            className={clsx(
-                                'w-full flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors',
-                                location.pathname === '/admin' && currentTab === 'audit'
-                                    ? 'bg-white/10 text-white border-l-4 border-white'
-                                    : 'text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
-                            )}
-                        >
-                            <Activity className="mr-3 h-5 w-5" />
-                            {t('admin.tabs.auditLogs', 'Audit Logs')}
-                        </button>
+                        <CollapsibleGroup
+                            label={t('nav.monitoring', 'Monitoring')}
+                            icon={Activity}
+                            children={[
+                                { label: t('admin.tabs.auditConfig', 'Audit Config'), tab: 'audit-config', icon: ShieldCheck, permission: 'CONFIG_MANAGE' },
+                                { label: t('admin.tabs.auditLogs', 'Audit Logs'), tab: 'audit', icon: Activity, permission: 'AUDIT_VIEW' },
+                            ]}
+                            isOpen={openGroups.monitoring || false}
+                            onToggle={() => toggleGroup('monitoring')}
+                            currentTab={currentTab}
+                            currentPath={location.pathname}
+                            hasPermission={checkPerm}
+                            onChildClick={navigateToAdminTab}
+                        />
                     )}
                 </nav>
 
