@@ -7,7 +7,10 @@ import { Lock, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const Login = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+    const savedEmail = localStorage.getItem('rememberedEmail') || '';
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+        defaultValues: { email: savedEmail, remember: !!savedEmail }
+    });
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState('');
@@ -26,6 +29,7 @@ export const Login = () => {
     interface LoginFormData {
         email: string;
         password: string;
+        remember: boolean;
     }
 
     const onSubmit = async (data: LoginFormData) => {
@@ -33,6 +37,11 @@ export const Login = () => {
         sessionStorage.removeItem('loginError'); // Clear persisted errors
         setIsLoading(true);
         try {
+            if (data.remember) {
+                localStorage.setItem('rememberedEmail', data.email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
             const response = await authService.login(data.email, data.password);
             login(response.user);
             navigate('/');
@@ -73,6 +82,7 @@ export const Login = () => {
                             <input
                                 {...register('email', { required: t('login.emailRequired') })}
                                 type="email"
+                                autoComplete="username email"
                                 className="pl-10 block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 placeholder={t('login.emailPlaceholder')}
                             />
@@ -89,11 +99,26 @@ export const Login = () => {
                             <input
                                 {...register('password', { required: t('login.passwordRequired') })}
                                 type="password"
+                                autoComplete="current-password"
                                 className="pl-10 block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
                                 placeholder={t('login.passwordPlaceholder')}
                             />
                         </div>
                         {errors.password && <p className="text-red-500 text-xs mt-1">{String(errors.password.message)}</p>}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <input
+                                {...register('remember')}
+                                id="remember-me"
+                                type="checkbox"
+                                className="h-4 w-4 text-primary focus:ring-accent border-slate-300 rounded"
+                            />
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
+                                {t('login.rememberMe', 'Remember me')}
+                            </label>
+                        </div>
                     </div>
 
                     <button
