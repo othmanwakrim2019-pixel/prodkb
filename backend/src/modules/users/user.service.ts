@@ -155,7 +155,7 @@ export class UserService {
         };
     }
 
-    private toPublicUser(user: any): IUserPublic {
+    private toPublicUser(user: { id: string; name: string; email: string; isActive: boolean; role?: { name: string } | null; createdAt: Date }): IUserPublic {
         return {
             id: user.id,
             name: user.name,

@@ -54,13 +54,14 @@ const worker = new Worker<WebhookDeliveryJobData>(
                 body,
                 signal: controller.signal,
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
             clearTimeout(timeout);
             // On failure, BullMQ handles the retries automatically based on attempts configured
             // If it's the last attempt (job.attemptsMade >= job.opts.attempts! - 1), we can log the ultimate failure
             const isLastAttempt = job.attemptsMade >= (job.opts.attempts || 3);
+            const errMsg = err instanceof Error ? err.message : String(err);
             if (isLastAttempt) {
-                await logDelivery(webhook.id, event, body, null, null, job.attemptsMade, false, err.message);
+                await logDelivery(webhook.id, event, body, null, null, job.attemptsMade, false, errMsg);
             }
             throw err; // throw to trigger BullMQ retry
         }

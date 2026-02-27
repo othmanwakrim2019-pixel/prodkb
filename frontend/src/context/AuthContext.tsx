@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 // The httpOnly cookie is sent automatically by the browser
                 // No need to set Authorization header manually
-                const response = await axios.get('/auth/me');
+                const response = await axios.get('/auth/v1/me');
                 setUser(response.data);
             } catch (error) {
                 console.error('Failed to fetch user', error);
