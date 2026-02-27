@@ -61,17 +61,17 @@ export async function sendNotification(incident: any, type: 'created' | 'updated
             switch (type) {
                 case 'created':
                     notifType = 'incident_created';
-                    title = `🚨 New Incident ${incidentRef}`;
+                    title = `New Incident ${incidentRef}`;
                     message = `${incident.title} — Severity: ${incident.severity}`;
                     break;
                 case 'updated':
                     notifType = 'status_changed';
-                    title = `🔄 Incident Updated ${incidentRef}`;
+                    title = `Incident Updated ${incidentRef}`;
                     message = `${incident.title} — Status: ${incident.status}`;
                     break;
                 case 'resolved':
                     notifType = 'incident_resolved';
-                    title = `✅ Incident Resolved ${incidentRef}`;
+                    title = `Incident Resolved ${incidentRef}`;
                     message = `${incident.title} has been resolved`;
                     break;
             }
@@ -93,8 +93,8 @@ export async function sendNoteNotification(incident: any, noteType: 'note_added'
     try {
         const incidentRef = `#${incident.id.substring(0, 8)}`;
         const title = noteType === 'note_added'
-            ? `📝 Note Added ${incidentRef}`
-            : `📎 File Uploaded ${incidentRef}`;
+            ? `Note Added ${incidentRef}`
+            : `File Uploaded ${incidentRef}`;
         const message = incident.title;
 
         await notificationService.createForTeam(

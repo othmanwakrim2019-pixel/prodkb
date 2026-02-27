@@ -104,16 +104,6 @@ export const NotificationBell = () => {
         return `${days}d ago`;
     };
 
-    const typeIcon = (type: string) => {
-        switch (type) {
-            case 'incident_created': return '🚨';
-            case 'status_changed': return '🔄';
-            case 'incident_resolved': return '✅';
-            case 'note_added': return '📝';
-            case 'file_uploaded': return '📎';
-            default: return '🔔';
-        }
-    };
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -164,11 +154,9 @@ export const NotificationBell = () => {
                                 <button
                                     key={n.id}
                                     onClick={() => handleNotificationClick(n)}
-                                    className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 ${!n.isRead ? 'bg-blue-50/40' : ''
-                                        }`}
+                                    className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.isRead ? 'bg-blue-50/40' : ''}`}
                                 >
-                                    <span className="text-lg mt-0.5 flex-shrink-0">{typeIcon(n.type)}</span>
-                                    <div className="flex-1 min-w-0">
+                                    <div className="min-w-0">
                                         <div className="flex items-center gap-2">
                                             <p className={`text-sm truncate ${!n.isRead ? 'font-semibold text-slate-900' : 'font-medium text-slate-600'}`}>
                                                 {n.title}
