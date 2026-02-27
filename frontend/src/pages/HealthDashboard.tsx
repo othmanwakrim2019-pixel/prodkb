@@ -31,22 +31,42 @@ export const HealthDashboard = () => {
             const data = res.data;
 
             setUptime(data.uptime || 0);
-            setOverallStatus(data.status === 'ok' ? 'ok' : 'degraded');
 
             const comps: HealthComponent[] = [];
+            // Always add API as healthy if we got a response
+            comps.push({ name: 'api', status: 'ok', icon: <Wifi className="h-5 w-5" />, label: 'API Server' });
+
             if (data.components) {
                 if (data.components.database !== undefined) {
-                    comps.push({ name: 'database', status: data.components.database === 'ok' ? 'ok' : 'error', icon: <Database className="h-5 w-5" />, label: 'PostgreSQL' });
+                    comps.push({
+                        name: 'database',
+                        status: data.components.database === 'connected' ? 'ok' : 'error',
+                        icon: <Database className="h-5 w-5" />,
+                        label: 'PostgreSQL'
+                    });
                 }
                 if (data.components.redis !== undefined) {
-                    comps.push({ name: 'redis', status: data.components.redis === 'ok' ? 'ok' : 'error', icon: <Server className="h-5 w-5" />, label: 'Redis' });
+                    comps.push({
+                        name: 'redis',
+                        status: data.components.redis === 'connected' ? 'ok' : 'error',
+                        icon: <Server className="h-5 w-5" />,
+                        label: 'Redis'
+                    });
                 }
-                if (data.components.bullmq !== undefined) {
-                    comps.push({ name: 'bullmq', status: data.components.bullmq === 'ok' ? 'ok' : 'error', icon: <Activity className="h-5 w-5" />, label: 'BullMQ' });
+                if (data.components.slaWorker !== undefined) {
+                    comps.push({
+                        name: 'slaWorker',
+                        status: data.components.slaWorker === 'healthy' ? 'ok' : data.components.slaWorker === 'no_repeatable_jobs' ? 'ok' : 'error',
+                        icon: <Activity className="h-5 w-5" />,
+                        label: 'SLA Worker'
+                    });
                 }
             }
-            // Always add API as healthy if we got a response
-            comps.unshift({ name: 'api', status: 'ok', icon: <Wifi className="h-5 w-5" />, label: 'API Server' });
+
+            // Derive overall status from component states
+            const hasError = comps.some(c => c.status === 'error');
+            setOverallStatus(hasError ? 'degraded' : 'ok');
+
             setComponents(comps);
             setLastCheck(new Date());
         } catch {
@@ -55,7 +75,7 @@ export const HealthDashboard = () => {
                 { name: 'api', status: 'error', icon: <Wifi className="h-5 w-5" />, label: 'API Server' },
                 { name: 'database', status: 'unknown', icon: <Database className="h-5 w-5" />, label: 'PostgreSQL' },
                 { name: 'redis', status: 'unknown', icon: <Server className="h-5 w-5" />, label: 'Redis' },
-                { name: 'bullmq', status: 'unknown', icon: <Activity className="h-5 w-5" />, label: 'BullMQ' },
+                { name: 'slaWorker', status: 'unknown', icon: <Activity className="h-5 w-5" />, label: 'SLA Worker' },
             ]);
         }
     };
