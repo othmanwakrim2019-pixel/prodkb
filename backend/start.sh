@@ -42,8 +42,12 @@ if [ -z "$DATABASE_URL" ]; then
     echo "FATAL ERROR: DATABASE_URL is empty at runtime!"
     exit 1
 fi
-npx prisma migrate deploy
-echo "Migrations applied successfully."
+
+# Prisma migrations cannot run through PGBouncer transaction mode.
+# We create a temporary DIRECT_URL that points directly to the 'postgres' container.
+DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
+echo "Using direct connection for migrations..."
+DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy
 echo "Migrations applied successfully."
 
 # 3. Generate Prisma Client (in case it wasn't generated at build time)
