@@ -110,6 +110,26 @@ export class PlanningController {
         }
     }
 
+    /** Delete a planning instance and all its jobs */
+    static async deleteInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const instance = await planningInstanceService.delete(req.params.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'DELETE',
+                entityType: 'PLANNING_INSTANCE',
+                entityId: req.params.id,
+                details: JSON.stringify({ name: instance.name }),
+                req,
+            });
+
+            res.json(createResponse(true, null, 'Planning instance deleted'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // -- Jobs --
 
     static async getJobsByInstance(req: AuthRequest, res: Response, next: NextFunction) {

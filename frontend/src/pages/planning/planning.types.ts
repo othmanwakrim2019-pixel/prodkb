@@ -26,8 +26,9 @@ export interface PlanningInstance {
 export interface PlanningJob {
     id: string;
     instanceId: string;
-    systemId: string;
-    jobId: string;
+    systemId: string | null;
+    jobId: string | null;
+    customTaskName: string | null;
     scheduledTime: string;
     dependencies: string[];
     status: PlanningStatusType;
@@ -51,20 +52,21 @@ export interface PlanningJob {
     system: {
         id: string;
         name: string;
-    };
+    } | null;
     job: {
         id: string;
         name: string;
         code: string;
-    };
+    } | null;
     createdAt: string;
     updatedAt: string;
 }
 
 export interface CreatePlanningJobPayload {
     instanceId: string;
-    systemId: string;
-    jobId: string;
+    systemId?: string;
+    jobId?: string;
+    customTaskName?: string;
     scheduledTime: string;
     dependencies: string[];
     status?: PlanningStatusType;

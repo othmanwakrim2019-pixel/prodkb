@@ -11,7 +11,7 @@ import type {
     PlanningPeriod,
     InstanceStatusType,
 } from './planning.types';
-import { Plus, Archive, RotateCcw, ArrowRight, ArrowDown, History, TableProperties, GitBranch, Copy } from 'lucide-react';
+import { Plus, Archive, RotateCcw, ArrowRight, ArrowDown, History, TableProperties, GitBranch, Copy, Trash2 } from 'lucide-react';
 
 const PERIODS: { value: PlanningPeriod; label: string }[] = [
     { value: 'monthly', label: 'Monthly' },
@@ -138,6 +138,17 @@ export const Planning = () => {
         }
     }, [fetchInstances]);
 
+    const handleDeleteInstance = useCallback(async (instanceId: string) => {
+        if (!confirm('⚠️ Are you sure you want to permanently delete this planning instance and ALL its tasks? This cannot be undone.')) return;
+        try {
+            await axios.delete(`/api/v1/planning/instances/${instanceId}`);
+            if (selectedInstanceId === instanceId) setSelectedInstanceId(null);
+            await fetchInstances();
+        } catch (err) {
+            console.error('Failed to delete instance:', err);
+        }
+    }, [fetchInstances, selectedInstanceId]);
+
     const handleClone = useCallback(async () => {
         if (!selectedInstanceId) return;
         if (!confirm('Clone this planning instance for next month? All tasks will be reset to Pending.')) return;
@@ -155,14 +166,16 @@ export const Planning = () => {
     }, [selectedInstanceId, fetchInstances]);
 
     const handleCreateIncidentFromJob = useCallback((job: PlanningJob) => {
+        const taskName = job.customTaskName || job.job?.name || 'Unknown Task';
+        const taskCode = job.job?.code || 'MANUAL';
         // Navigate to create incident with pre-filled data via state
         navigate('/incidents/create', {
             state: {
                 prefill: {
-                    title: `[PLANNING] ${job.job.name} failed`,
-                    systemId: job.systemId,
-                    jobId: job.jobId,
-                    description: `Batch job "${job.job.name}" (${job.job.code}) scheduled for ${new Date(job.scheduledTime).toLocaleDateString('fr-FR')} has failed during the Fin de Mois procedure.`,
+                    title: `[PLANNING] ${taskName} failed`,
+                    systemId: job.systemId || undefined,
+                    jobId: job.jobId || undefined,
+                    description: `Task "${taskName}" (${taskCode}) scheduled for ${new Date(job.scheduledTime).toLocaleDateString('fr-FR')} has failed during the Fin de Mois procedure.`,
                     severity: 'HIGH',
                 }
             }
@@ -286,6 +299,13 @@ export const Planning = () => {
                                         <RotateCcw className="w-3.5 h-3.5" />
                                     </button>
                                 )}
+                                <button
+                                    onClick={e => { e.stopPropagation(); handleDeleteInstance(inst.id); }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 transition-all"
+                                    title="Delete permanently"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
                         ))}
                     </div>

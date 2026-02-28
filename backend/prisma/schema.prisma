@@ -387,10 +387,11 @@ model PlanningJob {
   id             String         @id @default(uuid())
   instanceId     String
   instance       PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  systemId       String
-  system         System           @relation(fields: [systemId], references: [id])
-  jobId          String
-  job            Job              @relation(fields: [jobId], references: [id])
+  systemId       String?
+  system         System?          @relation(fields: [systemId], references: [id])
+  jobId          String?
+  job            Job?             @relation(fields: [jobId], references: [id])
+  customTaskName String?          // Free-text task name for MANUAL_ACTION (e.g. "Fermeture des Agences")
   scheduledTime  DateTime
   dependencies   Json             @default("[]") // Array of PlanningJob IDs
   status         PlanningStatus   @default(pending)

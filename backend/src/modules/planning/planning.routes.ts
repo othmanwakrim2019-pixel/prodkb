@@ -14,6 +14,7 @@ router.post('/instances', checkPermission('PLANNING_MANAGE'), PlanningController
 router.post('/instances/:id/clone', checkPermission('PLANNING_MANAGE'), PlanningController.cloneInstance);
 router.patch('/instances/:id/archive', checkPermission('PLANNING_MANAGE'), PlanningController.archiveInstance);
 router.patch('/instances/:id/reactivate', checkPermission('PLANNING_MANAGE'), PlanningController.reactivateInstance);
+router.delete('/instances/:id', checkPermission('PLANNING_MANAGE'), PlanningController.deleteInstance);
 
 // --- Jobs within instances ---
 router.get('/instances/:id/jobs', checkPermission('PLANNING_VIEW'), PlanningController.getJobsByInstance);

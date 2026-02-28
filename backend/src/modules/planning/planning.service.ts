@@ -131,8 +131,9 @@ export class PlanningInstanceService {
             const newJob = await prisma.planningJob.create({
                 data: {
                     instanceId: newInstance.id,
-                    systemId: job.systemId,
-                    jobId: job.jobId,
+                    systemId: job.systemId ?? undefined,
+                    jobId: job.jobId ?? undefined,
+                    customTaskName: job.customTaskName ?? undefined,
                     scheduledTime: advanceMonth(job.scheduledTime),
                     dependencies: [], // fill after all created
                     status: PlanningStatus.pending,
@@ -171,6 +172,15 @@ export class PlanningInstanceService {
                 _count: { select: { jobs: true } },
             },
         });
+    }
+
+    /** Delete a planning instance and all its jobs (cascade) */
+    async delete(id: string) {
+        const instance = await prisma.planningInstance.findUnique({ where: { id } });
+        if (!instance) throw new NotFoundError('Planning instance not found');
+        await prisma.planningInstance.delete({ where: { id } });
+        logger.info(`Deleted planning instance ${id}`);
+        return instance;
     }
 }
 

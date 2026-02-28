@@ -163,9 +163,9 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                                     {/* Task name */}
                                     <td className="px-4 py-3">
                                         <div className={`font-medium ${isDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                                            {job.job.name}
+                                            {job.customTaskName || job.job?.name || 'Untitled'}
                                         </div>
-                                        <div className="text-xs text-slate-400 mt-0.5">{job.system.name}</div>
+                                        <div className="text-xs text-slate-400 mt-0.5">{job.system?.name || (job.customTaskName ? 'Action manuelle' : '')}</div>
                                         {job.notes && (
                                             <div className="text-xs text-emerald-600 mt-1 italic">"{job.notes}"</div>
                                         )}
@@ -287,7 +287,7 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
             {/* MANUAL_ACTION Confirmation Modal */}
             {confirmJob && (
                 <ConfirmNoteModal
-                    jobName={confirmJob.job.name}
+                    jobName={confirmJob.customTaskName || confirmJob.job?.name || 'Task'}
                     onConfirm={(note) => {
                         updateStatus(confirmJob, 'done', note);
                         setConfirmJob(null);
