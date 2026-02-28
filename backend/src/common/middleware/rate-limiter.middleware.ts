@@ -38,6 +38,9 @@ function createLimiter(opts: { windowMs: number; max: number; message: string | 
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests: opts.skipSuccessfulRequests,
+        // Use exact IP — default v7 groups IPv6 by /56 subnet, which bans
+        // an entire office/network when one user triggers the limit.
+        keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
         ...storeOpts,
     });
 }
