@@ -40,6 +40,8 @@ model User {
   createdInstances  PlanningInstance[] @relation("CreatedInstances")
   completedPlanningJobs PlanningJob[] @relation("CompletedPlanningJobs")
   refreshTokens     RefreshToken[]
+  notifications     Notification[]
+  postMortems       PostMortem[]
 
   @@index([roleId])
 }
@@ -221,6 +223,7 @@ model Incident {
   linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
 
   logs IncidentLog[]
+  postMortem PostMortem?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -234,6 +237,27 @@ model Incident {
   @@index([environment])
   @@index([status, createdAt]) // Optimized for dashboard
   @@index([slaBreached, status]) // SLA enforcement queries
+}
+
+// ── Post-Mortem / Root Cause Analysis ──
+model PostMortem {
+  id                 String   @id @default(uuid())
+  incidentId         String   @unique
+  incident           Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  summary            String   @db.Text
+  rootCause          String   @db.Text
+  timeline           String   @db.Text
+  impact             String   @db.Text
+  lessonsLearned     String   @db.Text
+  preventiveActions  String   @db.Text
+  status             String   @default("DRAFT") // DRAFT | PUBLISHED
+  createdById        String
+  createdBy          User     @relation(fields: [createdById], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([incidentId])
+  @@index([status])
 }
 
 model IncidentLog {
@@ -459,4 +483,20 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
+}
+
+// ── In-App Notifications ──
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String   // 'incident_created' | 'status_changed' | 'note_added' | 'file_uploaded'
+  title      String
+  message    String
+  incidentId String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

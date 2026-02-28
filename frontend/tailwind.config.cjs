@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,9 +8,9 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                primary: '#003d82', // CIH Bank Blue (trust, experience)
-                secondary: '#002856', // CIH Bank Dark Blue
-                accent: '#ff6b35', // CIH Bank Orange (innovation, modern)
+                primary: '#003d82',
+                secondary: '#002856',
+                accent: '#ff6b35',
                 'cih-blue': '#003d82',
                 'cih-orange': '#ff6b35',
             }
@@ -17,3 +18,4 @@ module.exports = {
     },
     plugins: [],
 }
+

@@ -90,4 +90,31 @@ export class UserController {
             next(error);
         }
     }
+
+    static async adminResetPassword(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { newPassword } = req.body;
+
+            if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+                return res.status(400).json(createResponse(false, null, 'New password must be at least 8 characters'));
+            }
+
+            await userService.adminResetPassword(id, newPassword);
+
+            // Audit
+            await logAudit({
+                userId: req.user?.id || 'unknown',
+                actionType: 'UPDATE',
+                entityType: 'USER',
+                entityId: id,
+                details: 'Admin reset password',
+                req
+            });
+
+            res.json(createResponse(true, null, 'Password has been reset successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
 }

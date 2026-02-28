@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import axios from '../utils/axios';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IncidentFilters } from '../components/IncidentFilters';
 import { Incident } from '../types';
 import { useTranslation } from 'react-i18next';
+import { Pagination } from '../components/ui/Pagination';
+import { exportToCSV } from '../utils/exportCSV';
 
 export const Incidents = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -75,16 +77,31 @@ export const Incidents = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">{t('incidents.title')}</h1>
-                {canCreate() && (
-                    <Link
-                        to="/incidents/new"
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('incidents.title')}</h1>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => exportToCSV(incidents as any[], 'incidents', [
+                            { key: 'title', label: 'Title' },
+                            { key: 'severity', label: 'Severity' },
+                            { key: 'status', label: 'Status' },
+                            { key: 'environment', label: 'Environment' },
+                            { key: 'createdAt', label: 'Created At' },
+                        ])}
+                        className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                     >
-                        <Plus className="-ml-1 mr-2 h-5 w-5" />
-                        New Incident
-                    </Link>
-                )}
+                        <Download className="-ml-0.5 mr-1.5 h-4 w-4" />
+                        {t('common.exportCSV')}
+                    </button>
+                    {canCreate() && (
+                        <Link
+                            to="/incidents/new"
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                        >
+                            <Plus className="-ml-1 mr-2 h-5 w-5" />
+                            {t('common.newIncident')}
+                        </Link>
+                    )}
+                </div>
             </div>
 
             {/* Filters */}
@@ -122,8 +139,8 @@ export const Incidents = () => {
                         <tbody className="bg-white divide-y divide-slate-200">
                             {incidents.map((incident) => (
                                 <tr key={incident.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Link to={`/incidents/${incident.id}`} className="text-sm font-medium text-primary hover:text-accent">
+                                    <td className="px-6 py-4">
+                                        <Link to={`/incidents/${incident.id}`} className="text-sm font-medium text-primary hover:text-accent block max-w-xs truncate" title={incident.title}>
                                             {incident.title}
                                         </Link>
                                     </td>
@@ -179,70 +196,12 @@ export const Incidents = () => {
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-between sm:px-6">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                        <button
-                            onClick={() => handlePageChange(meta.page - 1)}
-                            disabled={meta.page === 1}
-                            className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(meta.page + 1)}
-                            disabled={meta.page === meta.totalPages}
-                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Next
-                        </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-4">
-                            <p className="text-sm text-slate-700">
-                                Showing <span className="font-medium">{incidents.length > 0 ? (meta.page - 1) * meta.limit + 1 : 0}</span> to <span className="font-medium">{Math.min(meta.page * meta.limit, meta.total)}</span> of{' '}
-                                <span className="font-medium">{meta.total}</span> results
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="limit" className="text-sm text-slate-600">Rows per page:</label>
-                                <select
-                                    id="limit"
-                                    value={meta.limit}
-                                    onChange={(e) => handleLimitChange(Number(e.target.value))}
-                                    className="block w-20 rounded-md border-slate-300 py-1.5 text-base focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <button
-                                    onClick={() => handlePageChange(meta.page - 1)}
-                                    disabled={meta.page === 1}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">Previous</span>
-                                    Previous
-                                </button>
-                                {/* Simple page counter for now, can be expanded to full pagination UI */}
-                                <span className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
-                                    Page {meta.page} of {meta.totalPages}
-                                </span>
-                                <button
-                                    onClick={() => handlePageChange(meta.page + 1)}
-                                    disabled={meta.page === meta.totalPages}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">Next</span>
-                                    Next
-                                </button>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <Pagination
+                    meta={meta}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
+                    limitOptions={[10, 20, 50, 100]}
+                />
             </div>
         </div>
     );

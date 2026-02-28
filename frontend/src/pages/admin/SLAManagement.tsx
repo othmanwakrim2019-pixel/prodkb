@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { SLA, Severity } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { slaService } from '../../services/admin.service';
+import { Pagination } from '../../components/ui/Pagination';
 
 export const SLAManagement = () => {
     const { canManageSLAs } = useAuth();
@@ -12,6 +13,8 @@ export const SLAManagement = () => {
     const [showSlaForm, setShowSlaForm] = useState(false);
     const [newSla, setNewSla] = useState({ name: '', description: '', severity: 'Medium', acknowledgeTimeMinutes: 60, resolveTimeMinutes: 480 });
     const [editingSla, setEditingSla] = useState<SLA | null>(null);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         fetchSlas();
@@ -180,7 +183,7 @@ export const SLAManagement = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                        {slas.map((sla) => (
+                        {slas.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((sla) => (
                             <tr key={sla.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sla.severity === 'Critical' ? 'bg-red-100 text-red-800' :
@@ -220,6 +223,18 @@ export const SLAManagement = () => {
                     </tbody>
                 </table>
             </div>
+
+            {slas.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: slas.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages: Math.ceil(slas.length / ITEMS_PER_PAGE),
+                    }}
+                    onPageChange={setPage}
+                />
+            )}
 
             {editingSla && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

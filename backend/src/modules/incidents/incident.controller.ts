@@ -8,6 +8,7 @@ import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
 import { fileUploadService } from '../../common/services/fileUploadService';
 import { createIncidentSchema, updateIncidentSchema, addIncidentLogSchema } from './incident.schema';
 import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../common/errors/app.error';
+import { sanitizeObject } from '../../common/utils/sanitize';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
 import { logger } from '../../common/utils/logger';
@@ -103,7 +104,19 @@ export class IncidentController {
 
     static async getIncidentById(req: Request, res: Response, next: NextFunction) {
         try {
+            const authReq = req as AuthRequest;
             const incident = await incidentCrudService.findById(req.params.id);
+
+            // IDOR protection: non-ADMIN users can only view incidents assigned to their team
+            if (authReq.user?.role !== UserRole.ADMIN) {
+                const userTeamIds = authReq.user?.teamIds || [];
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const incidentTeamId = (incident as any).assignedTeamId;
+                if (incidentTeamId && !userTeamIds.includes(incidentTeamId)) {
+                    throw new ForbiddenError('You do not have access to this incident');
+                }
+            }
+
             res.json(createResponse(true, incident));
         } catch (error) {
             next(error);
@@ -115,7 +128,7 @@ export class IncidentController {
             const userId = req.user?.id;
             if (!userId) throw new ValidationError('User not authenticated');
 
-            const data = createIncidentSchema.parse(req.body);
+            const data = sanitizeObject(createIncidentSchema.parse(req.body), ['description']);
 
             const incident = await incidentCrudService.create(data as CreateIncidentDTO, userId);
 
@@ -141,7 +154,7 @@ export class IncidentController {
             if (!userId) throw new ValidationError('User not authenticated');
 
             const existingIncident = await incidentCrudService.findById(req.params.id);
-            const data = updateIncidentSchema.parse(req.body);
+            const data = sanitizeObject(updateIncidentSchema.parse(req.body), ['description']);
 
             // Role-based workflow restrictions
             if (data.status === 'Closed' && req.user?.role !== UserRole.ADMIN) {
@@ -186,14 +199,20 @@ export class IncidentController {
     }
 
     static async uploadIncidentFile(req: AuthRequest, res: Response, next: NextFunction) {
+        let tempPath: string | undefined;
         try {
             const userId = req.user?.id;
             if (!userId) throw new ValidationError('User not authenticated');
             if (!req.file) throw new ValidationError('No file uploaded');
 
+            // diskStorage gives us req.file.path instead of req.file.buffer
+            tempPath = req.file.path;
+            const fs = await import('fs');
+            const fileBuffer = fs.readFileSync(tempPath);
+
             const uploadedFile = await fileUploadService.saveFile(
                 req.params.id,
-                req.file.buffer,
+                fileBuffer,
                 req.file.originalname,
                 req.file.mimetype
             );
@@ -208,6 +227,12 @@ export class IncidentController {
             res.status(201).json(createResponse(true, log));
         } catch (error) {
             next(error);
+        } finally {
+            // Always clean up temp file
+            if (tempPath) {
+                const fs = await import('fs');
+                fs.unlink(tempPath, () => { }); // fire-and-forget cleanup
+            }
         }
     }
 

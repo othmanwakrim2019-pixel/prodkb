@@ -5,6 +5,7 @@ import { EditTeamModal } from '../../components/EditTeamModal';
 import { Team, User, TeamMember } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { teamService, userService } from '../../services/admin.service';
+import { Pagination } from '../../components/ui/Pagination';
 
 export const TeamManagement = () => {
     const { canManageTeams } = useAuth();
@@ -17,6 +18,8 @@ export const TeamManagement = () => {
     const [newTeam, setNewTeam] = useState({ name: '', description: '', emailDistribution: '', sendEmail: true });
     const [newMember, setNewMember] = useState({ userId: '', role: '' });
     const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         fetchTeams();
@@ -206,7 +209,7 @@ export const TeamManagement = () => {
             )}
 
             <div className="grid grid-cols-1 gap-4">
-                {teams.map((team) => (
+                {teams.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((team) => (
                     <div key={team.id} className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
                         <div className="px-6 py-4 flex items-center justify-between bg-slate-50">
                             <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedTeamId(expandedTeamId === team.id ? null : team.id)}>
@@ -344,6 +347,18 @@ export const TeamManagement = () => {
                     </div>
                 ))}
             </div>
+
+            {teams.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: teams.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages: Math.ceil(teams.length / ITEMS_PER_PAGE),
+                    }}
+                    onPageChange={setPage}
+                />
+            )}
 
             {editingTeam && (
                 <EditTeamModal

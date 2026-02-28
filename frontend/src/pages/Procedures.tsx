@@ -5,6 +5,7 @@ import { Plus, Search as SearchIcon, Link as LinkIcon, ShieldAlert } from 'lucid
 import { useAuth } from '../context/AuthContext';
 import { Procedure } from '../types';
 import { useTranslation } from 'react-i18next';
+import { Pagination } from '../components/ui/Pagination';
 
 export const Procedures = () => {
     const { hasPermission } = useAuth();
@@ -14,6 +15,8 @@ export const Procedures = () => {
     const [search, setSearch] = useState('');
     const [searchParams] = useSearchParams();
     const linkToIncidentId = searchParams.get('linkTo');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
 
     useEffect(() => {
         const fetchProcedures = async () => {
@@ -106,7 +109,7 @@ export const Procedures = () => {
 
             {/* Procedure List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {procedures.map((procedure) => (
+                {procedures.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((procedure) => (
                     <div key={procedure.id} className="block group">
                         {linkToIncidentId ? (
                             <button
@@ -193,6 +196,21 @@ export const Procedures = () => {
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {procedures.length > ITEMS_PER_PAGE && (
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+                    <Pagination
+                        meta={{
+                            total: procedures.length,
+                            page,
+                            limit: ITEMS_PER_PAGE,
+                            totalPages: Math.ceil(procedures.length / ITEMS_PER_PAGE),
+                        }}
+                        onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    />
+                </div>
+            )}
         </div>
     );
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../lib/api'; // Corrected path to lib/api
 import { Edit, Save, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import DOMPurify from 'dompurify';
 
 interface EmailTemplate {
     id: string;
@@ -213,7 +214,7 @@ export const EmailTemplates = () => {
                                         </div>
                                         <div className="p-4 bg-white">
                                             <div className="mb-2 font-bold text-lg border-b pb-2">{preview.subject}</div>
-                                            <div dangerouslySetInnerHTML={{ __html: preview.body }} className="prose max-w-none" />
+                                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.body) }} className="prose max-w-none" />
                                         </div>
                                     </div>
                                 )}

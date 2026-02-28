@@ -15,7 +15,6 @@ import { PageLoader } from '../components/ui/PageLoader';
 import { EmptyState } from '../components/ui/PageLoader';
 import { IncidentLogTimeline } from '../components/incidents/IncidentLogTimeline';
 import { IncidentSidebar } from '../components/incidents/IncidentSidebar';
-
 export const IncidentDetails = () => {
     const { id } = useParams();
     const { canEdit, hasPermission, user } = useAuth();
@@ -128,6 +127,9 @@ export const IncidentDetails = () => {
                     </div>
                 </div>
             )}
+
+
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content */}

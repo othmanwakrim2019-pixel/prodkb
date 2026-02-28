@@ -5,6 +5,7 @@ import { logger } from '../../common/utils/logger';
 import { AuthenticationError, ConflictError, ValidationError, NotFoundError } from '../../common/errors/app.error';
 import { JwtService } from '../../common/utils/jwt.utils';
 import { refreshTokenService } from './refresh-token.service';
+import { isAccountLocked, recordFailedAttempt, clearFailedAttempts } from '../../common/services/lockout.service';
 import type { CreateUserDTO, IUserPublic } from '../../types';
 
 export class AuthService {
@@ -73,6 +74,13 @@ export class AuthService {
      * Login user
      */
     async login(email: string, password: string) {
+        // ── Account lockout check ──
+        const lockoutRemaining = await isAccountLocked(email);
+        if (lockoutRemaining > 0) {
+            const minutes = Math.ceil(lockoutRemaining / 60);
+            throw new AuthenticationError(`Account is temporarily locked. Try again in ${minutes} minute(s).`);
+        }
+
         const user = await prisma.user.findUnique({
             where: { email },
             include: {
@@ -85,17 +93,25 @@ export class AuthService {
         });
 
         if (!user) {
+            await recordFailedAttempt(email);
             throw new AuthenticationError('Invalid email or password');
         }
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
-            throw new AuthenticationError('Invalid email or password');
+            const result = await recordFailedAttempt(email);
+            if (result.locked) {
+                throw new AuthenticationError('Too many failed attempts. Account is locked for 15 minutes.');
+            }
+            throw new AuthenticationError(`Invalid email or password. ${result.attemptsLeft} attempt(s) remaining.`);
         }
 
         if (!user.isActive) {
             throw new AuthenticationError('Account is inactive');
         }
+
+        // ── Successful login — clear lockout counter ──
+        await clearFailedAttempts(email);
 
         // Generate JWT using JwtService
         const token = JwtService.sign({

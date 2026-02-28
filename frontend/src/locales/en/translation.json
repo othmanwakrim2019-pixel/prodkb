@@ -5,7 +5,9 @@
         "procedures": "Procedures",
         "search": "Search",
         "planning": "Planning",
-        "admin": "Admin"
+        "admin": "Admin",
+        "settings": "Settings",
+        "userManagement": "User Management"
     },
     "common": {
         "signOut": "Sign Out",
@@ -58,7 +60,40 @@
         "user": "User",
         "timestamp": "Timestamp",
         "accessDenied": "Access Denied",
-        "accessDeniedMessage": "You do not have permission to view this page. Please contact your administrator if you believe this is an error."
+        "accessDeniedMessage": "You do not have permission to view this page. Please contact your administrator if you believe this is an error.",
+        "online": "Online",
+        "notifications": "Notifications",
+        "markAllRead": "Mark all read",
+        "noNotifications": "No notifications yet",
+        "exportCSV": "Export CSV",
+        "administration": "Administration",
+        "environment": "Environment",
+        "production": "Production",
+        "preProduction": "Pre-Production",
+        "recette": "Recette",
+        "application": "Application",
+        "selectApplication": "Select Application...",
+        "selectUproc": "Select Uproc...",
+        "selectApplicationFirst": "Select an application first",
+        "autoFilledFromJob": "auto-filled from job",
+        "autoFilledFromUproc": "Auto-filled from selected job",
+        "detailedDescription": "Detailed description of what happened...",
+        "assignedTeam": "Assigned Team",
+        "noTeamAssigned": "No Team Assigned",
+        "autoFilledNote": "Auto-filled from Uproc",
+        "slaPolicy": "SLA Policy",
+        "noSlaPolicy": "No SLA Policy",
+        "detectionSource": "Detection Source",
+        "detectionPlaceholder": "e.g. Dollar Universe Console",
+        "declareIncident": "Declare Incident",
+        "componentContext": "Component Context",
+        "issueDetails": "Issue Details",
+        "assignmentSLA": "Assignment & SLA",
+        "newIncident": "New Incident",
+        "download": "Download",
+        "selectFirst": "Select first",
+        "similarIncidents": "similar incident(s) found",
+        "searching": "Searching..."
     },
     "login": {
         "subtitle": "Incident Management System",
@@ -159,7 +194,14 @@
         "allSystems": "All Systems",
         "allTeams": "All Teams",
         "searchPlaceholder": "Search incidents...",
-        "backToIncidents": "Back to Incidents"
+        "backToIncidents": "Back to Incidents",
+        "logs": "Logs & Files",
+        "addNote": "Add Note",
+        "uploadFile": "Upload File",
+        "linkProcedure": "Link Procedure",
+        "unlinkProcedure": "Unlink Procedure",
+        "noLogs": "No logs or files yet.",
+        "acknowledge": "Acknowledge"
     },
     "createIncident": {
         "title": "Create New Incident",
@@ -245,7 +287,10 @@
             "slas": "SLA Policies",
             "roles": "Roles & Permissions",
             "emailTemplates": "Email Templates",
-            "auditLogs": "Audit Logs"
+            "auditLogs": "Audit Logs",
+            "escalation": "Escalation Rules",
+            "autoAssign": "Auto-Assignment",
+            "webhooks": "Webhooks"
         },
         "users": {
             "title": "User Management",

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Plus, Pencil, Trash2, GitBranch } from 'lucide-react';
+import { Pagination } from '../../components/ui/Pagination';
 
 interface AutoAssignRule {
     id: string;
@@ -30,6 +31,8 @@ export const AutoAssignManagement = () => {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<AutoAssignRule | null>(null);
     const [form, setForm] = useState(emptyForm);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => { fetchAll(); }, []);
 
@@ -177,7 +180,7 @@ export const AutoAssignManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {rules.map(r => (
+                            {rules.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(r => (
                                 <tr key={r.id} className="border-b last:border-b-0 hover:bg-slate-50">
                                     <td className="px-4 py-3 font-medium">{r.name}</td>
                                     <td className="px-4 py-3 text-slate-600">{r.system?.name || <span className="text-slate-400 italic">All</span>}</td>
@@ -204,6 +207,18 @@ export const AutoAssignManagement = () => {
                         </tbody>
                     </table>
                 </div>
+            )}
+
+            {rules.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: rules.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages: Math.ceil(rules.length / ITEMS_PER_PAGE),
+                    }}
+                    onPageChange={setPage}
+                />
             )}
         </div>
     );

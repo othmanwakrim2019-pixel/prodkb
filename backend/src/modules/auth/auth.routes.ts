@@ -5,6 +5,7 @@ import { authenticate, authorize, invalidateAuthCache, AuthRequest } from '../..
 import { refreshTokenService } from './refresh-token.service';
 import { createResponse } from '../../common/types/api.response';
 import { generateCsrfToken, setCsrfCookie, clearCsrfCookie } from '../../common/middleware/csrf.middleware';
+import { clearFailedAttempts } from '../../common/services/lockout.service';
 
 const router = Router();
 
@@ -68,4 +69,20 @@ router.post('/logout', authenticate, async (req: AuthRequest, res: Response, nex
     } catch (error) { next(error); }
 });
 
+// ── Admin: Unlock a locked account ──
+// Clears the failed login attempt counter in Redis so the user can try again immediately.
+// Only accessible by authenticated ADMIN users.
+router.post('/unlock-account', authenticate, authorize(['ADMIN']), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email } = req.body;
+        if (!email || typeof email !== 'string') {
+            res.status(400).json(createResponse(false, null, 'Email is required'));
+            return;
+        }
+        await clearFailedAttempts(email.toLowerCase().trim());
+        res.json(createResponse(true, null, `Account ${email} has been unlocked successfully`));
+    } catch (error) { next(error); }
+});
+
 export const authRoutes = router;
+

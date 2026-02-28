@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Plus, Pencil, Trash2, AlertTriangle, Zap } from 'lucide-react';
+import { Pagination } from '../../components/ui/Pagination';
 
 interface EscalationRule {
     id: string;
@@ -31,6 +32,8 @@ export const EscalationManagement = () => {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<EscalationRule | null>(null);
     const [form, setForm] = useState(emptyForm);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => { fetchAll(); }, []);
 
@@ -183,7 +186,7 @@ export const EscalationManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {rules.map(r => (
+                            {rules.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(r => (
                                 <tr key={r.id} className="border-b last:border-b-0 hover:bg-slate-50">
                                     <td className="px-4 py-3 font-medium">{r.name}</td>
                                     <td className="px-4 py-3">
@@ -211,6 +214,18 @@ export const EscalationManagement = () => {
                         </tbody>
                     </table>
                 </div>
+            )}
+
+            {rules.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: rules.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages: Math.ceil(rules.length / ITEMS_PER_PAGE),
+                    }}
+                    onPageChange={setPage}
+                />
             )}
         </div>
     );

@@ -1,5 +1,6 @@
 import { logger } from '../../../common/utils/logger';
 import { emailService } from '../../../common/services/emailService';
+import { notificationService } from '../../notifications/notification.service';
 import { ValidationError } from '../../../common/errors/app.error';
 import { IncidentStatus } from '../../../constants';
 
@@ -37,15 +38,70 @@ export function validateStatusTransition(currentStatus: string, newStatus: strin
     }
 }
 
-export async function sendNotification(incident: unknown, type: 'created' | 'updated' | 'resolved'): Promise<void> {
+export async function sendNotification(incident: any, type: 'created' | 'updated' | 'resolved'): Promise<void> {
     try {
+        // Email notification
         switch (type) {
             case 'created': await emailService.sendIncidentCreated({ incident }); break;
             case 'updated': await emailService.sendIncidentUpdated({ incident }); break;
             case 'resolved': await emailService.sendIncidentResolved({ incident }); break;
         }
     } catch (e) {
-        logger.warn('Notification failed', { error: e });
+        logger.warn('Email notification failed', { error: e });
+    }
+
+    // In-app notification for team members
+    if (incident.assignedTeamId) {
+        try {
+            const incidentRef = `#${incident.id.substring(0, 8)}`;
+            let notifType = 'incident_updated';
+            let title = '';
+            let message = '';
+
+            switch (type) {
+                case 'created':
+                    notifType = 'incident_created';
+                    title = `New Incident ${incidentRef}`;
+                    message = `${incident.title} — Severity: ${incident.severity}`;
+                    break;
+                case 'updated':
+                    notifType = 'status_changed';
+                    title = `Incident Updated ${incidentRef}`;
+                    message = `${incident.title} — Status: ${incident.status}`;
+                    break;
+                case 'resolved':
+                    notifType = 'incident_resolved';
+                    title = `Incident Resolved ${incidentRef}`;
+                    message = `${incident.title} has been resolved`;
+                    break;
+            }
+
+            await notificationService.createForTeam(
+                incident.assignedTeamId, notifType, title, message, incident.id
+            );
+        } catch (e) {
+            logger.warn('In-app notification failed', { error: e });
+        }
+    }
+}
+
+/**
+ * Send in-app notification for note/file events (no email)
+ */
+export async function sendNoteNotification(incident: any, noteType: 'note_added' | 'file_uploaded'): Promise<void> {
+    if (!incident.assignedTeamId) return;
+    try {
+        const incidentRef = `#${incident.id.substring(0, 8)}`;
+        const title = noteType === 'note_added'
+            ? `Note Added ${incidentRef}`
+            : `File Uploaded ${incidentRef}`;
+        const message = incident.title;
+
+        await notificationService.createForTeam(
+            incident.assignedTeamId, noteType, title, message, incident.id
+        );
+    } catch (e) {
+        logger.warn('In-app note notification failed', { error: e });
     }
 }
 

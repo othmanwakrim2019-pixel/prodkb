@@ -11,12 +11,12 @@ export interface JwtPayloadWithUser extends jwt.JwtPayload {
 
 export class JwtService {
     static sign(payload: object, expiresIn: string | number = '15m'): string {
-        return jwt.sign(payload, env.JWT_SECRET, { expiresIn } as jwt.SignOptions);
+        return jwt.sign(payload, env.JWT_SECRET, { expiresIn, algorithm: 'HS256' } as jwt.SignOptions);
     }
 
     static verify(token: string): JwtPayloadWithUser {
         try {
-            return jwt.verify(token, env.JWT_SECRET) as JwtPayloadWithUser;
+            return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayloadWithUser;
         } catch (error) {
             throw new AppError('Invalid or expired token', 401, 'INVALID_TOKEN');
         }

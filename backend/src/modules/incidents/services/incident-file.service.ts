@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from '../../../common/errors/app.error
 import { fileUploadService } from '../../../common/services/fileUploadService';
 import type { IIncidentLog } from '../../../types';
 import { incidentCrudService } from './incident-crud.service';
+import { defaultInclude, sendNoteNotification } from './incident-shared';
 
 export interface CreateLogData {
     logType: string;
@@ -36,6 +37,12 @@ export class IncidentFileService {
             }
         });
 
+        // Notify the assigned team about the new note
+        const incident = await prisma.incident.findUnique({ where: { id: incidentId }, include: defaultInclude });
+        if (incident) {
+            sendNoteNotification(incident, 'note_added').catch(() => { });
+        }
+
         return log as unknown as IIncidentLog;
     }
 
@@ -61,6 +68,12 @@ export class IncidentFileService {
                 mimeType: fileData.mimeType
             }
         });
+
+        // Notify the assigned team about the uploaded file
+        const incident = await prisma.incident.findUnique({ where: { id: incidentId }, include: defaultInclude });
+        if (incident) {
+            sendNoteNotification(incident, 'file_uploaded').catch(() => { });
+        }
 
         return log as unknown as IIncidentLog;
     }

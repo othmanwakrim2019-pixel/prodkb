@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
-import { Filter, Clock, User, Shield } from 'lucide-react';
+import { Filter, Clock, User, Shield, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { Pagination } from '../components/ui/Pagination';
+import { exportToCSV } from '../utils/exportCSV';
 
 interface AuditLog {
     id: string;
@@ -26,6 +28,8 @@ const AuditLogs = () => {
     // Filters
     const [actionType, setActionType] = useState('');
     const [entityType, setEntityType] = useState('');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
@@ -49,9 +53,24 @@ const AuditLogs = () => {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('admin.auditLogs.title')}</h1>
-                <p className="text-muted-foreground">{t('admin.auditLogs.subtitle')}</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight dark:text-white">{t('admin.auditLogs.title')}</h1>
+                    <p className="text-muted-foreground dark:text-slate-400">{t('admin.auditLogs.subtitle')}</p>
+                </div>
+                <button
+                    onClick={() => exportToCSV(logs as any[], 'audit_logs', [
+                        { key: 'timestamp', label: 'Timestamp' },
+                        { key: 'actionType', label: 'Action' },
+                        { key: 'entityType', label: 'Entity' },
+                        { key: 'entityId', label: 'Entity ID' },
+                        { key: 'details', label: 'Details' },
+                    ])}
+                    className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                    <Download className="-ml-0.5 mr-1.5 h-4 w-4" />
+                    {t('common.exportCSV')}
+                </button>
             </div>
 
             {/* Filters */}
@@ -99,7 +118,7 @@ const AuditLogs = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y">
-                        {logs.map(log => (
+                        {logs.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(log => (
                             <tr key={log.id} className="hover:bg-slate-50">
                                 <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
@@ -141,6 +160,19 @@ const AuditLogs = () => {
                     </tbody>
                 </table>
                 {loading && <div className="p-4 text-center text-slate-500">{t('admin.auditLogs.loadingLogs')}</div>}
+
+                {/* Pagination */}
+                {logs.length > ITEMS_PER_PAGE && (
+                    <Pagination
+                        meta={{
+                            total: logs.length,
+                            page,
+                            limit: ITEMS_PER_PAGE,
+                            totalPages: Math.ceil(logs.length / ITEMS_PER_PAGE),
+                        }}
+                        onPageChange={setPage}
+                    />
+                )}
             </div>
         </div>
     );

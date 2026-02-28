@@ -1,5 +1,8 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Pencil, Trash2, Unlock, KeyRound } from 'lucide-react';
 import { User, TeamMembership } from '../../types';
+import { Pagination } from '../ui/Pagination';
+import { userService } from '../../services/admin.service';
 
 interface Props {
     users: User[];
@@ -9,11 +12,54 @@ interface Props {
     onDelete: (userId: string, userName: string) => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete }: Props) => {
+    const [page, setPage] = useState(1);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+    // Reset to page 1 when search changes
+    useEffect(() => { setPage(1); }, [searchTerm]);
+
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+    const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+    const handleUnlock = async (email: string, name: string) => {
+        if (!confirm(`Unlock account for "${name}" (${email})? This will clear any login lockout.`)) return;
+        setActionLoading(email);
+        try {
+            await userService.unlockAccount(email);
+            alert(`Account "${name}" has been unlocked successfully!`);
+        } catch (err) {
+            alert(`Failed to unlock account: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleResetPassword = async (userId: string, name: string) => {
+        const newPassword = prompt(`Enter new password for "${name}" (minimum 8 characters):`);
+        if (!newPassword) return;
+        if (newPassword.length < 8) {
+            alert('Password must be at least 8 characters.');
+            return;
+        }
+        if (!confirm(`Are you sure you want to reset the password for "${name}"?`)) return;
+        setActionLoading(userId);
+        try {
+            await userService.resetPassword(userId, newPassword);
+            alert(`Password for "${name}" has been reset successfully!`);
+        } catch (err) {
+            alert(`Failed to reset password: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     return (
         <div className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
@@ -29,7 +75,7 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                    {filteredUsers.map((u) => (
+                    {paginatedUsers.map((u) => (
                         <tr key={u.id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{u.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{u.email}</td>
@@ -54,26 +100,56 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                             </td>
                             {canManageUsers && (
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button
-                                        onClick={() => onEdit({ ...u, isActive: u.isActive ?? true })}
-                                        className="text-accent hover:text-blue-900 mr-3"
-                                        title="Edit user"
-                                    >
-                                        <Pencil className="h-4 w-4 inline" />
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(u.id, u.name)}
-                                        className="text-red-600 hover:text-red-900"
-                                        title="Delete user"
-                                    >
-                                        <Trash2 className="h-4 w-4 inline" />
-                                    </button>
+                                    <div className="flex items-center justify-end gap-1">
+                                        <button
+                                            onClick={() => handleUnlock(u.email, u.name)}
+                                            disabled={actionLoading === u.email}
+                                            className="text-green-600 hover:text-green-800 p-1.5 rounded hover:bg-green-50 transition-colors"
+                                            title="Unlock account"
+                                        >
+                                            <Unlock className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleResetPassword(u.id, u.name)}
+                                            disabled={actionLoading === u.id}
+                                            className="text-amber-600 hover:text-amber-800 p-1.5 rounded hover:bg-amber-50 transition-colors"
+                                            title="Reset password"
+                                        >
+                                            <KeyRound className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit({ ...u, isActive: u.isActive ?? true })}
+                                            className="text-accent hover:text-blue-900 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                                            title="Edit user"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete(u.id, u.name)}
+                                            className="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50 transition-colors"
+                                            title="Delete user"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             )}
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            {filteredUsers.length > ITEMS_PER_PAGE && (
+                <Pagination
+                    meta={{
+                        total: filteredUsers.length,
+                        page,
+                        limit: ITEMS_PER_PAGE,
+                        totalPages,
+                    }}
+                    onPageChange={setPage}
+                />
+            )}
         </div>
     );
 };
