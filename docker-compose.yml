@@ -257,7 +257,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://16.171.224.220:3000}
+        VITE_API_URL: ${VITE_API_URL:-http://16.171.224.220:8080}
     container_name: prodkb-frontend
     ports:
       - "8080:80"

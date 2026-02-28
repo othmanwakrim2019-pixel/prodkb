@@ -31,6 +31,10 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 const app = express();
 
+// Trust the reverse proxy (Nginx / Docker) to accurately provide the client's real IP
+// Without this, express-rate-limit will apply globals limits to the Docker bridge IP!
+app.set('trust proxy', true);
+
 if (env.SENTRY_DSN) {
     const isProduction = env.NODE_ENV === 'production';
     Sentry.init({
