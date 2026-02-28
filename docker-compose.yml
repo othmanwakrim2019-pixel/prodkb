@@ -115,7 +115,7 @@ services:
       - "3002:3002"
     environment:
       - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@postgres:5432/${POSTGRES_DB:-prodkb}?schema=public
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173}
@@ -166,7 +166,7 @@ services:
     container_name: prodkb-sla-worker
     command: [ "node", "dist/src/workers/sla.worker.js" ]
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@postgres:5432/${POSTGRES_DB:-prodkb}?schema=public
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
@@ -206,7 +206,7 @@ services:
     container_name: prodkb-webhook-worker
     command: [ "node", "dist/src/workers/webhook.worker.js" ]
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@postgres:5432/${POSTGRES_DB:-prodkb}?schema=public
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -232,7 +232,7 @@ services:
     container_name: prodkb-cleanup-worker
     command: [ "node", "dist/src/workers/cleanup.worker.js" ]
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@postgres:5432/${POSTGRES_DB:-prodkb}?schema=public
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
