@@ -16,10 +16,15 @@ fi
 
 # 2. Wait for database to be reachable
 echo "Waiting for database to be ready..."
-MAX_RETRIES=10
-RETRY_INTERVAL=3
+MAX_RETRIES=15
+RETRY_INTERVAL=2
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+DB_HOST=${DB_HOST:-pgbouncer}
+DB_PORT=${DB_PORT:-5432}
+echo "  Checking $DB_HOST:$DB_PORT..."
 for i in $(seq 1 $MAX_RETRIES); do
-    if echo "SELECT 1;" | npx prisma db execute --stdin 2>/dev/null; then
+    if nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
         echo "Database is ready!"
         break
     fi
