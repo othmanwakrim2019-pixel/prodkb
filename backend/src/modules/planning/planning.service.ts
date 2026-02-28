@@ -214,8 +214,9 @@ export class PlanningJobService {
 
     async create(data: {
         instanceId: string;
-        systemId: string;
-        jobId: string;
+        systemId?: string;
+        jobId?: string;
+        customTaskName?: string;
         scheduledTime: Date;
         dependencies: string[];
         status?: PlanningStatus;
@@ -236,8 +237,9 @@ export class PlanningJobService {
         return prisma.planningJob.create({
             data: {
                 instanceId: data.instanceId,
-                systemId: data.systemId,
-                jobId: data.jobId,
+                systemId: data.systemId ?? undefined,
+                jobId: data.jobId ?? undefined,
+                customTaskName: data.customTaskName ?? undefined,
                 scheduledTime: data.scheduledTime,
                 dependencies: data.dependencies,
                 status: data.status || PlanningStatus.pending,
