@@ -14,13 +14,40 @@ if [ ! -d "$MIGRATIONS_DIR" ] || [ -z "$(ls -A "$MIGRATIONS_DIR" 2>/dev/null)" ]
     exit 1
 fi
 
-# 2. Apply pending migrations (safe for production — never drops data)
+# 2. Wait for database to be reachable
+echo "Waiting for database to be ready..."
+MAX_RETRIES=15
+RETRY_INTERVAL=2
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+DB_HOST=${DB_HOST:-pgbouncer}
+DB_PORT=${DB_PORT:-5432}
+echo "  Checking $DB_HOST:$DB_PORT..."
+for i in $(seq 1 $MAX_RETRIES); do
+    if nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
+        echo "Database is ready!"
+        break
+    fi
+    if [ $i -eq $MAX_RETRIES ]; then
+        echo "ERROR: Database not reachable after $MAX_RETRIES retries"
+        exit 1
+    fi
+    echo "  Attempt $i/$MAX_RETRIES failed, retrying in ${RETRY_INTERVAL}s..."
+    sleep $RETRY_INTERVAL
+done
+
+# 3. Apply pending migrations (safe for production — never drops data)
 echo "Applying database migrations..."
 if [ -z "$DATABASE_URL" ]; then
-    echo "🚨 FATAL ERROR: DATABASE_URL is empty at runtime!"
+    echo "FATAL ERROR: DATABASE_URL is empty at runtime!"
     exit 1
 fi
-npx prisma migrate deploy
+
+# Prisma migrations cannot run through PGBouncer transaction mode.
+# We create a temporary DIRECT_URL that points directly to the 'postgres' container.
+DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
+echo "Using direct connection for migrations..."
+DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy
 echo "Migrations applied successfully."
 
 # 3. Generate Prisma Client (in case it wasn't generated at build time)

@@ -34,6 +34,7 @@ services:
       - MAX_CLIENT_CONN=1000
       - DEFAULT_POOL_SIZE=20
       - ADMIN_USERS=${POSTGRES_USER:-prodkb}
+      - AUTH_TYPE=scram-sha-256
     ports:
       - "6432:5432"
     depends_on:
@@ -118,7 +119,7 @@ services:
       - "3002:3002"
     environment:
       - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173}
@@ -148,10 +149,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health" ]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
     networks:
       - prodkb-network
     deploy:
@@ -171,7 +172,7 @@ services:
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
@@ -213,7 +214,7 @@ services:
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -241,7 +242,7 @@ services:
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -264,8 +265,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      # args:
-      #   VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://16.171.224.220:3000}
     container_name: prodkb-frontend
     ports:
       - "8080:80"
@@ -323,6 +324,25 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    networks:
+      - prodkb-network
+    restart: unless-stopped
+
+  # Node Exporter — scrapes EC2 server hardware metrics (CPU, RAM, Disk)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: prodkb-node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
     networks:
       - prodkb-network
     restart: unless-stopped
