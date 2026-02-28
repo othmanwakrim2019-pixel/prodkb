@@ -564,14 +564,52 @@ export class PlanningJobService {
         const job = await this.findById(id);
         validateTransition(job.status, newStatus);
 
-        // For MANUAL_ACTION going to done, require a note
+        // ── Guard: transitioning to "running" ──────────────────────────────
+        if (newStatus === PlanningStatus.running) {
+            const deps = job.dependencies as string[];
+
+            // 1. All direct dependencies must be done
+            if (deps.length > 0) {
+                const depJobs = await prisma.planningJob.findMany({
+                    where: { id: { in: deps } },
+                    select: { id: true, status: true },
+                });
+                const notDone = depJobs.filter(d => d.status !== PlanningStatus.done);
+                if (notDone.length > 0) {
+                    throw new ValidationError(
+                        `Cannot start this task: ${notDone.length} dependency(ies) are not yet completed.`
+                    );
+                }
+            }
+
+            // 2. No earlier-scheduled tasks in the same instance should still be pending/running
+            const earlierBlocking = await prisma.planningJob.findMany({
+                where: {
+                    instanceId: job.instanceId,
+                    scheduledTime: { lt: job.scheduledTime },
+                    status: { in: [PlanningStatus.pending, PlanningStatus.running] },
+                    id: { not: id },
+                },
+                select: { id: true, scheduledTime: true },
+                take: 1,
+            });
+            if (earlierBlocking.length > 0) {
+                const blocked = earlierBlocking[0];
+                const blockedDate = new Date(blocked.scheduledTime).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                throw new ValidationError(
+                    `Cannot start this task: there are earlier-scheduled tasks (${blockedDate}) that have not been completed yet.`
+                );
+            }
+        }
+
+        // ── Guard: MANUAL_ACTION done requires a note ──────────────────────
         if (job.taskType === TaskType.MANUAL_ACTION && newStatus === PlanningStatus.done && !notes) {
             throw new ValidationError('A confirmation note is required when marking a manual action as done');
         }
 
         const updateData: Record<string, unknown> = { status: newStatus };
 
-        if (newStatus === PlanningStatus.running && job.taskType === TaskType.BATCH) {
+        if (newStatus === PlanningStatus.running) {
             updateData.launchedAt = new Date();
             updateData.launchedById = userId || null;
         }

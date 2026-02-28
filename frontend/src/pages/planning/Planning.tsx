@@ -6,6 +6,7 @@ import { PlanningTableView } from './PlanningTableView';
 import { AddJobModal } from './AddJobModal';
 import { CreateInstanceModal } from './CreateInstanceModal';
 import { ImportCsvModal } from './ImportCsvModal';
+import { EditJobModal } from './EditJobModal';
 import type {
     PlanningInstance,
     PlanningJob,
@@ -42,6 +43,7 @@ export const Planning = () => {
     const [showCreateInstance, setShowCreateInstance] = useState(false);
     const [showImportCsv, setShowImportCsv] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+    const [editingJob, setEditingJob] = useState<PlanningJob | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
         return (localStorage.getItem('planning_view') as ViewMode) || 'table';
     });
@@ -425,6 +427,7 @@ export const Planning = () => {
                             instanceStatus={selectedInstance.status}
                             onRefresh={fetchJobs}
                             onCreateIncident={handleCreateIncidentFromJob}
+                            onEditJob={(job) => setEditingJob(job)}
                         />
                     ) : (
                         <PlanningFlow
@@ -499,6 +502,14 @@ export const Planning = () => {
                     fetchInstances();
                     setSelectedInstanceId(newInstanceId);
                 }}
+            />
+
+            <EditJobModal
+                job={editingJob}
+                isOpen={editingJob !== null}
+                onClose={() => setEditingJob(null)}
+                onSaved={fetchJobs}
+                existingJobs={jobs}
             />
         </div>
     );
