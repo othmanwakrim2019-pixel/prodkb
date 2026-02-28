@@ -9,7 +9,8 @@ import {
     createInstanceSchema, createPlanningJobSchema, updatePlanningJobSchema,
     updateStatusSchema, updatePositionSchema, batchPositionsSchema,
 } from './planning.schema';
-import { TaskType } from '@prisma/client';
+import { TaskType, PlanningPeriod } from '@prisma/client';
+import Papa from 'papaparse';
 
 // --- Instance Controller ---
 
@@ -275,6 +276,58 @@ export class PlanningController {
             const { positions } = batchPositionsSchema.parse(req.body);
             await planningJobService.updatePositions(positions);
             res.json(createResponse(true, null, `${positions.length} positions saved`));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // -- CSV Import --
+
+    static async importCsv(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            if (!req.file) {
+                res.status(400).json(createResponse(false, null, 'No CSV file uploaded'));
+                return;
+            }
+
+            const instanceName = (req.body.instanceName as string)?.trim();
+            const period = req.body.period as string;
+
+            if (!instanceName) {
+                res.status(400).json(createResponse(false, null, 'instanceName is required'));
+                return;
+            }
+
+            const validPeriods: PlanningPeriod[] = ['monthly', 'quarterly', 'annual'];
+            if (!validPeriods.includes(period as PlanningPeriod)) {
+                res.status(400).json(createResponse(false, null, 'period must be monthly, quarterly, or annual'));
+                return;
+            }
+
+            const csvText = req.file.buffer.toString('utf-8');
+            const { data } = Papa.parse<Record<string, string>>(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, '_'),
+            });
+
+            const result = await planningInstanceService.importFromCsv({
+                instanceName,
+                period: period as PlanningPeriod,
+                rows: data,
+                createdById: req.user!.id,
+            });
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'CREATE',
+                entityType: 'PLANNING_INSTANCE',
+                entityId: result.instance.id,
+                details: JSON.stringify({ action: 'CSV_IMPORT', jobsCreated: result.jobsCreated }),
+                req,
+            });
+
+            res.status(201).json(createResponse(true, result, `Imported ${result.jobsCreated} tasks into "${instanceName}"`));
         } catch (error) {
             next(error);
         }

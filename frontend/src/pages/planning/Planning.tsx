@@ -5,13 +5,14 @@ import { PlanningFlow } from './PlanningFlow';
 import { PlanningTableView } from './PlanningTableView';
 import { AddJobModal } from './AddJobModal';
 import { CreateInstanceModal } from './CreateInstanceModal';
+import { ImportCsvModal } from './ImportCsvModal';
 import type {
     PlanningInstance,
     PlanningJob,
     PlanningPeriod,
     InstanceStatusType,
 } from './planning.types';
-import { Plus, Archive, RotateCcw, ArrowRight, ArrowDown, History, TableProperties, GitBranch, Copy, Trash2 } from 'lucide-react';
+import { Plus, Archive, RotateCcw, ArrowRight, ArrowDown, History, TableProperties, GitBranch, Copy, Trash2, Upload } from 'lucide-react';
 
 const PERIODS: { value: PlanningPeriod; label: string }[] = [
     { value: 'monthly', label: 'Monthly' },
@@ -39,6 +40,7 @@ export const Planning = () => {
     const [loading, setLoading] = useState(false);
     const [showAddJob, setShowAddJob] = useState(false);
     const [showCreateInstance, setShowCreateInstance] = useState(false);
+    const [showImportCsv, setShowImportCsv] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
         return (localStorage.getItem('planning_view') as ViewMode) || 'table';
@@ -219,6 +221,12 @@ export const Planning = () => {
                         className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${showHistory ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                     >
                         <History className="w-4 h-4" /> History
+                    </button>
+                    <button
+                        onClick={() => setShowImportCsv(true)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                    >
+                        <Upload className="w-4 h-4" /> Import CSV
                     </button>
                     <button
                         onClick={() => setShowCreateInstance(true)}
@@ -483,6 +491,15 @@ export const Planning = () => {
                     existingJobs={jobs}
                 />
             )}
+
+            <ImportCsvModal
+                isOpen={showImportCsv}
+                onClose={() => setShowImportCsv(false)}
+                onImported={(newInstanceId) => {
+                    fetchInstances();
+                    setSelectedInstanceId(newInstanceId);
+                }}
+            />
         </div>
     );
 };

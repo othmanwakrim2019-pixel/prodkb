@@ -182,7 +182,249 @@ export class PlanningInstanceService {
         logger.info(`Deleted planning instance ${id}`);
         return instance;
     }
+
+    /**
+     * Import a planning instance from parsed CSV rows.
+     * Each row must follow the defined 9-column format.
+     */
+    async importFromCsv(params: {
+        instanceName: string;
+        period: PlanningPeriod;
+        rows: Record<string, string>[];
+        createdById: string;
+    }) {
+        const { instanceName, period, rows, createdById } = params;
+        const warnings: string[] = [];
+        const skipped: string[] = [];
+
+        // ── 1. Filter valid rows (must have ref + task_type + date) ──────────
+        const validRows = rows.filter(r => {
+            const ref = r.ref?.trim();
+            const taskType = r.task_type?.trim().toUpperCase();
+            const date = r.date?.trim();
+            if (!ref || !date) return false;
+            if (taskType !== 'BATCH' && taskType !== 'MANUAL') {
+                skipped.push(`Row ref="${ref}": unknown task_type "${taskType}" — skipped`);
+                return false;
+            }
+            return true;
+        });
+
+        if (validRows.length === 0) {
+            throw new ValidationError('No valid rows found in CSV. Make sure ref, task_type, and date columns are filled in.');
+        }
+
+        // ── 2. Detect duplicate refs ─────────────────────────────────────────
+        const seenRefs = new Set<string>();
+        for (const r of validRows) {
+            const ref = r.ref.trim();
+            if (seenRefs.has(ref)) {
+                throw new ValidationError(`Duplicate ref "${ref}" found in CSV. Each row must have a unique ref.`);
+            }
+            seenRefs.add(ref);
+        }
+
+        // ── 3. Parse dates ───────────────────────────────────────────────────
+        const parseDate = (dateStr: string, timeStr: string): Date => {
+            // Supports: DD/MM/YYYY, D/M/YYYY, M/D/YY, DD/MM/YY
+            const [datePart] = [dateStr.trim()];
+            const timePart = timeStr?.trim() || '08:00';
+            const parts = datePart.split('/');
+            let d: Date;
+            if (parts.length === 3) {
+                const [p1, p2, p3] = parts.map(Number);
+                const year = p3 < 100 ? 2000 + p3 : p3;
+                // If day > 12, must be DD/MM format
+                const month = p1 > 12 ? p2 - 1 : p2 - 1; // still MM in both cases after swap
+                const day = p1 > 12 ? p1 : p2;
+                const mm = p1 > 12 ? p2 : p1;
+                // DD/MM/YYYY: p1 is day (> 12 gives it away), else ambiguous — treat as MM/DD/YY
+                if (p1 > 12) {
+                    d = new Date(year, p2 - 1, p1);
+                } else {
+                    // treat as MM/DD/YY (US format like planning_dump.csv)
+                    d = new Date(year, p1 - 1, p2);
+                }
+            } else {
+                d = new Date(dateStr);
+            }
+            const [hh, mm2] = timePart.split(':').map(Number);
+            d.setHours(hh || 8, mm2 || 0, 0, 0);
+            return d;
+        };
+
+        // ── 4. Resolve system/job refs for BATCH rows ────────────────────────
+        const systemCache = new Map<string, string>(); // name → id
+        const jobCache = new Map<string, string>();    // code → id
+
+        const resolvedJobs: Array<{
+            ref: string;
+            taskType: 'BATCH' | 'MANUAL';
+            scheduledTime: Date;
+            customTaskName?: string;
+            systemId?: string;
+            jobId?: string;
+            supportContact?: string;
+            rawDepsRefs: string[];
+        }> = [];
+
+        for (const r of validRows) {
+            const ref = r.ref.trim();
+            const taskType = r.task_type.trim().toUpperCase() as 'BATCH' | 'MANUAL';
+            const scheduledTime = parseDate(r.date, r.time);
+            const supportParts = [r.support_contact, r.intervenant].filter(Boolean);
+            const supportContact = supportParts.join(' / ').trim() || undefined;
+            const rawDepsRefs = (r.depends_on || '')
+                .split(/[,;\s]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            if (taskType === 'MANUAL') {
+                const taskName = r.task_name?.trim();
+                if (!taskName) {
+                    skipped.push(`Row ref="${ref}": MANUAL task with empty task_name — skipped`);
+                    continue;
+                }
+                resolvedJobs.push({ ref, taskType, scheduledTime, customTaskName: taskName, supportContact, rawDepsRefs });
+            } else {
+                // BATCH — look up system by name and job by code
+                const sysName = r.system_name?.trim();
+                const jobCode = r.job_code?.trim();
+
+                if (!sysName || !jobCode) {
+                    skipped.push(`Row ref="${ref}": BATCH task missing system_name or job_code — skipped`);
+                    continue;
+                }
+
+                let systemId = systemCache.get(sysName);
+                if (!systemId) {
+                    const sys = await prisma.system.findFirst({ where: { name: { equals: sysName, mode: 'insensitive' } } });
+                    if (!sys) {
+                        warnings.push(`Row ref="${ref}": System "${sysName}" not found in DB — skipped`);
+                        skipped.push(ref);
+                        continue;
+                    }
+                    systemCache.set(sysName, sys.id);
+                    systemId = sys.id;
+                }
+
+                let jobId = jobCache.get(jobCode);
+                if (!jobId) {
+                    const job = await prisma.job.findFirst({ where: { code: { equals: jobCode, mode: 'insensitive' }, systemId } });
+                    if (!job) {
+                        warnings.push(`Row ref="${ref}": Job code "${jobCode}" not found for system "${sysName}" — skipped`);
+                        skipped.push(ref);
+                        continue;
+                    }
+                    jobCache.set(jobCode, job.id);
+                    jobId = job.id;
+                }
+
+                resolvedJobs.push({ ref, taskType, scheduledTime, systemId, jobId, supportContact, rawDepsRefs });
+            }
+        }
+
+        // ── 5. Resolve depends_on refs → validate no circular deps ──────────
+        const refToIdx = new Map<string, number>();
+        resolvedJobs.forEach((j, i) => refToIdx.set(j.ref, i));
+
+        const resolvedDeps: Map<number, number[]> = new Map();
+        for (let i = 0; i < resolvedJobs.length; i++) {
+            const deps: number[] = [];
+            for (const depRef of resolvedJobs[i].rawDepsRefs) {
+                const depIdx = refToIdx.get(depRef);
+                if (depIdx === undefined) {
+                    warnings.push(`Row ref="${resolvedJobs[i].ref}": dependency ref "${depRef}" not found — ignored`);
+                } else {
+                    deps.push(depIdx);
+                }
+            }
+            resolvedDeps.set(i, deps);
+        }
+
+        // Simple cycle detection via DFS
+        const visited = new Array(resolvedJobs.length).fill(0); // 0=unvisited,1=visiting,2=done
+        const detectCycle = (node: number): boolean => {
+            if (visited[node] === 1) return true;
+            if (visited[node] === 2) return false;
+            visited[node] = 1;
+            for (const dep of resolvedDeps.get(node) || []) {
+                if (detectCycle(dep)) return true;
+            }
+            visited[node] = 2;
+            return false;
+        };
+        for (let i = 0; i < resolvedJobs.length; i++) {
+            if (detectCycle(i)) {
+                throw new ValidationError('Circular dependency detected in CSV. Please check your depends_on column.');
+            }
+        }
+
+        // ── 6. Compute date range from scheduled times ───────────────────────
+        const dates = resolvedJobs.map(j => j.scheduledTime);
+        const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        // End date = end of that day
+        endDate.setHours(23, 59, 59, 999);
+
+        // ── 7. Create instance + jobs in a transaction ───────────────────────
+        const result = await prisma.$transaction(async (tx) => {
+            const instance = await tx.planningInstance.create({
+                data: {
+                    name: instanceName,
+                    period,
+                    startDate,
+                    endDate,
+                    createdById,
+                    status: InstanceStatus.active,
+                },
+            });
+
+            // Create all jobs first (no deps yet) to get DB IDs
+            const createdJobIds: string[] = [];
+            for (const job of resolvedJobs) {
+                const created = await tx.planningJob.create({
+                    data: {
+                        instanceId: instance.id,
+                        taskType: job.taskType === 'BATCH' ? TaskType.BATCH : TaskType.MANUAL_ACTION,
+                        scheduledTime: job.scheduledTime,
+                        systemId: job.systemId ?? undefined,
+                        jobId: job.jobId ?? undefined,
+                        customTaskName: job.customTaskName ?? undefined,
+                        supportContact: job.supportContact ?? undefined,
+                        status: PlanningStatus.pending,
+                        dependencies: [],
+                    },
+                });
+                createdJobIds.push(created.id);
+            }
+
+            // Now update dependencies using real DB IDs
+            for (let i = 0; i < resolvedJobs.length; i++) {
+                const depIdxs = resolvedDeps.get(i) || [];
+                if (depIdxs.length > 0) {
+                    const depDbIds = depIdxs.map(idx => createdJobIds[idx]);
+                    await tx.planningJob.update({
+                        where: { id: createdJobIds[i] },
+                        data: { dependencies: depDbIds },
+                    });
+                }
+            }
+
+            return instance;
+        });
+
+        logger.info(`Imported planning instance "${instanceName}" with ${resolvedJobs.length} jobs`);
+
+        return {
+            instance: result,
+            jobsCreated: resolvedJobs.length,
+            skipped,
+            warnings,
+        };
+    }
 }
+
 
 // --- Planning Job Service ---
 

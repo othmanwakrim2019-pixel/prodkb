@@ -91,14 +91,14 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
 
                 {/* System Name */}
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
-                    {job.system.name}
+                    {job.system?.name ?? job.customTaskName ?? '—'}
                 </p>
 
                 {/* Job Name + Code */}
                 <h3 className={`font-semibold text-sm leading-tight mb-1 ${style.text}`}>
-                    {job.job.name}
+                    {job.job?.name ?? job.customTaskName}
                 </h3>
-                <p className="text-xs text-slate-500 font-mono mb-1">{job.job.code}</p>
+                <p className="text-xs text-slate-500 font-mono mb-1">{job.job?.code ?? ''}</p>
 
                 {/* Scheduled Time */}
                 <p className="text-xs text-slate-400 mb-2">
