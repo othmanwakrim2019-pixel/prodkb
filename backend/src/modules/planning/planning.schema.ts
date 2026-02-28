@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const periodEnum = z.enum(['monthly', 'quarterly', 'annual']);
-export const statusEnum = z.enum(['pending', 'running', 'done']);
+export const statusEnum = z.enum(['pending', 'running', 'done', 'failed', 'blocked']);
+export const taskTypeEnum = z.enum(['BATCH', 'MANUAL_ACTION']);
 export const instanceStatusEnum = z.enum(['active', 'archived']);
 
 export const createInstanceSchema = z.object({
@@ -19,6 +20,9 @@ export const createPlanningJobSchema = z.object({
     scheduledTime: z.string().datetime(),
     dependencies: z.array(z.string().uuid()).default([]),
     status: statusEnum.optional(),
+    taskType: taskTypeEnum.optional(),
+    supportContact: z.string().max(200).optional(),
+    notes: z.string().max(2000).optional(),
 });
 
 export const updatePlanningJobSchema = z.object({
@@ -26,10 +30,14 @@ export const updatePlanningJobSchema = z.object({
     jobId: z.string().uuid().optional(),
     scheduledTime: z.string().datetime().optional(),
     dependencies: z.array(z.string().uuid()).optional(),
+    taskType: taskTypeEnum.optional(),
+    supportContact: z.string().max(200).optional().nullable(),
+    notes: z.string().max(2000).optional().nullable(),
 });
 
 export const updateStatusSchema = z.object({
     status: statusEnum,
+    notes: z.string().max(2000).optional(), // required for MANUAL_ACTION → done
 });
 
 export const updatePositionSchema = z.object({

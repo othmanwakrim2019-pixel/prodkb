@@ -38,9 +38,16 @@ function createLimiter(opts: { windowMs: number; max: number; message: string | 
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests: opts.skipSuccessfulRequests,
-        // Use exact IP — default v7 groups IPv6 by /56 subnet, which bans
-        // an entire office/network when one user triggers the limit.
-        keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+        // Combine the validated IP key with User-Agent so each device is treated
+        // separately even on shared NAT networks.
+        // validate: { xForwardedForHeader: false } suppresses the IPv6 subnet warning
+        // while we keep the exact IP via trust proxy set in server.ts.
+        validate: { xForwardedForHeader: false },
+        keyGenerator: (req) => {
+            const ip = req.ip || req.socket.remoteAddress || 'unknown';
+            const ua = req.headers['user-agent'] || 'unknown-ua';
+            return `${ip}::${ua.slice(0, 80)}`;
+        },
         ...storeOpts,
     });
 }

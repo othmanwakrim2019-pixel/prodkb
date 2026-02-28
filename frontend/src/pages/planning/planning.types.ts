@@ -1,5 +1,6 @@
 export type PlanningPeriod = 'monthly' | 'quarterly' | 'annual';
-export type PlanningStatusType = 'pending' | 'running' | 'done';
+export type PlanningStatusType = 'pending' | 'running' | 'done' | 'failed' | 'blocked';
+export type TaskType = 'BATCH' | 'MANUAL_ACTION';
 export type InstanceStatusType = 'active' | 'archived';
 
 export interface PlanningInstance {
@@ -30,8 +31,17 @@ export interface PlanningJob {
     scheduledTime: string;
     dependencies: string[];
     status: PlanningStatusType;
+    taskType: TaskType;
+    supportContact: string | null;
+    notes: string | null;
     positionX: number | null;
     positionY: number | null;
+    launchedAt: string | null;
+    launchedById: string | null;
+    launchedBy: {
+        id: string;
+        name: string;
+    } | null;
     completedAt: string | null;
     completedById: string | null;
     completedBy: {
@@ -58,6 +68,9 @@ export interface CreatePlanningJobPayload {
     scheduledTime: string;
     dependencies: string[];
     status?: PlanningStatusType;
+    taskType?: TaskType;
+    supportContact?: string;
+    notes?: string;
 }
 
 export interface CreateInstancePayload {

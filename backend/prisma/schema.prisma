@@ -39,6 +39,7 @@ model User {
   teamMemberships   TeamMember[]
   createdInstances  PlanningInstance[] @relation("CreatedInstances")
   completedPlanningJobs PlanningJob[] @relation("CompletedPlanningJobs")
+  launchedPlanningJobs  PlanningJob[] @relation("LaunchedPlanningJobs")
   refreshTokens     RefreshToken[]
   notifications     Notification[]
   postMortems       PostMortem[]
@@ -345,10 +346,17 @@ enum PlanningPeriod {
   annual
 }
 
+enum TaskType {
+  BATCH         // Automated server job (GP, PACK, ICNE, etc.)
+  MANUAL_ACTION // Human task (close branches, open accounting period, etc.)
+}
+
 enum PlanningStatus {
   pending
-  running
+  running  // BATCH: job was launched and is executing
   done
+  failed   // Job failed — can trigger an Incident
+  blocked  // Waiting on a dependency that is not yet done
 }
 
 enum InstanceStatus {
@@ -376,29 +384,39 @@ model PlanningInstance {
 }
 
 model PlanningJob {
-  id            String           @id @default(uuid())
-  instanceId    String
-  instance      PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  systemId      String
-  system        System           @relation(fields: [systemId], references: [id])
-  jobId         String
-  job           Job              @relation(fields: [jobId], references: [id])
-  scheduledTime DateTime
-  dependencies  Json             @default("[]") // Array of PlanningJob IDs
-  status        PlanningStatus   @default(pending)
-  positionX     Float?
-  positionY     Float?
-  completedAt   DateTime?
-  completedById String?
-  completedBy   User?            @relation("CompletedPlanningJobs", fields: [completedById], references: [id])
+  id             String         @id @default(uuid())
+  instanceId     String
+  instance       PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  systemId       String
+  system         System           @relation(fields: [systemId], references: [id])
+  jobId          String
+  job            Job              @relation(fields: [jobId], references: [id])
+  scheduledTime  DateTime
+  dependencies   Json             @default("[]") // Array of PlanningJob IDs
+  status         PlanningStatus   @default(pending)
+  taskType       TaskType         @default(BATCH)
+  supportContact String?          // e.g. "Radouane", "Réseaux et télécoms"
+  notes          String?          // Operator confirmation note (required for MANUAL_ACTION done)
+  positionX      Float?
+  positionY      Float?
+
+  // BATCH tracking
+  launchedAt     DateTime?
+  launchedById   String?
+  launchedBy     User?            @relation("LaunchedPlanningJobs", fields: [launchedById], references: [id])
+
+  // Completion tracking (BATCH done or MANUAL_ACTION confirmed)
+  completedAt    DateTime?
+  completedById  String?
+  completedBy    User?            @relation("CompletedPlanningJobs", fields: [completedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([instanceId, jobId])
   @@index([instanceId])
   @@index([systemId])
   @@index([status])
+  @@index([taskType])
   @@index([jobId])
 }
 

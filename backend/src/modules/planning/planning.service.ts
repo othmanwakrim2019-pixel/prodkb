@@ -2,14 +2,18 @@
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../common/errors/app.error';
-import { PlanningPeriod, PlanningStatus, InstanceStatus, type PlanningJob } from '@prisma/client';
+import { PlanningPeriod, PlanningStatus, TaskType, InstanceStatus, type PlanningJob } from '@prisma/client';
 
 // --- State Transition Validation ---
 
+// BATCH:        pending → running → done/failed | done → pending (reopen)
+// MANUAL_ACTION: pending → done/failed/blocked    | done → pending (reopen)
 const ALLOWED_TRANSITIONS: Record<PlanningStatus, PlanningStatus[]> = {
-    [PlanningStatus.pending]: [PlanningStatus.running, PlanningStatus.done],
-    [PlanningStatus.running]: [PlanningStatus.done, PlanningStatus.pending],
-    [PlanningStatus.done]: [PlanningStatus.pending, PlanningStatus.running], // allow reopening
+    [PlanningStatus.pending]: [PlanningStatus.running, PlanningStatus.done, PlanningStatus.failed, PlanningStatus.blocked],
+    [PlanningStatus.running]: [PlanningStatus.done, PlanningStatus.failed, PlanningStatus.pending],
+    [PlanningStatus.done]: [PlanningStatus.pending], // allow reopening
+    [PlanningStatus.failed]: [PlanningStatus.pending, PlanningStatus.running],
+    [PlanningStatus.blocked]: [PlanningStatus.pending],
 };
 
 function validateTransition(from: PlanningStatus, to: PlanningStatus): void {
@@ -87,6 +91,87 @@ export class PlanningInstanceService {
             data: { status: InstanceStatus.active },
         });
     }
+
+    /**
+     * Clone an existing planning instance for the next month.
+     * Copies all jobs, advances scheduledTime by 1 month, resets statuses to pending.
+     */
+    async cloneForNextMonth(instanceId: string, createdById: string) {
+        const source = await prisma.planningInstance.findUnique({
+            where: { id: instanceId },
+            include: { jobs: true },
+        });
+        if (!source) throw new NotFoundError('Planning instance not found');
+
+        // Advance start/end dates by 1 month
+        const advanceMonth = (d: Date) => {
+            const next = new Date(d);
+            next.setMonth(next.getMonth() + 1);
+            return next;
+        };
+
+        const newInstance = await prisma.planningInstance.create({
+            data: {
+                name: source.name.replace(/\d{4}$/, '') + new Date(advanceMonth(source.startDate)).getFullYear()
+                    || `${source.name} (Clone)`,
+                description: source.description ?? undefined,
+                period: source.period,
+                startDate: advanceMonth(source.startDate),
+                endDate: advanceMonth(source.endDate),
+                createdById,
+                status: InstanceStatus.active,
+            },
+        });
+
+        // Map old job IDs to new job IDs to fix dependency references
+        const idMap = new Map<string, string>();
+        const createdJobs: PlanningJob[] = [];
+
+        for (const job of source.jobs) {
+            const newJob = await prisma.planningJob.create({
+                data: {
+                    instanceId: newInstance.id,
+                    systemId: job.systemId,
+                    jobId: job.jobId,
+                    scheduledTime: advanceMonth(job.scheduledTime),
+                    dependencies: [], // fill after all created
+                    status: PlanningStatus.pending,
+                    taskType: job.taskType,
+                    supportContact: job.supportContact ?? undefined,
+                    notes: undefined,
+                    positionX: job.positionX ?? undefined,
+                    positionY: job.positionY ?? undefined,
+                },
+            });
+            idMap.set(job.id, newJob.id);
+            createdJobs.push(newJob);
+        }
+
+        // Now fix dependency references using the id map
+        for (let i = 0; i < source.jobs.length; i++) {
+            const oldJob = source.jobs[i];
+            const newJobId = idMap.get(oldJob.id)!;
+            const oldDeps = oldJob.dependencies as string[];
+            const newDeps = oldDeps.map(depId => idMap.get(depId) || depId);
+
+            if (newDeps.length > 0) {
+                await prisma.planningJob.update({
+                    where: { id: newJobId },
+                    data: { dependencies: newDeps },
+                });
+            }
+        }
+
+        logger.info(`Cloned planning instance ${instanceId} → ${newInstance.id} with ${createdJobs.length} jobs`);
+
+        return prisma.planningInstance.findUnique({
+            where: { id: newInstance.id },
+            include: {
+                createdBy: { select: { id: true, name: true, email: true } },
+                _count: { select: { jobs: true } },
+            },
+        });
+    }
 }
 
 // --- Planning Job Service ---
@@ -97,6 +182,7 @@ export class PlanningJobService {
         system: { select: { id: true, name: true } },
         job: { select: { id: true, name: true, code: true } },
         completedBy: { select: { id: true, name: true } },
+        launchedBy: { select: { id: true, name: true } },
     };
 
     async findByInstance(instanceId: string) {
@@ -123,15 +209,16 @@ export class PlanningJobService {
         scheduledTime: Date;
         dependencies: string[];
         status?: PlanningStatus;
+        taskType?: TaskType;
+        supportContact?: string;
+        notes?: string;
     }) {
-        // Verify instance exists and is active
         const instance = await prisma.planningInstance.findUnique({ where: { id: data.instanceId } });
         if (!instance) throw new NotFoundError('Planning instance not found');
         if (instance.status === InstanceStatus.archived) {
             throw new ValidationError('Cannot add jobs to an archived planning instance');
         }
 
-        // Validate dependencies exist in the same instance
         if (data.dependencies.length > 0) {
             await this.validateDependencies(data.dependencies, data.instanceId);
         }
@@ -144,6 +231,9 @@ export class PlanningJobService {
                 scheduledTime: data.scheduledTime,
                 dependencies: data.dependencies,
                 status: data.status || PlanningStatus.pending,
+                taskType: data.taskType || TaskType.BATCH,
+                supportContact: data.supportContact,
+                notes: data.notes,
             },
             include: this.includeRelations,
         });
@@ -154,13 +244,15 @@ export class PlanningJobService {
         jobId?: string;
         scheduledTime?: Date;
         dependencies?: string[];
+        taskType?: TaskType;
+        supportContact?: string | null;
+        notes?: string | null;
     }) {
         const existing = await this.findById(id);
 
         if (data.dependencies && data.dependencies.length > 0) {
             await this.validateDependencies(data.dependencies, existing.instanceId, id);
 
-            // Check for circular dependencies
             const allJobs = await prisma.planningJob.findMany({
                 where: { instanceId: existing.instanceId },
             });
@@ -176,6 +268,9 @@ export class PlanningJobService {
                 ...(data.jobId !== undefined && { jobId: data.jobId }),
                 ...(data.scheduledTime !== undefined && { scheduledTime: data.scheduledTime }),
                 ...(data.dependencies !== undefined && { dependencies: data.dependencies }),
+                ...(data.taskType !== undefined && { taskType: data.taskType }),
+                ...(data.supportContact !== undefined && { supportContact: data.supportContact }),
+                ...(data.notes !== undefined && { notes: data.notes }),
             },
             include: this.includeRelations,
         });
@@ -184,7 +279,6 @@ export class PlanningJobService {
     async delete(id: string) {
         const job = await this.findById(id);
 
-        // Remove this job from other jobs' dependency arrays within the same instance
         const siblings = await prisma.planningJob.findMany({
             where: { instanceId: job.instanceId },
         });
@@ -210,21 +304,36 @@ export class PlanningJobService {
     }
 
     /**
-     * Manual status update with state transition validation.
+     * Update job status with type-aware transitions and tracking timestamps.
      */
-    async updateStatus(id: string, newStatus: PlanningStatus, userId?: string) {
+    async updateStatus(id: string, newStatus: PlanningStatus, userId?: string, notes?: string) {
         const job = await this.findById(id);
         validateTransition(job.status, newStatus);
 
+        // For MANUAL_ACTION going to done, require a note
+        if (job.taskType === TaskType.MANUAL_ACTION && newStatus === PlanningStatus.done && !notes) {
+            throw new ValidationError('A confirmation note is required when marking a manual action as done');
+        }
+
         const updateData: Record<string, unknown> = { status: newStatus };
+
+        if (newStatus === PlanningStatus.running && job.taskType === TaskType.BATCH) {
+            updateData.launchedAt = new Date();
+            updateData.launchedById = userId || null;
+        }
 
         if (newStatus === PlanningStatus.done) {
             updateData.completedAt = new Date();
             updateData.completedById = userId || null;
-        } else {
-            // If reverting from done, clear completion tracking
+            if (notes) updateData.notes = notes;
+        }
+
+        if (newStatus === PlanningStatus.pending) {
+            // Clear all tracking when reopened
             updateData.completedAt = null;
             updateData.completedById = null;
+            updateData.launchedAt = null;
+            updateData.launchedById = null;
         }
 
         const updated = await prisma.planningJob.update({
@@ -233,7 +342,7 @@ export class PlanningJobService {
             include: this.includeRelations,
         });
 
-        // If marked as done, cascade-activate dependents
+        // If marked done, cascade-activate dependents
         if (newStatus === PlanningStatus.done) {
             await this.cascadeActivation(id, job.instanceId);
         }
@@ -241,16 +350,10 @@ export class PlanningJobService {
         return updated;
     }
 
-    /**
-     * Complete a job (shortcut for updateStatus to done) with cascade activation.
-     */
-    async complete(id: string, userId?: string) {
-        return this.updateStatus(id, PlanningStatus.done, userId);
+    async complete(id: string, userId?: string, notes?: string) {
+        return this.updateStatus(id, PlanningStatus.done, userId, notes);
     }
 
-    /**
-     * Save node position after drag.
-     */
     async updatePosition(id: string, positionX: number, positionY: number) {
         return prisma.planningJob.update({
             where: { id },
@@ -258,9 +361,6 @@ export class PlanningJobService {
         });
     }
 
-    /**
-     * Batch save all node positions (used after dagre re-layout).
-     */
     async updatePositions(positions: Array<{ id: string; positionX: number; positionY: number }>) {
         const updates = positions.map(pos =>
             prisma.planningJob.update({
@@ -283,7 +383,7 @@ export class PlanningJobService {
         for (const candidate of allJobs) {
             const deps = candidate.dependencies as string[];
             if (!deps.includes(completedJobId)) continue;
-            if (candidate.status !== PlanningStatus.pending) continue;
+            if (candidate.status !== PlanningStatus.blocked && candidate.status !== PlanningStatus.pending) continue;
 
             const allDepsDone = deps.every(depId => {
                 if (depId === completedJobId) return true;
@@ -294,14 +394,14 @@ export class PlanningJobService {
             if (allDepsDone) {
                 await prisma.planningJob.update({
                     where: { id: candidate.id },
-                    data: { status: PlanningStatus.running },
+                    data: { status: PlanningStatus.pending },
                 });
                 activated.push(candidate.id);
             }
         }
 
         if (activated.length > 0) {
-            logger.info(`Completing job ${completedJobId} activated ${activated.length} downstream jobs: ${activated.join(', ')}`);
+            logger.info(`Completing job ${completedJobId} unblocked ${activated.length} downstream jobs: ${activated.join(', ')}`);
         }
     }
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
-import type { PlanningJob, CreatePlanningJobPayload } from './planning.types';
+import type { PlanningJob, CreatePlanningJobPayload, TaskType } from './planning.types';
 import type { System, Job } from '../../types';
+import { Cpu, User } from 'lucide-react';
 
 interface AddJobModalProps {
     isOpen: boolean;
@@ -17,6 +18,8 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
     const [selectedJobId, setSelectedJobId] = useState('');
     const [scheduledTime, setScheduledTime] = useState('');
     const [dependencies, setDependencies] = useState<string[]>([]);
+    const [taskType, setTaskType] = useState<TaskType>('BATCH');
+    const [supportContact, setSupportContact] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -28,6 +31,8 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
             setSelectedJobId('');
             setScheduledTime('');
             setDependencies([]);
+            setTaskType('BATCH');
+            setSupportContact('');
             setError('');
         }
     }, [isOpen]);
@@ -61,6 +66,8 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                 jobId: selectedJobId,
                 scheduledTime: new Date(scheduledTime).toISOString(),
                 dependencies,
+                taskType,
+                supportContact: supportContact.trim() || undefined,
             };
             await axios.post('/api/v1/planning/jobs', payload);
             onCreated();
@@ -134,6 +141,36 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                         )}
                     </div>
 
+                    {/* Task Type */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Task Type</label>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setTaskType('BATCH')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${taskType === 'BATCH'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                    }`}
+                            >
+                                <Cpu className="w-4 h-4" /> ⚙️ Automated Batch
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTaskType('MANUAL_ACTION')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${taskType === 'MANUAL_ACTION'
+                                    ? 'border-violet-500 bg-violet-50 text-violet-700'
+                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                    }`}
+                            >
+                                <User className="w-4 h-4" /> 👤 Manual Action
+                            </button>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1.5">
+                            {taskType === 'BATCH' ? '⚙️ Automated job — will have a Launch button' : '👤 Human task — operator must confirm with a note'}
+                        </p>
+                    </div>
+
                     {/* Scheduled Time */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Scheduled Time</label>
@@ -182,6 +219,18 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* Support Contact */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Support Contact <span className="text-slate-400 font-normal">(optional)</span></label>
+                        <input
+                            type="text"
+                            value={supportContact}
+                            onChange={e => setSupportContact(e.target.value)}
+                            placeholder='e.g. "Radouane", "Réseaux et Télécoms"'
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                     </div>
 
                     {/* Actions */}
