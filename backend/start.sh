@@ -19,7 +19,7 @@ echo "Waiting for database to be ready..."
 MAX_RETRIES=10
 RETRY_INTERVAL=3
 for i in $(seq 1 $MAX_RETRIES); do
-    if npx prisma db execute --stdin <<< "SELECT 1" 2>/dev/null; then
+    if echo "SELECT 1;" | npx prisma db execute --stdin 2>/dev/null; then
         echo "Database is ready!"
         break
     fi
