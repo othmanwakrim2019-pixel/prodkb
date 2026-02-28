@@ -111,6 +111,12 @@ export const userService = {
 
     removeFromTeam: (teamId: string, userId: string): Promise<void> =>
         api.delete(`/api/v1/teams/${teamId}/members/${userId}`).then(() => undefined),
+
+    resetPassword: (userId: string, newPassword: string): Promise<void> =>
+        api.put(`/api/v1/users/${userId}/reset-password`, { newPassword }).then(() => undefined),
+
+    unlockAccount: (email: string): Promise<void> =>
+        api.post('/auth/v1/unlock-account', { email }).then(() => undefined),
 };
 
 // ── Systems ──

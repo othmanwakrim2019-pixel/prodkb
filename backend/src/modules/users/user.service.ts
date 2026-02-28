@@ -131,6 +131,25 @@ export class UserService {
     }
 
     /**
+     * Admin reset password — forces a new password without requiring the old one.
+     * Only callable by ADMIN users from the user management UI.
+     */
+    async adminResetPassword(targetUserId: string, newPassword: string): Promise<void> {
+        const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+        if (!user) throw new NotFoundError('User not found');
+
+        if (newPassword.length < 8) throw new ValidationError('New password must be at least 8 characters');
+
+        const hashedPassword = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+        await prisma.user.update({
+            where: { id: targetUserId },
+            data: { password: hashedPassword },
+        });
+
+        logger.info('Admin reset password for user', { targetUserId });
+    }
+
+    /**
      * Get user with permissions (internal use)
      */
     async findByIdWithPermissions(id: string): Promise<IUserPublic & { permissions: string[] }> {

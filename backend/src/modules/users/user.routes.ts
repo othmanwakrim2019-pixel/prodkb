@@ -12,5 +12,6 @@ router.get('/', checkPermission('USER_VIEW'), UserController.getAllUsers);
 router.put('/:id', checkPermission('USER_MANAGE'), UserController.updateUser);
 router.delete('/:id', checkPermission('USER_MANAGE'), UserController.deleteUser);
 router.put('/me/password', UserController.changePassword);
+router.put('/:id/reset-password', checkPermission('USER_MANAGE'), UserController.adminResetPassword);
 
 export const userRoutes = router;
