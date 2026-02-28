@@ -14,13 +14,31 @@ if [ ! -d "$MIGRATIONS_DIR" ] || [ -z "$(ls -A "$MIGRATIONS_DIR" 2>/dev/null)" ]
     exit 1
 fi
 
-# 2. Apply pending migrations (safe for production — never drops data)
+# 2. Wait for database to be reachable
+echo "Waiting for database to be ready..."
+MAX_RETRIES=10
+RETRY_INTERVAL=3
+for i in $(seq 1 $MAX_RETRIES); do
+    if npx prisma db execute --stdin <<< "SELECT 1" 2>/dev/null; then
+        echo "Database is ready!"
+        break
+    fi
+    if [ $i -eq $MAX_RETRIES ]; then
+        echo "ERROR: Database not reachable after $MAX_RETRIES retries"
+        exit 1
+    fi
+    echo "  Attempt $i/$MAX_RETRIES failed, retrying in ${RETRY_INTERVAL}s..."
+    sleep $RETRY_INTERVAL
+done
+
+# 3. Apply pending migrations (safe for production — never drops data)
 echo "Applying database migrations..."
 if [ -z "$DATABASE_URL" ]; then
-    echo "🚨 FATAL ERROR: DATABASE_URL is empty at runtime!"
+    echo "FATAL ERROR: DATABASE_URL is empty at runtime!"
     exit 1
 fi
 npx prisma migrate deploy
+echo "Migrations applied successfully."
 echo "Migrations applied successfully."
 
 # 3. Generate Prisma Client (in case it wasn't generated at build time)
