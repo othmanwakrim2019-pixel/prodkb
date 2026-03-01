@@ -670,7 +670,8 @@ export class PlanningJobService {
             where: { instanceId },
         });
 
-        const activated: string[] = [];
+        const autoStarted: string[] = [];
+        const unblocked: string[] = [];
 
         for (const candidate of allJobs) {
             const deps = candidate.dependencies as string[];
@@ -684,16 +685,32 @@ export class PlanningJobService {
             });
 
             if (allDepsDone) {
-                await prisma.planningJob.update({
-                    where: { id: candidate.id },
-                    data: { status: PlanningStatus.pending },
-                });
-                activated.push(candidate.id);
+                if (candidate.taskType === TaskType.BATCH) {
+                    // Auto-start BATCH tasks: they don't require human intervention
+                    await prisma.planningJob.update({
+                        where: { id: candidate.id },
+                        data: {
+                            status: PlanningStatus.running,
+                            launchedAt: new Date(),
+                        },
+                    });
+                    autoStarted.push(candidate.id);
+                } else {
+                    // MANUAL_ACTION tasks: move to pending so the user can acknowledge
+                    await prisma.planningJob.update({
+                        where: { id: candidate.id },
+                        data: { status: PlanningStatus.pending },
+                    });
+                    unblocked.push(candidate.id);
+                }
             }
         }
 
-        if (activated.length > 0) {
-            logger.info(`Completing job ${completedJobId} unblocked ${activated.length} downstream jobs: ${activated.join(', ')}`);
+        if (autoStarted.length > 0) {
+            logger.info(`Job ${completedJobId} done → auto-started ${autoStarted.length} downstream BATCH job(s): ${autoStarted.join(', ')}`);
+        }
+        if (unblocked.length > 0) {
+            logger.info(`Job ${completedJobId} done → unblocked ${unblocked.length} MANUAL job(s) awaiting user: ${unblocked.join(', ')}`);
         }
     }
 
