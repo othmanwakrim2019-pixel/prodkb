@@ -2,10 +2,10 @@
  * System Health Score Service
  *
  * Computes a 0–100 health score per system based on:
- *   - Incident frequency (last 30 days) — weight 30%
- *   - Average MTTR — weight 25%
- *   - SLA breach rate — weight 25%
- *   - Resolution rate — weight 20%
+ *   - Open incidents right now — weight 35%  (most intuitive factor)
+ *   - Resolution rate (30d)   — weight 25%
+ *   - SLA breach rate (30d)   — weight 20%
+ *   - Average MTTR (30d)      — weight 20%
  *
  * Higher score = healthier system.
  * Snapshots are persisted in the SystemHealthSnapshot table for trend analysis.
@@ -21,12 +21,13 @@ export interface SystemHealthResult {
     systemId: string;
     systemName: string;
     score: number;
-    incidentCount30d: number;
+    totalIncidents30d: number;
+    resolvedIncidents30d: number;
     avgMttrMinutes: number;
     slaBreachRate: number;
     resolutionRate: number;
     openIncidents: number;
-    trend: 'up' | 'down' | 'stable'; // Compared to previous snapshot
+    trend: 'up' | 'down' | 'stable';
 }
 
 class HealthScoreService {
@@ -43,12 +44,11 @@ class HealthScoreService {
                 const result = await this.computeForSystem(system.id, system.name);
                 results.push(result);
 
-                // Persist snapshot
                 await prisma.systemHealthSnapshot.create({
                     data: {
                         systemId: system.id,
                         score: result.score,
-                        incidentCount30d: result.incidentCount30d,
+                        incidentCount30d: result.totalIncidents30d,
                         avgMttrMinutes: result.avgMttrMinutes,
                         slaBreachRate: result.slaBreachRate,
                         resolutionRate: result.resolutionRate,
@@ -73,12 +73,27 @@ class HealthScoreService {
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        // 1. Incident count in last 30 days
-        const incidentCount30d = await prisma.incident.count({
+        // 1. Currently open incidents (most important for intuitiveness)
+        const openIncidents = await prisma.incident.count({
+            where: { systemId, status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS] } },
+        });
+
+        // 2. Total incidents in last 30 days
+        const totalIncidents30d = await prisma.incident.count({
             where: { systemId, createdAt: { gte: thirtyDaysAgo } },
         });
 
-        // 2. Average MTTR for resolved incidents in last 30 days
+        // 3. Resolved/closed incidents in last 30 days
+        const resolvedIncidents30d = await prisma.incident.count({
+            where: {
+                systemId,
+                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
+                createdAt: { gte: thirtyDaysAgo },
+            },
+        });
+        const resolutionRate = totalIncidents30d > 0 ? resolvedIncidents30d / totalIncidents30d : 1;
+
+        // 4. Average MTTR for resolved incidents in last 30 days
         const mttrResult = await prisma.incident.aggregate({
             where: {
                 systemId,
@@ -90,7 +105,7 @@ class HealthScoreService {
         });
         const avgMttrMinutes = mttrResult._avg.timeToResolve ?? 0;
 
-        // 3. SLA breach rate
+        // 5. SLA breach rate
         const totalWithSla = await prisma.incident.count({
             where: { systemId, slaId: { not: null }, createdAt: { gte: thirtyDaysAgo } },
         });
@@ -99,40 +114,26 @@ class HealthScoreService {
         });
         const slaBreachRate = totalWithSla > 0 ? breachedCount / totalWithSla : 0;
 
-        // 4. Resolution rate (resolved / total)
-        const resolvedCount = await prisma.incident.count({
-            where: {
-                systemId,
-                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
-                createdAt: { gte: thirtyDaysAgo },
-            },
-        });
-        const resolutionRate = incidentCount30d > 0 ? resolvedCount / incidentCount30d : 1;
+        // ── Score formula (redesigned for intuitive results) ──
 
-        // 5. Currently open incidents
-        const openIncidents = await prisma.incident.count({
-            where: { systemId, status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS] } },
-        });
+        // Open incidents: 0 open = 100, 10+ open = 0  (weight 35%)
+        const openScore = Math.max(0, 100 - (openIncidents / 10) * 100);
 
-        // ── Score formula ──
-        // Incident frequency: fewer incidents = higher score (cap at 50 incidents)
-        const freqScore = Math.max(0, 100 - (incidentCount30d / 50) * 100);
+        // Resolution rate: 100% resolved = 100  (weight 25%)
+        const resolveScore = resolutionRate * 100;
 
-        // MTTR: lower = better (cap at 480 min = 8 hours)
-        const mttrScore = Math.max(0, 100 - (avgMttrMinutes / 480) * 100);
-
-        // SLA breach: lower = better
+        // SLA breach: 0% breaches = 100  (weight 20%)
         const slaScore = (1 - slaBreachRate) * 100;
 
-        // Resolution rate: higher = better
-        const resolveScore = resolutionRate * 100;
+        // MTTR: 0 min = 100, 480+ min (8h) = 0  (weight 20%)
+        const mttrScore = Math.max(0, 100 - (avgMttrMinutes / 480) * 100);
 
         // Weighted composite
         const score = Math.round(
-            freqScore * 0.30 +
-            mttrScore * 0.25 +
-            slaScore * 0.25 +
-            resolveScore * 0.20
+            openScore * 0.35 +
+            resolveScore * 0.25 +
+            slaScore * 0.20 +
+            mttrScore * 0.20
         );
 
         // Trend: compare to last snapshot
@@ -151,7 +152,8 @@ class HealthScoreService {
             systemId,
             systemName,
             score: Math.min(100, Math.max(0, score)),
-            incidentCount30d,
+            totalIncidents30d,
+            resolvedIncidents30d,
             avgMttrMinutes: Math.round(avgMttrMinutes),
             slaBreachRate: Math.round(slaBreachRate * 100) / 100,
             resolutionRate: Math.round(resolutionRate * 100) / 100,
@@ -172,7 +174,6 @@ class HealthScoreService {
             results.push(result);
         }
 
-        // Sort by score descending
         return results.sort((a, b) => b.score - a.score);
     }
 }
