@@ -151,6 +151,7 @@ model System {
   procedures  Procedure[]
   escalationRules EscalationRule[]
   autoAssignRules AutoAssignmentRule[]
+  healthSnapshots SystemHealthSnapshot[]
   updatedById String?
   updatedBy   User?       @relation("UpdatedSystems", fields: [updatedById], references: [id])
 
@@ -518,4 +519,22 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([createdAt])
+}
+
+// ── System Health Score Snapshots ──
+model SystemHealthSnapshot {
+  id                 String   @id @default(uuid())
+  systemId           String
+  system             System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  score              Int      // 0-100 composite health score
+  incidentCount30d   Int      @default(0)
+  avgMttrMinutes     Float    @default(0)
+  slaBreachRate      Float    @default(0) // 0.0 - 1.0
+  resolutionRate     Float    @default(0) // 0.0 - 1.0
+  openIncidents      Int      @default(0)
+  computedAt         DateTime @default(now())
+
+  @@index([systemId, computedAt])
+  @@index([computedAt])
+  @@index([score])
 }

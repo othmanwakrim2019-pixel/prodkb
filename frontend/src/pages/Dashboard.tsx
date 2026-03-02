@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { TrendChart, StatusDonutChart, TopSystemsChart } from '../components/DashboardCharts';
 import { useTranslation } from 'react-i18next';
 import { AnimatedNumber, KPICard, PeriodPill } from '../components/dashboard/DashboardWidgets';
+import { SystemHealthWidget } from '../components/dashboard/SystemHealthWidget';
 
 interface DashboardStats {
     createdToday: number;
@@ -337,6 +338,11 @@ const Dashboard = () => {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* ═══ SYSTEM HEALTH ═══ */}
+            <div className="grid gap-4 lg:grid-cols-2">
+                <SystemHealthWidget />
             </div>
         </div>
     );

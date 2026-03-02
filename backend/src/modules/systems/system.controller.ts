@@ -1,6 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { systemService } from './system.service';
+import { healthScoreService } from './health-score.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
@@ -8,6 +9,17 @@ import { createSystemSchema, updateSystemSchema, createJobSchema, updateJobSchem
 
 
 export class SystemController {
+    // --- Health Leaderboard ---
+
+    static async getHealthLeaderboard(_req: Request, res: Response, next: NextFunction) {
+        try {
+            const leaderboard = await healthScoreService.getLeaderboard();
+            res.json(createResponse(true, leaderboard));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // --- Systems ---
 
     static async getSystems(req: Request, res: Response, next: NextFunction) {
