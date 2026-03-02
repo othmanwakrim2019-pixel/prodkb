@@ -15,6 +15,7 @@
 
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
+import { IncidentStatus } from '../../constants';
 
 export interface SystemHealthResult {
     systemId: string;
@@ -81,7 +82,7 @@ class HealthScoreService {
         const mttrResult = await prisma.incident.aggregate({
             where: {
                 systemId,
-                status: 'resolved',
+                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
                 resolvedAt: { gte: thirtyDaysAgo },
                 timeToResolve: { not: null },
             },
@@ -102,7 +103,7 @@ class HealthScoreService {
         const resolvedCount = await prisma.incident.count({
             where: {
                 systemId,
-                status: { in: ['resolved', 'closed'] },
+                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
                 createdAt: { gte: thirtyDaysAgo },
             },
         });
@@ -110,7 +111,7 @@ class HealthScoreService {
 
         // 5. Currently open incidents
         const openIncidents = await prisma.incident.count({
-            where: { systemId, status: { notIn: ['resolved', 'closed'] } },
+            where: { systemId, status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS] } },
         });
 
         // ── Score formula ──
