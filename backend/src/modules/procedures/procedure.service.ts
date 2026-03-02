@@ -1,6 +1,6 @@
 
 import { prisma } from '../../common/utils/prisma';
-import { NotFoundError } from '../../common/errors/app.error';
+import { NotFoundError, ValidationError } from '../../common/errors/app.error';
 
 // ── Typed DTOs (eliminates `any`) ──
 export interface CreateProcedureDTO {
@@ -115,8 +115,19 @@ export class ProcedureService {
     }
 
     async delete(id: string) {
-        const procedure = await prisma.procedure.findUnique({ where: { id } });
+        const procedure = await prisma.procedure.findUnique({
+            where: { id },
+            include: {
+                _count: { select: { incidents: true } }
+            }
+        });
         if (!procedure) throw new NotFoundError('Procedure not found');
+
+        if (procedure._count.incidents > 0) {
+            throw new ValidationError(
+                `Impossible de supprimer la procédure "${procedure.title}" car elle est liée à ${procedure._count.incidents} incident(s). Veuillez d'abord retirer cette procédure des incidents concernés.`
+            );
+        }
 
         await prisma.procedure.delete({ where: { id } });
         return procedure;

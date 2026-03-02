@@ -144,8 +144,29 @@ export class TeamService {
     }
 
     async delete(id: string) {
-        await this.findById(id); // Ensure exists
+        const team = await prisma.team.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: { members: true, incidents: true, jobs: true }
+                }
+            }
+        });
+        if (!team) throw new NotFoundError('Team not found');
+
+        const reasons: string[] = [];
+        if (team._count.incidents > 0) reasons.push(`${team._count.incidents} incident(s)`);
+        if (team._count.jobs > 0) reasons.push(`${team._count.jobs} job(s)`);
+        if (team._count.members > 0) reasons.push(`${team._count.members} membre(s)`);
+
+        if (reasons.length > 0) {
+            throw new ValidationError(
+                `Impossible de supprimer l'équipe "${team.name}" car elle est liée à : ${reasons.join(', ')}. Veuillez d'abord supprimer ces éléments.`
+            );
+        }
+
         await prisma.team.delete({ where: { id } });
+        return team;
     }
 
     async addMember(teamId: string, userId: string, role: string) {

@@ -91,13 +91,13 @@ export const SystemManagement = () => {
     };
 
     const handleDeleteSystem = async (systemId: string, systemName: string) => {
-        if (!confirm(`Delete system "${systemName}"? This will fail if there are related incidents, jobs, or procedures.`)) return;
+        if (!confirm(`Supprimer le système "${systemName}" ?`)) return;
         try {
             await systemService.delete(systemId);
             await fetchSystems();
-            alert('System deleted successfully!');
-        } catch (error) {
-            console.error(error);
+            alert('Système supprimé avec succès !');
+        } catch (error: any) {
+            alert(error.response?.data?.message || 'Échec de la suppression du système.');
         }
     };
 
@@ -119,13 +119,13 @@ export const SystemManagement = () => {
     };
 
     const handleDeleteJob = async (jobId: string, jobName: string) => {
-        if (!confirm(`Delete job "${jobName}"? This will fail if there are related incidents or procedures.`)) return;
+        if (!confirm(`Supprimer le job "${jobName}" ?`)) return;
         try {
             await jobService.delete(jobId);
             await fetchSystems();
-            alert('Job deleted successfully!');
-        } catch (error) {
-            console.error(error);
+            alert('Job supprimé avec succès !');
+        } catch (error: any) {
+            alert(error.response?.data?.message || 'Échec de la suppression du job.');
         }
     };
 

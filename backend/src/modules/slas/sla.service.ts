@@ -1,6 +1,6 @@
 
 import { prisma } from '../../common/utils/prisma';
-import { NotFoundError } from '../../common/errors/app.error';
+import { NotFoundError, ValidationError } from '../../common/errors/app.error';
 
 // ── Typed DTOs (eliminates `any`) ──
 export interface CreateSLADTO {
@@ -92,12 +92,21 @@ export class SlaService {
     }
 
     async deleteSLA(id: string) {
-        const sla = await this.findSLAById(id);
-
-        await prisma.sLA.delete({
+        const sla = await prisma.sLA.findUnique({
             where: { id },
+            include: {
+                _count: { select: { incidents: true } }
+            }
         });
+        if (!sla) throw new NotFoundError('SLA not found');
 
+        if (sla._count.incidents > 0) {
+            throw new ValidationError(
+                `Impossible de supprimer la politique SLA "${sla.name}" car elle est liée à ${sla._count.incidents} incident(s). Veuillez d'abord retirer cette SLA des incidents concernés.`
+            );
+        }
+
+        await prisma.sLA.delete({ where: { id } });
         return sla;
     }
 }

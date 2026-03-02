@@ -104,7 +104,29 @@ export class UserService {
      * Delete a user
      */
     async delete(id: string): Promise<void> {
-        await this.findById(id);
+        const user = await prisma.user.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        createdIncidents: true,
+                        teamMemberships: true,
+                    }
+                }
+            }
+        });
+        if (!user) throw new NotFoundError('User not found');
+
+        const reasons: string[] = [];
+        if (user._count.createdIncidents > 0) reasons.push(`${user._count.createdIncidents} incident(s) créé(s)`);
+        if (user._count.teamMemberships > 0) reasons.push(`${user._count.teamMemberships} équipe(s)`);
+
+        if (reasons.length > 0) {
+            throw new ValidationError(
+                `Impossible de supprimer l'utilisateur "${user.name}" car il est lié à : ${reasons.join(', ')}. Veuillez d'abord retirer ces associations.`
+            );
+        }
+
         await prisma.user.delete({ where: { id } });
         logger.info('User deleted', { userId: id });
     }

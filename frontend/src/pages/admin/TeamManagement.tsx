@@ -81,16 +81,13 @@ export const TeamManagement = () => {
     };
 
     const handleDeleteTeam = async (teamId: string, teamName: string) => {
-        if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
+        if (!confirm(`Supprimer l'équipe "${teamName}" ?`)) return;
         try {
             await teamService.delete(teamId);
             await fetchTeams();
-            alert('Team deleted successfully!');
-            await fetchTeams();
-            alert('Team deleted successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            alert('Équipe supprimée avec succès !');
         } catch (error: any) {
-            console.error(error);
+            alert(error.response?.data?.message || 'Échec de la suppression.');
         }
     };
 
