@@ -74,6 +74,11 @@ axios.interceptors.response.use(
 
         // Handle 401 Unauthorized via transparent refresh token
         if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+            // If the original request was to the login endpoint, do NOT try to refresh
+            if (originalRequest.url?.includes('/auth/v1/login') || originalRequest.url?.includes('/auth/login')) {
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
                 // If already refreshing, pause this request and queue it
                 try {
