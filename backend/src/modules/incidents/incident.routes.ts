@@ -44,6 +44,7 @@ const upload = multer({
 // Stats & Search (Must come before :id)
 router.get('/stats', authenticate, checkPermission('DASHBOARD_VIEW'), IncidentController.getStats);
 router.get('/search', authenticate, checkPermission('SEARCH_VIEW'), IncidentController.searchSimilar);
+router.get('/suggest-procedures', authenticate, checkPermission('INCIDENT_VIEW'), IncidentController.suggestProcedures);
 
 // CRUD
 router.get('/', authenticate, checkPermission('INCIDENT_VIEW'), paginationMiddleware, IncidentController.getIncidents);

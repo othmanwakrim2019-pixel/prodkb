@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
 import v1Routes from './modules/v1.routes';
+import { eventRoutes } from './modules/events/events.routes';
 import { registerSLARepeatable, slaQueue } from './modules/sla/sla.queue';
 import { webhookQueue } from './modules/webhooks/webhook.queue';
 import swaggerUi from 'swagger-ui-express';
@@ -180,6 +181,9 @@ app.use('/admin/queues', authenticate, authorize(['ADMIN']), bullBoardAdapter.ge
 // Auth routes with strict rate limiting — versioned
 app.use('/auth/v1', authLimiter, authRoutes);
 app.use('/auth', authLimiter, authRoutes); // backward compat
+
+// SSE events — no CSRF needed (GET-only, read-only stream)
+app.use('/api/v1/events', apiLimiter, eventRoutes);
 
 // API v1 routes with general rate limiting + CSRF protection
 app.use('/api/v1', apiLimiter, csrfProtection, v1Routes);
