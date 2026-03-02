@@ -33,66 +33,81 @@ const nodeTypes: NodeTypes = {
 };
 
 /**
- * Use dagre to compute graph layout, respecting saved positions when available.
+ * Use dagre to compute a clean, automatic graph layout.
+ * Nodes are sorted by scheduledTime so the flow reads chronologically.
  */
 function getLayoutedElements(
     jobs: PlanningJob[],
     direction: 'LR' | 'TB'
 ): { nodes: Node[]; edges: Edge[] } {
+    // Sort by scheduledTime so dagre assigns ranks chronologically
+    const sortedJobs = [...jobs].sort(
+        (a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
+    );
+
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
     g.setGraph({
         rankdir: direction,
-        ranksep: 80,
-        nodesep: 50,
-        marginx: 40,
-        marginy: 40,
+        ranksep: 120,   // distance between ranks (columns in LR)
+        nodesep: 60,    // distance between nodes in the same rank
+        marginx: 60,
+        marginy: 60,
+        align: 'UL',    // align nodes to upper-left for uniform layout
     });
 
-    jobs.forEach(job => {
+    sortedJobs.forEach(job => {
         g.setNode(job.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
     });
 
     const edges: Edge[] = [];
-    const jobIdSet = new Set(jobs.map(j => j.id));
+    const jobIdSet = new Set(sortedJobs.map(j => j.id));
 
-    jobs.forEach(job => {
+    sortedJobs.forEach(job => {
         const deps = Array.isArray(job.dependencies)
             ? job.dependencies
             : (() => { try { return JSON.parse(job.dependencies as string) || []; } catch { return []; } })();
         deps.forEach((depId: string) => {
             if (jobIdSet.has(depId)) {
+                const depJob = sortedJobs.find(j => j.id === depId);
+                const edgeColor =
+                    job.status === 'done' ? '#10b981'
+                        : job.status === 'running' ? '#3b82f6'
+                            : depJob?.status === 'done' ? '#6ee7b7'
+                                : '#cbd5e1';
+
                 edges.push({
                     id: `${depId}->${job.id}`,
                     source: depId,
                     target: job.id,
                     animated: job.status === 'running',
+                    type: 'smoothstep',
                     style: {
-                        stroke: job.status === 'done' ? '#10b981' : job.status === 'running' ? '#3b82f6' : '#94a3b8',
+                        stroke: edgeColor,
                         strokeWidth: 2,
                     },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        color: job.status === 'done' ? '#10b981' : job.status === 'running' ? '#3b82f6' : '#94a3b8',
+                        color: edgeColor,
                     },
                 });
+                g.setEdge(depId, job.id);
             }
         });
     });
 
     dagre.layout(g);
 
-    // Use saved positions if available, otherwise use dagre layout
-    const nodes: Node[] = jobs.map(job => {
+    // Always use dagre's computed layout for clean positioning
+    const nodes: Node[] = sortedJobs.map(job => {
         const nodeWithPos = g.node(job.id);
-        const hasSavedPos = job.positionX !== null && job.positionY !== null;
-
         return {
             id: job.id,
             type: 'jobNode',
-            position: hasSavedPos
-                ? { x: job.positionX!, y: job.positionY! }
-                : { x: nodeWithPos.x - NODE_WIDTH / 2, y: nodeWithPos.y - NODE_HEIGHT / 2 },
+            position: {
+                x: nodeWithPos.x - NODE_WIDTH / 2,
+                y: nodeWithPos.y - NODE_HEIGHT / 2,
+            },
             data: { job },
             draggable: true,
         };
