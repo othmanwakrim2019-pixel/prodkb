@@ -132,6 +132,55 @@ export class ProcedureService {
         await prisma.procedure.delete({ where: { id } });
         return procedure;
     }
+
+    /**
+     * Compute effectiveness stats for a procedure.
+     * Compares avg MTTR for incidents linked to this procedure
+     * vs incidents on the same system without any procedure linked.
+     */
+    async getEffectivenessStats(id: string) {
+        const procedure = await prisma.procedure.findUnique({ where: { id } });
+        if (!procedure) throw new NotFoundError('Procedure not found');
+
+        // Avg MTTR for incidents linked to THIS procedure
+        const withProcedure = await prisma.incident.aggregate({
+            where: {
+                linkedProcedureId: id,
+                status: 'resolved',
+                timeToResolve: { not: null },
+            },
+            _avg: { timeToResolve: true },
+            _count: { id: true },
+        });
+
+        // Avg MTTR for incidents on the same system WITHOUT any procedure
+        const withoutProcedure = await prisma.incident.aggregate({
+            where: {
+                systemId: procedure.systemId,
+                linkedProcedureId: null,
+                status: 'resolved',
+                timeToResolve: { not: null },
+            },
+            _avg: { timeToResolve: true },
+            _count: { id: true },
+        });
+
+        const avgMttrWith = Math.round(withProcedure._avg.timeToResolve ?? 0);
+        const avgMttrWithout = Math.round(withoutProcedure._avg.timeToResolve ?? 0);
+        const improvementPercent = avgMttrWithout > 0
+            ? Math.round(((avgMttrWithout - avgMttrWith) / avgMttrWithout) * 100)
+            : 0;
+
+        return {
+            procedureId: id,
+            procedureTitle: procedure.title,
+            linkedIncidentCount: withProcedure._count.id,
+            avgMttrWithProcedure: avgMttrWith,       // minutes
+            unlinkedIncidentCount: withoutProcedure._count.id,
+            avgMttrWithoutProcedure: avgMttrWithout,  // minutes
+            improvementPercent,                        // positive = faster with procedure
+        };
+    }
 }
 
 export const procedureService = new ProcedureService();

@@ -577,6 +577,30 @@ View Details: ${appUrl}/incidents/${incident.id}
 ProdKB Incident Management System
     `;
   }
+
+  /**
+   * Send a raw email (used by digest worker and custom senders).
+   */
+  async sendRawEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
+    if (!this.enabled || !this.transporter || !this.config) {
+      logger.warn('Email service not enabled, skipping raw email');
+      return false;
+    }
+    try {
+      await this.transporter.sendMail({
+        from: this.config.from,
+        to,
+        subject,
+        text: text || this.stripHtml(html),
+        html,
+      });
+      logger.info('Raw email sent', { to, subject });
+      return true;
+    } catch (error) {
+      logger.error('Failed to send raw email', { error: error instanceof Error ? error.message : 'Unknown' });
+      return false;
+    }
+  }
 }
 
 export const emailService = new EmailService();

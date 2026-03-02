@@ -24,17 +24,34 @@ const STATUS_STYLES: Record<string, { bg: string; border: string; badge: string;
         badgeText: 'text-emerald-700',
         text: 'text-emerald-900',
     },
+    failed: {
+        bg: 'bg-red-50',
+        border: 'border-red-500',
+        badge: 'bg-red-100',
+        badgeText: 'text-red-700',
+        text: 'text-red-900',
+    },
+    blocked: {
+        bg: 'bg-orange-50',
+        border: 'border-orange-400',
+        badge: 'bg-orange-100',
+        badgeText: 'text-orange-700',
+        text: 'text-orange-900',
+    },
 };
 
 interface JobNodeData {
     job: PlanningJob;
     onStatusChange: (id: string, status: PlanningStatusType) => void;
     onDelete: (id: string) => void;
+    isBlastBlocked?: boolean;
+    blastCount?: number;
 }
 
 function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
-    const { job, onStatusChange, onDelete } = data;
-    const style = STATUS_STYLES[job.status] || STATUS_STYLES.pending;
+    const { job, onStatusChange, onDelete, isBlastBlocked, blastCount } = data;
+    const effectiveStyle = isBlastBlocked ? 'blocked' : job.status;
+    const style = STATUS_STYLES[effectiveStyle] || STATUS_STYLES.pending;
     const [showDropdown, setShowDropdown] = useState(false);
 
     const scheduledDate = new Date(job.scheduledTime).toLocaleString('en-US', {
@@ -47,8 +64,22 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
     const statusOptions: PlanningStatusType[] = ['pending', 'running', 'done'];
 
     return (
-        <div className={`rounded-lg border-2 shadow-md min-w-[230px] max-w-[260px] ${style.bg} ${style.border} transition-all duration-200`}>
+        <div className={`rounded-lg border-2 shadow-md min-w-[230px] max-w-[260px] ${style.bg} ${style.border} transition-all duration-200 ${isBlastBlocked ? 'ring-2 ring-orange-300 ring-offset-1' : ''} ${job.status === 'failed' ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}>
             <Handle type="target" position={Position.Left} className="!bg-slate-400 !w-2.5 !h-2.5" />
+
+            {/* Blast Radius: blocked banner */}
+            {isBlastBlocked && (
+                <div className="bg-orange-500 text-white text-[10px] font-bold text-center py-1 rounded-t-md animate-pulse">
+                    ⚠ BLOQUÉ — dépendance échouée
+                </div>
+            )}
+
+            {/* Blast Radius: impact count badge on failed nodes */}
+            {job.status === 'failed' && blastCount && blastCount > 0 && (
+                <div className="bg-red-600 text-white text-[10px] font-bold text-center py-1 rounded-t-md">
+                    💥 {blastCount} tâche{blastCount > 1 ? 's' : ''} impactée{blastCount > 1 ? 's' : ''}
+                </div>
+            )}
 
             <div className="p-3">
                 {/* Header: Status + Delete */}

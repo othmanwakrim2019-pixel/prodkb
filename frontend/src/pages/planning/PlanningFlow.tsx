@@ -33,27 +33,93 @@ const nodeTypes: NodeTypes = {
 };
 
 /**
+ * Compute the "blast radius" of failed/blocked jobs.
+ * Returns a Map<jobId, blastCount> where blastCount is the number of
+ * downstream jobs that would be blocked by this job's failure.
+ * Also returns a Set of all currently-blocked downstream job IDs.
+ */
+function computeBlastRadius(jobs: PlanningJob[]): {
+    blockedSet: Set<string>;
+    blastCountMap: Map<string, number>;
+} {
+    // Build adjacency list: depId → [jobIds that depend on depId]
+    const downstream = new Map<string, string[]>();
+    const jobIdSet = new Set(jobs.map(j => j.id));
+
+    jobs.forEach(job => {
+        const deps = Array.isArray(job.dependencies)
+            ? job.dependencies
+            : (() => { try { return JSON.parse(job.dependencies as string) || []; } catch { return []; } })();
+        deps.forEach((depId: string) => {
+            if (jobIdSet.has(depId)) {
+                if (!downstream.has(depId)) downstream.set(depId, []);
+                downstream.get(depId)!.push(job.id);
+            }
+        });
+    });
+
+    // Find all root failures: jobs with status 'failed'
+    const failedIds = new Set(jobs.filter(j => j.status === 'failed').map(j => j.id));
+
+    // BFS from each failed node to find all descendants
+    const blockedSet = new Set<string>();
+    const queue = [...failedIds];
+    while (queue.length > 0) {
+        const current = queue.shift()!;
+        const children = downstream.get(current) || [];
+        children.forEach(childId => {
+            if (!blockedSet.has(childId) && !failedIds.has(childId)) {
+                blockedSet.add(childId);
+                queue.push(childId);
+            }
+        });
+    }
+
+    // For each failed node, count how many total downstream are blocked by it
+    const blastCountMap = new Map<string, number>();
+    failedIds.forEach(failedId => {
+        const affected = new Set<string>();
+        const bfsQ = [failedId];
+        while (bfsQ.length > 0) {
+            const cur = bfsQ.shift()!;
+            const ch = downstream.get(cur) || [];
+            ch.forEach(c => {
+                if (!affected.has(c)) {
+                    affected.add(c);
+                    bfsQ.push(c);
+                }
+            });
+        }
+        if (affected.size > 0) blastCountMap.set(failedId, affected.size);
+    });
+
+    return { blockedSet, blastCountMap };
+}
+
+/**
  * Use dagre to compute a clean, automatic graph layout.
  * Nodes are sorted by scheduledTime so the flow reads chronologically.
+ * Failed nodes show their blast radius, blocked descendants are highlighted.
  */
 function getLayoutedElements(
     jobs: PlanningJob[],
     direction: 'LR' | 'TB'
 ): { nodes: Node[]; edges: Edge[] } {
-    // Sort by scheduledTime so dagre assigns ranks chronologically
     const sortedJobs = [...jobs].sort(
         (a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
     );
+
+    const { blockedSet, blastCountMap } = computeBlastRadius(sortedJobs);
 
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
     g.setGraph({
         rankdir: direction,
-        ranksep: 120,   // distance between ranks (columns in LR)
-        nodesep: 60,    // distance between nodes in the same rank
+        ranksep: 120,
+        nodesep: 60,
         marginx: 60,
         marginy: 60,
-        align: 'UL',    // align nodes to upper-left for uniform layout
+        align: 'UL',
     });
 
     sortedJobs.forEach(job => {
@@ -70,8 +136,11 @@ function getLayoutedElements(
         deps.forEach((depId: string) => {
             if (jobIdSet.has(depId)) {
                 const depJob = sortedJobs.find(j => j.id === depId);
-                const edgeColor =
-                    job.status === 'done' ? '#10b981'
+                const isBlastEdge = depJob?.status === 'failed' || blockedSet.has(depId);
+
+                const edgeColor = isBlastEdge
+                    ? '#ef4444'  // red for blast radius edges
+                    : job.status === 'done' ? '#10b981'
                         : job.status === 'running' ? '#3b82f6'
                             : depJob?.status === 'done' ? '#6ee7b7'
                                 : '#cbd5e1';
@@ -80,11 +149,11 @@ function getLayoutedElements(
                     id: `${depId}->${job.id}`,
                     source: depId,
                     target: job.id,
-                    animated: job.status === 'running',
+                    animated: job.status === 'running' || isBlastEdge,
                     type: 'smoothstep',
                     style: {
                         stroke: edgeColor,
-                        strokeWidth: 2,
+                        strokeWidth: isBlastEdge ? 3 : 2,
                     },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -98,9 +167,10 @@ function getLayoutedElements(
 
     dagre.layout(g);
 
-    // Always use dagre's computed layout for clean positioning
     const nodes: Node[] = sortedJobs.map(job => {
         const nodeWithPos = g.node(job.id);
+        const isBlocked = blockedSet.has(job.id);
+        const blastCount = blastCountMap.get(job.id);
         return {
             id: job.id,
             type: 'jobNode',
@@ -108,7 +178,11 @@ function getLayoutedElements(
                 x: nodeWithPos.x - NODE_WIDTH / 2,
                 y: nodeWithPos.y - NODE_HEIGHT / 2,
             },
-            data: { job },
+            data: {
+                job,
+                isBlastBlocked: isBlocked,         // downstream blocked node
+                blastCount: blastCount ?? 0,        // how many it blocks (for failed nodes)
+            },
             draggable: true,
         };
     });
@@ -122,7 +196,6 @@ export const PlanningFlow = ({ jobs, onStatusChange, onDelete, direction }: Plan
         [jobs, direction]
     );
 
-    // Inject callbacks into node data
     const nodesWithCallbacks = useMemo(
         () =>
             layoutedNodes.map(node => ({
@@ -139,16 +212,13 @@ export const PlanningFlow = ({ jobs, onStatusChange, onDelete, direction }: Plan
     const [nodes, setNodes, onNodesChange] = useNodesState(nodesWithCallbacks);
     const [edges, , onEdgesChange] = useEdgesState(layoutedEdges);
 
-    // Sync when jobs/direction change
     useMemo(() => {
         setNodes(nodesWithCallbacks);
     }, [nodesWithCallbacks, setNodes]);
 
-    // Debounce position save
     const positionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const onNodeDragStop: OnNodeDrag = useCallback((_event, node) => {
-        // Debounce the API call
         if (positionTimerRef.current) clearTimeout(positionTimerRef.current);
         positionTimerRef.current = setTimeout(async () => {
             try {
@@ -199,6 +269,9 @@ export const PlanningFlow = ({ jobs, onStatusChange, onDelete, direction }: Plan
                 <MiniMap
                     nodeColor={node => {
                         const job = (node.data as { job: PlanningJob }).job;
+                        const isBlocked = (node.data as { isBlastBlocked?: boolean }).isBlastBlocked;
+                        if (job.status === 'failed') return '#ef4444';
+                        if (isBlocked) return '#f97316';
                         if (job.status === 'done') return '#10b981';
                         if (job.status === 'running') return '#3b82f6';
                         return '#94a3b8';

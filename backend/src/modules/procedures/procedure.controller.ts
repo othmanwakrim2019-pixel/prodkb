@@ -99,4 +99,14 @@ export class ProcedureController {
             next(error);
         }
     }
+
+    static async getProcedureStats(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const stats = await procedureService.getEffectivenessStats(id);
+            res.json(createResponse(true, stats));
+        } catch (error) {
+            next(error);
+        }
+    }
 }
