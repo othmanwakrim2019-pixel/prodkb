@@ -167,14 +167,14 @@ export const IncidentDetails = () => {
                                 <p className="text-slate-700 whitespace-pre-wrap">{incident.description}</p>
                             </div>
 
-                            {/* Tabs: Logs / War Room */}
+                            {/* Tabs: Logs / Discussion */}}
                             <div>
                                 <div className="flex border-b border-slate-200 mb-4 gap-1">
                                     <button
                                         onClick={() => setActiveTab('logs')}
                                         className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'logs'
-                                                ? 'border-blue-600 text-blue-700 bg-blue-50'
-                                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                                            ? 'border-blue-600 text-blue-700 bg-blue-50'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700'
                                             }`}
                                     >
                                         <ClipboardList className="h-4 w-4" /> Logs & Fichiers
@@ -182,11 +182,11 @@ export const IncidentDetails = () => {
                                     <button
                                         onClick={() => setActiveTab('warroom')}
                                         className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'warroom'
-                                                ? 'border-blue-600 text-blue-700 bg-blue-50'
-                                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                                            ? 'border-blue-600 text-blue-700 bg-blue-50'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700'
                                             }`}
                                     >
-                                        <MessageSquare className="h-4 w-4" /> War Room
+                                        <MessageSquare className="h-4 w-4" /> Discussion
                                     </button>
                                 </div>
 

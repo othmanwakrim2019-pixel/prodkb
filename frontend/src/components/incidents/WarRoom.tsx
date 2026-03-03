@@ -92,7 +92,7 @@ export function WarRoom({ incidentId }: WarRoomProps) {
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
                 <div className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4 text-blue-500" />
-                    <span className="font-semibold text-sm text-slate-900 dark:text-white">War Room</span>
+                    <span className="font-semibold text-sm text-slate-900 dark:text-white">Discussion</span>
                     <span className={`inline-block w-2 h-2 rounded-full ml-1 ${connected ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                 </div>
                 <div className="flex items-center gap-1 text-xs text-slate-500">
@@ -109,7 +109,7 @@ export function WarRoom({ incidentId }: WarRoomProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 && (
                     <p className="text-center text-xs text-slate-400 mt-8">
-                        Aucun message pour l'instant.<br />Soyez le premier à rejoindre la War Room.
+                        Aucun message pour l'instant.<br />Soyez le premier à rejoindre la discussion.
                     </p>
                 )}
                 {messages.map(msg => {

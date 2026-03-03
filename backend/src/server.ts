@@ -314,13 +314,24 @@ if (require.main === module) {
             }
         });
 
-        // Socket.io for War Room — attach to HTTP server
+        // Socket.io for Discussion Room — attach to HTTP server
+        // IMPORTANT: In cluster mode every worker gets its own Socket.io server.
+        // Without a shared adapter, messages sent from worker-A never reach clients
+        // connected to worker-B. The Redis adapter fixes this via pub/sub.
         const { Server: SocketIOServer } = require('socket.io');
+        const { createAdapter } = require('@socket.io/redis-adapter');
+        const { createClient } = require('ioredis');
+
+        const pubClient = createClient({ host: 'redis', port: 6379 });
+        const subClient = pubClient.duplicate();
+
         const io = new SocketIOServer(server, {
             cors: { origin: allowedOrigins, credentials: true },
             path: '/socket.io',
         });
+        io.adapter(createAdapter(pubClient, subClient));
         registerWarRoomGateway(io);
+
 
         // Graceful shutdown array for worker
         const shutdownWorker = async (signal: string) => {
