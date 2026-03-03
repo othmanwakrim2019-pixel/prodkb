@@ -19,7 +19,7 @@ const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: isProduction,          // HTTPS only in production
+    secure: process.env.USE_HTTPS === 'true', // Only use secure cookies if explicitly behind HTTPS
     sameSite: 'strict' as const,
     path: '/',
 };
