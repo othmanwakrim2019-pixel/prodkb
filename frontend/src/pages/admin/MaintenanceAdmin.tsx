@@ -70,15 +70,30 @@ export default function MaintenanceAdmin() {
         setShowForm(true);
     };
 
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
     const save = async () => {
-        if (!form.systemId || !form.title || !form.scheduledAt || !form.endsAt) return;
-        if (editItem) {
-            await axiosInstance.put(`/api/v1/maintenance/${editItem.id}`, form);
-        } else {
-            await axiosInstance.post('/api/v1/maintenance', form);
+        if (!form.systemId || !form.title || !form.scheduledAt || !form.endsAt) {
+            setSaveError('Veuillez remplir tous les champs obligatoires.');
+            return;
         }
-        setShowForm(false);
-        load();
+        setSaving(true);
+        setSaveError(null);
+        try {
+            if (editItem) {
+                await axiosInstance.put(`/api/v1/maintenance/${editItem.id}`, form);
+            } else {
+                await axiosInstance.post('/api/v1/maintenance', form);
+            }
+            setShowForm(false);
+            load();
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || 'Erreur lors de la sauvegarde.';
+            setSaveError(msg);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const remove = async (id: string) => {
@@ -158,12 +173,15 @@ export default function MaintenanceAdmin() {
                                 </div>
                             </div>
                         </div>
+                        {saveError && (
+                            <p className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{saveError}</p>
+                        )}
                         <div className="flex gap-3 pt-2">
-                            <button onClick={() => setShowForm(false)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                            <button onClick={() => { setShowForm(false); setSaveError(null); }} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                 Annuler
                             </button>
-                            <button onClick={save} className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
-                                {editItem ? 'Enregistrer' : 'Créer'}
+                            <button onClick={save} disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors">
+                                {saving ? 'Enregistrement...' : editItem ? 'Enregistrer' : 'Créer'}
                             </button>
                         </div>
                     </div>
