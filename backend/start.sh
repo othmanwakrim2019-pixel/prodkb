@@ -44,11 +44,25 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 # Prisma migrations cannot run through PGBouncer transaction mode.
-# We create a temporary DIRECT_URL that points directly to the 'postgres' container.
+# We use a direct connection to postgres (bypassing pgbouncer) for migrations.
 DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
 echo "Using direct connection for migrations..."
-DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy
-echo "Migrations applied successfully."
+
+# Retry up to 5 times — concurrent container restarts can race for the advisory lock
+MIGRATE_RETRIES=5
+MIGRATE_DELAY=10
+for i in $(seq 1 $MIGRATE_RETRIES); do
+    if DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy; then
+        echo "Migrations applied successfully."
+        break
+    fi
+    if [ $i -eq $MIGRATE_RETRIES ]; then
+        echo "ERROR: Migrations failed after $MIGRATE_RETRIES attempts. Exiting."
+        exit 1
+    fi
+    echo "Migration attempt $i/$MIGRATE_RETRIES failed (advisory lock?). Retrying in ${MIGRATE_DELAY}s..."
+    sleep $MIGRATE_DELAY
+done
 
 # 3. Generate Prisma Client (in case it wasn't generated at build time)
 npx prisma generate
