@@ -44,10 +44,10 @@ export class ProcedureService {
         const where: Record<string, unknown> = {};
         if (search) {
             where.OR = [
-                { title: { contains: search } },
-                { description: { contains: search } },
-                { errorCode: { contains: search } },
-                { tags: { contains: search } },
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { errorCode: { contains: search, mode: 'insensitive' } },
+                { tags: { contains: search, mode: 'insensitive' } },
             ];
         }
 
