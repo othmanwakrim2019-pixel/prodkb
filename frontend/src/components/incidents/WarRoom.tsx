@@ -43,10 +43,25 @@ export function WarRoom({ incidentId }: WarRoomProps) {
     }, []);
 
     useEffect(() => {
-        // Load history via REST
+        // Initial REST load
         axiosInstance.get(`/api/v1/warroom/${incidentId}/messages`).then(res => {
             setMessages(res.data?.data || []);
         }).catch(() => { });
+
+        // Polling fallback: re-fetch from DB every 10s so missed socket events never
+        // leave the user staring at a blank chat. New messages are additive-merged.
+        const poll = setInterval(() => {
+            axiosInstance.get(`/api/v1/warroom/${incidentId}/messages`).then(res => {
+                const fresh: Message[] = res.data?.data || [];
+                setMessages(prev => {
+                    const pending = prev.filter(m => m.id.startsWith('optimistic-') && !fresh.some(h => h.content === m.content && h.user.id === m.user.id));
+                    // Only update if something changed to avoid unnecessary re-renders
+                    const hasNew = fresh.some(m => !prev.find(p => p.id === m.id));
+                    if (!hasNew && pending.length === 0) return prev;
+                    return [...fresh, ...pending];
+                });
+            }).catch(() => { });
+        }, 10000);
 
         const socket = getWarRoomSocket();
 
@@ -94,12 +109,14 @@ export function WarRoom({ incidentId }: WarRoomProps) {
 
         if (socket.connected) {
             setConnected(true);
-            socket.emit('warroom:join', { incidentId });
+            // Small delay to let the namespace handshake complete before joining
+            setTimeout(() => socket.emit('warroom:join', { incidentId }), 300);
         } else {
             socket.connect();
         }
 
         return () => {
+            clearInterval(poll);
             socket.emit('warroom:leave', { incidentId });
             socket.off('connect', onConnect);
             socket.off('disconnect', onDisconnect);
