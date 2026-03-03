@@ -36,9 +36,10 @@ export default function MaintenanceAdmin() {
     const [showForm, setShowForm] = useState(false);
     const [editItem, setEditItem] = useState<MaintenanceWindow | null>(null);
     const [form, setForm] = useState({ systemId: '', title: '', description: '', scheduledAt: '', endsAt: '' });
-    const { user } = useAuth();
+    const { user, hasPermission } = useAuth();
 
-    const isAdmin = (user as any)?.role?.name === 'ADMIN';
+    // role is a plain string, e.g. 'ADMIN' — not an object
+    const isAdmin = user?.role === 'ADMIN' || hasPermission('MAINTENANCE_MANAGE') || hasPermission('SYSTEM_ADMIN');
 
     const load = async () => {
         const [mwRes, sysRes] = await Promise.all([
