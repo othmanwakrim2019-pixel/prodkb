@@ -4,18 +4,13 @@ let socket: Socket | null = null;
 
 export function getWarRoomSocket(): Socket {
     if (!socket) {
-        const token = document.cookie
-            .split('; ')
-            .find(c => c.startsWith('access_token='))
-            ?.split('=')[1];
-
         socket = io('/warroom', {
             path: '/socket.io',
-            auth: { token },
-            withCredentials: true,
+            withCredentials: true,   // browser forwards the httpOnly access_token cookie
             reconnection: true,
-            reconnectionAttempts: 5,
+            reconnectionAttempts: 10,
             reconnectionDelay: 2000,
+            transports: ['websocket', 'polling'],
         });
     }
     return socket;
