@@ -98,16 +98,22 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:"],
         },
     },
-    hsts: false, // Disabled: HSTS breaks HTTP-only IP deployments (like EC2 without a domain/SSL)
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: false, // Disabled: throws errors on HTTP deployments
+    originAgentCluster: false, // Disabled: throws errors on HTTP deployments
 }));
 
-// Security headers
+// Clear any previously cached HSTS rules from the browser
+// Without this, the browser will permanently remember the old HSTS setting and force HTTPS
+app.use((req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=0');
+    next();
+});
+// Additional Security headers
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    // REMOVED: res.setHeader('Strict-Transport-Security', ...) to avoid forcing HTTPS
     next();
 });
 
