@@ -60,7 +60,6 @@ export function WarRoom({ incidentId }: WarRoomProps) {
         // ADDITIVE merge: keeps any pending optimistic messages when history arrives late
         const onHistory = (hist: Message[]) => {
             setMessages(prev => {
-                const histIds = new Set(hist.map(m => m.id));
                 const pending = prev.filter(
                     m => m.id.startsWith('optimistic-') &&
                         !hist.some(h => h.content === m.content && h.user.id === m.user.id)
