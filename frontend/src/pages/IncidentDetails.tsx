@@ -166,58 +166,55 @@ export const IncidentDetails = () => {
                                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Description</h3>
                                 <p className="text-slate-700 whitespace-pre-wrap">{incident.description}</p>
                             </div>
-
-                            {/* Tabs: Logs / Discussion */}}
-                            <div>
-                                <div className="flex border-b border-slate-200 mb-4 gap-1">
-                                    <button
-                                        onClick={() => setActiveTab('logs')}
-                                        className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'logs'
-                                            ? 'border-blue-600 text-blue-700 bg-blue-50'
-                                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                                            }`}
-                                    >
-                                        <ClipboardList className="h-4 w-4" /> Logs & Fichiers
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('warroom')}
-                                        className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'warroom'
-                                            ? 'border-blue-600 text-blue-700 bg-blue-50'
-                                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                                            }`}
-                                    >
-                                        <MessageSquare className="h-4 w-4" /> Discussion
-                                    </button>
-                                </div>
-
-                                {activeTab === 'logs' && (
-                                    <>
-                                        {canEdit() && (
-                                            <div className="flex gap-2 mb-4">
-                                                <button onClick={() => setShowNoteModal(true)} className="inline-flex items-center px-3 py-1.5 border border-accent rounded-md shadow-sm text-xs font-medium text-accent hover:bg-blue-50">
-                                                    <Plus className="h-4 w-4 mr-1" /> Add Note
-                                                </button>
-                                                <button onClick={() => setShowFileUpload(true)} className="inline-flex items-center px-3 py-1.5 border border-slate-300 rounded-md shadow-sm text-xs font-medium text-slate-700 hover:bg-slate-50">
-                                                    <Upload className="h-4 w-4 mr-1" /> Upload File
-                                                </button>
-                                            </div>
-                                        )}
-                                        <IncidentLogTimeline
-                                            logs={incident.logs || []}
-                                            incidentId={incident.id}
-                                            currentUserId={user?.id}
-                                            onDownloadFile={incident$.downloadFile}
-                                            onDeleteFile={canEdit() ? handleDeleteFile : undefined}
-                                        />
-                                    </>
-                                )}
-
-                                {activeTab === 'warroom' && (
-                                    <div className="h-96">
-                                        <WarRoom incidentId={incident.id} />
-                                    </div>
-                                )}
+                            {/* Tabs: Logs / Discussion */}
+                            <div className="flex border-b border-slate-200 mb-4 gap-1">
+                                <button
+                                    onClick={() => setActiveTab('logs')}
+                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'logs'
+                                        ? 'border-blue-600 text-blue-700 bg-blue-50'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    <ClipboardList className="h-4 w-4" /> Logs & Fichiers
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('warroom')}
+                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${activeTab === 'warroom'
+                                        ? 'border-blue-600 text-blue-700 bg-blue-50'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    <MessageSquare className="h-4 w-4" /> Discussion
+                                </button>
                             </div>
+
+                            {activeTab === 'logs' && (
+                                <>
+                                    {canEdit() && (
+                                        <div className="flex gap-2 mb-4">
+                                            <button onClick={() => setShowNoteModal(true)} className="inline-flex items-center px-3 py-1.5 border border-accent rounded-md shadow-sm text-xs font-medium text-accent hover:bg-blue-50">
+                                                <Plus className="h-4 w-4 mr-1" /> Add Note
+                                            </button>
+                                            <button onClick={() => setShowFileUpload(true)} className="inline-flex items-center px-3 py-1.5 border border-slate-300 rounded-md shadow-sm text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                                <Upload className="h-4 w-4 mr-1" /> Upload File
+                                            </button>
+                                        </div>
+                                    )}
+                                    <IncidentLogTimeline
+                                        logs={incident.logs || []}
+                                        incidentId={incident.id}
+                                        currentUserId={user?.id}
+                                        onDownloadFile={incident$.downloadFile}
+                                        onDeleteFile={canEdit() ? handleDeleteFile : undefined}
+                                    />
+                                </>
+                            )}
+
+                            {activeTab === 'warroom' && (
+                                <div className="h-96">
+                                    <WarRoom incidentId={incident.id} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

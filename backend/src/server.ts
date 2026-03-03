@@ -322,8 +322,12 @@ if (require.main === module) {
         const { createAdapter } = require('@socket.io/redis-adapter');
         const { createClient } = require('ioredis');
 
-        const pubClient = createClient({ host: 'redis', port: 6379 });
+        const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379';
+        const pubClient = createClient(REDIS_URL);
         const subClient = pubClient.duplicate();
+
+        pubClient.on('error', (err: Error) => logger.error('Socket.io Redis pub error', { error: err.message }));
+        subClient.on('error', (err: Error) => logger.error('Socket.io Redis sub error', { error: err.message }));
 
         const io = new SocketIOServer(server, {
             cors: { origin: allowedOrigins, credentials: true },
@@ -331,6 +335,7 @@ if (require.main === module) {
         });
         io.adapter(createAdapter(pubClient, subClient));
         registerWarRoomGateway(io);
+
 
 
         // Graceful shutdown array for worker

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getWarRoomSocket } from '../../utils/socket';
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../utils/axios';
-import { Send, Users, Zap, MessageSquare } from 'lucide-react';
+import { Send, Users, Zap, MessageSquare, AlertCircle } from 'lucide-react';
 
 interface Message {
     id: string;
@@ -26,46 +26,77 @@ export function WarRoom({ incidentId }: WarRoomProps) {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [input, setInput] = useState('');
     const [connected, setConnected] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
+
+    // Add a message deduplicating by id
+    const addMessage = useCallback((msg: Message) => {
+        setMessages(prev => {
+            // Replace optimistic placeholder if server confirmed the same content sent by me
+            const withoutSamePending = prev.filter(m =>
+                !(m.id.startsWith('optimistic-') && m.content === msg.content && m.user.id === msg.user.id)
+            );
+            if (withoutSamePending.find(m => m.id === msg.id)) return withoutSamePending;
+            return [...withoutSamePending, msg];
+        });
+    }, []);
 
     useEffect(() => {
         // Load history via REST
         axiosInstance.get(`/api/v1/warroom/${incidentId}/messages`).then(res => {
             setMessages(res.data?.data || []);
-        });
+        }).catch(() => { });
 
         const socket = getWarRoomSocket();
 
-        socket.on('connect', () => {
+        // Named handlers — prevents stacking when component remounts (tab switch)
+        const onConnect = () => {
             setConnected(true);
+            setError(null);
             socket.emit('warroom:join', { incidentId });
-        });
-        socket.on('disconnect', () => setConnected(false));
-        socket.on('warroom:history', (hist: Message[]) => setMessages(hist));
-        socket.on('warroom:message', (msg: Message) => {
-            setMessages(prev => {
-                if (prev.find(m => m.id === msg.id)) return prev;
-                return [...prev, msg];
-            });
-        });
-        socket.on('warroom:participants', (p: Participant[]) => setParticipants(p));
+        };
+        const onDisconnect = () => setConnected(false);
+        const onHistory = (hist: Message[]) => setMessages(hist);
+        const onMessage = (msg: Message) => addMessage(msg);
+        const onParticipants = (p: Participant[]) => setParticipants(p);
+        const onConnectError = (err: Error) => {
+            setError(err.message || 'Connexion refusée');
+            setConnected(false);
+        };
 
-        if (!socket.connected) socket.connect();
-        else {
+        // Always remove first to prevent duplicate listeners
+        socket.off('connect', onConnect);
+        socket.off('disconnect', onDisconnect);
+        socket.off('warroom:history', onHistory);
+        socket.off('warroom:message', onMessage);
+        socket.off('warroom:participants', onParticipants);
+        socket.off('connect_error', onConnectError);
+
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+        socket.on('warroom:history', onHistory);
+        socket.on('warroom:message', onMessage);
+        socket.on('warroom:participants', onParticipants);
+        socket.on('connect_error', onConnectError);
+
+        if (socket.connected) {
             setConnected(true);
             socket.emit('warroom:join', { incidentId });
+        } else {
+            socket.connect();
         }
 
         return () => {
             socket.emit('warroom:leave', { incidentId });
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('warroom:history');
-            socket.off('warroom:message');
-            socket.off('warroom:participants');
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+            socket.off('warroom:history', onHistory);
+            socket.off('warroom:message', onMessage);
+            socket.off('warroom:participants', onParticipants);
+            socket.off('connect_error', onConnectError);
         };
-    }, [incidentId]);
+    }, [incidentId, addMessage]);
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -73,10 +104,22 @@ export function WarRoom({ incidentId }: WarRoomProps) {
     }, [messages]);
 
     const sendMessage = () => {
-        if (!input.trim() || !connected) return;
-        const socket = getWarRoomSocket();
-        socket.emit('warroom:message', { incidentId, content: input.trim() });
+        if (!input.trim() || !connected || !user) return;
+        const content = input.trim();
         setInput('');
+
+        // Optimistic update — sender sees message immediately
+        const optimisticMsg: Message = {
+            id: `optimistic-${Date.now()}`,
+            content,
+            type: 'message',
+            createdAt: new Date().toISOString(),
+            user: { id: user.id, name: user.name },
+        };
+        addMessage(optimisticMsg);
+
+        const socket = getWarRoomSocket();
+        socket.emit('warroom:message', { incidentId, content });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -104,6 +147,14 @@ export function WarRoom({ incidentId }: WarRoomProps) {
                     )}
                 </div>
             </div>
+
+            {/* Error banner */}
+            {error && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border-b border-red-200 text-xs text-red-700">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    <span>Erreur : {error}. Rechargez la page.</span>
+                </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
