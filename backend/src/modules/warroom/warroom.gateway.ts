@@ -15,6 +15,7 @@
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { warRoomService } from './warroom.service';
+import { prisma } from '../../common/utils/prisma';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { logger } from '../../common/utils/logger';
@@ -29,8 +30,8 @@ function getRoomParticipants(incidentId: string) {
 export function registerWarRoomGateway(io: SocketIOServer) {
     const warRoom = io.of('/warroom');
 
-    // Authenticate socket via access_token cookie or Bearer header
-    warRoom.use((socket: Socket, next) => {
+    // Authenticate socket via access_token cookie
+    warRoom.use(async (socket: Socket, next) => {
         try {
             const token =
                 socket.handshake.auth?.token ||
@@ -41,9 +42,19 @@ export function registerWarRoomGateway(io: SocketIOServer) {
 
             if (!token) return next(new Error('No token'));
 
-            const payload = jwt.verify(token, env.JWT_SECRET) as { id: string; name: string };
-            (socket as any).userId = payload.id;
-            (socket as any).userName = payload.name || 'Unknown';
+            // JWT payload uses userId, email, role — NOT id or name
+            const payload = jwt.verify(token, env.JWT_SECRET) as { userId: string; email: string; role: string };
+            if (!payload.userId) return next(new Error('Invalid token payload'));
+
+            // Fetch user name from DB for display in messages
+            const user = await prisma.user.findUnique({
+                where: { id: payload.userId },
+                select: { id: true, name: true },
+            });
+            if (!user) return next(new Error('User not found'));
+
+            (socket as any).userId = user.id;
+            (socket as any).userName = user.name || 'Unknown';
             next();
         } catch {
             next(new Error('Invalid token'));

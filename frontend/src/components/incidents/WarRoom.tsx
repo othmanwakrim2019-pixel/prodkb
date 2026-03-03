@@ -57,7 +57,17 @@ export function WarRoom({ incidentId }: WarRoomProps) {
             socket.emit('warroom:join', { incidentId });
         };
         const onDisconnect = () => setConnected(false);
-        const onHistory = (hist: Message[]) => setMessages(hist);
+        // ADDITIVE merge: keeps any pending optimistic messages when history arrives late
+        const onHistory = (hist: Message[]) => {
+            setMessages(prev => {
+                const histIds = new Set(hist.map(m => m.id));
+                const pending = prev.filter(
+                    m => m.id.startsWith('optimistic-') &&
+                        !hist.some(h => h.content === m.content && h.user.id === m.user.id)
+                );
+                return [...hist, ...pending];
+            });
+        };
         const onMessage = (msg: Message) => addMessage(msg);
         const onParticipants = (p: Participant[]) => setParticipants(p);
         const onConnectError = (err: Error) => {
@@ -65,13 +75,16 @@ export function WarRoom({ incidentId }: WarRoomProps) {
             setConnected(false);
         };
 
-        // Always remove first to prevent duplicate listeners
+        // CRITICAL: use removeAllListeners for warroom events.
+        // socket.off(event, fn) only removes a handler matching that exact fn reference.
+        // Stale handlers from previous component mounts accumulate and fire concurrently,
+        // causing onHistory to overwrite messages and messages to appear then disappear.
+        socket.removeAllListeners('warroom:history');
+        socket.removeAllListeners('warroom:message');
+        socket.removeAllListeners('warroom:participants');
+        socket.removeAllListeners('connect_error');
         socket.off('connect', onConnect);
         socket.off('disconnect', onDisconnect);
-        socket.off('warroom:history', onHistory);
-        socket.off('warroom:message', onMessage);
-        socket.off('warroom:participants', onParticipants);
-        socket.off('connect_error', onConnectError);
 
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconnect);
