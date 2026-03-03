@@ -47,10 +47,10 @@ export function generateCsrfToken(): string {
 export function setCsrfCookie(res: Response, token: string): void {
     res.cookie(CSRF_COOKIE_NAME, token, {
         httpOnly: false,     // JS must be able to read this
-        secure: process.env.USE_HTTPS === 'true',
+        secure: process.env.SECURITY_MODE === 'strict',
         sameSite: 'strict',
         path: '/',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (matches refresh token)
+        maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 }
 
@@ -60,7 +60,7 @@ export function setCsrfCookie(res: Response, token: string): void {
 export function clearCsrfCookie(res: Response): void {
     res.clearCookie(CSRF_COOKIE_NAME, {
         httpOnly: false,
-        secure: process.env.USE_HTTPS === 'true',
+        secure: process.env.SECURITY_MODE === 'strict',
         sameSite: 'strict',
         path: '/',
     });

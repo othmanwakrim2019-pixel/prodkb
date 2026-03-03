@@ -88,34 +88,44 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 }));
 
-// Security headers with Helmet.js
+// ── Security Mode ──────────────────────────────────────────────────────────
+// Set SECURITY_MODE=strict in .env to enable all production security headers.
+// Leave unset (or set to 'off') for HTTP/IP deployments (EC2 without SSL).
+// ───────────────────────────────────────────────────────────────────────────
+const SECURITY_MODE = process.env.SECURITY_MODE === 'strict';
+logger.info(`Security mode: ${SECURITY_MODE ? 'STRICT (HTTPS required)' : 'OFF (HTTP friendly)'}`);
+
 app.use(helmet({
-    contentSecurityPolicy: {
+    // HSTS: only in strict mode. When off, we send max-age=0 to clear any browser cache.
+    hsts: SECURITY_MODE
+        ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+        : false,
+    // CSP: relaxed always (Swagger UI and admin tools need inline scripts/styles)
+    contentSecurityPolicy: SECURITY_MODE ? {
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:"],
         },
-    },
+    } : false,
+    // These headers cause browser console errors on plain HTTP — always off
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginOpenerPolicy: false, // Disabled: throws errors on HTTP deployments
-    originAgentCluster: false, // Disabled: throws errors on HTTP deployments
 }));
 
-// Clear any previously cached HSTS rules from the browser
-// Without this, the browser will permanently remember the old HSTS setting and force HTTPS
+// When NOT in strict mode, force-clear any HSTS the browser may have cached before
 app.use((req, res, next) => {
-    res.setHeader('Strict-Transport-Security', 'max-age=0');
-    next();
-});
-// Additional Security headers
-app.use((req, res, next) => {
+    if (!SECURITY_MODE) {
+        res.setHeader('Strict-Transport-Security', 'max-age=0');
+    }
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     next();
 });
+
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());

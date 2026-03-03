@@ -139,6 +139,13 @@ services:
       - SEED=true
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # ── Security Mode ──────────────────────────────────────────────────────
+      # Leave blank (or remove) for plain HTTP deployments (no SSL/domain).
+      # Set to 'strict' when you have a domain + SSL certificate (HTTPS).
+      # When strict: enables HSTS, CSP, Secure cookies (browser won't store
+      #              cookies over plain HTTP — login will break without HTTPS).
+      - SECURITY_MODE=${SECURITY_MODE:-}
+      # ───────────────────────────────────────────────────────────────────────
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_SECURE=${SMTP_SECURE:-true}
