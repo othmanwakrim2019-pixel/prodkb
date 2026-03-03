@@ -43,6 +43,8 @@ model User {
   refreshTokens     RefreshToken[]
   notifications     Notification[]
   postMortems       PostMortem[]
+  maintenanceCreated MaintenanceWindow[] @relation("MaintenanceCreatedBy")
+  warRoomMessages    WarRoomMessage[]    @relation("WarRoomMessages")
 
   @@index([roleId])
 }
@@ -152,6 +154,7 @@ model System {
   escalationRules EscalationRule[]
   autoAssignRules AutoAssignmentRule[]
   healthSnapshots SystemHealthSnapshot[]
+  maintenanceWindows MaintenanceWindow[]
   updatedById String?
   updatedBy   User?       @relation("UpdatedSystems", fields: [updatedById], references: [id])
 
@@ -226,6 +229,7 @@ model Incident {
 
   logs IncidentLog[]
   postMortem PostMortem?
+  warRoomMessages WarRoomMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -519,6 +523,40 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([createdAt])
+}
+
+// ── Maintenance Windows ──
+model MaintenanceWindow {
+  id          String   @id @default(uuid())
+  systemId    String
+  system      System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  scheduledAt DateTime
+  endsAt      DateTime
+  status      String   @default("scheduled") // scheduled | active | completed | cancelled
+  createdById String
+  createdBy   User     @relation("MaintenanceCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([systemId, scheduledAt])
+  @@index([status])
+  @@index([scheduledAt, endsAt])
+}
+
+// ── War Room Messages ──
+model WarRoomMessage {
+  id         String   @id @default(uuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("WarRoomMessages", fields: [userId], references: [id])
+  content    String
+  type       String   @default("message") // message | system_event
+  createdAt  DateTime @default(now())
+
+  @@index([incidentId, createdAt])
 }
 
 // ── System Health Score Snapshots ──

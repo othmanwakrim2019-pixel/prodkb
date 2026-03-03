@@ -21,6 +21,8 @@ const CreateProcedure = lazy(() => import('./pages/CreateProcedure'));
 const Search = lazy(() => import('./pages/Search'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Planning = lazy(() => import('./pages/planning/Planning'));
+const StatusPage = lazy(() => import('./pages/StatusPage'));
+const MaintenanceAdmin = lazy(() => import('./pages/admin/MaintenanceAdmin'));
 
 function App() {
     return (
@@ -30,6 +32,13 @@ function App() {
                     <ConfirmProvider>
                         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                             <Routes>
+                                {/* Public routes — no auth needed */}
+                                <Route path="/status" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <StatusPage />
+                                    </Suspense>
+                                } />
+
                                 <Route path="/login" element={<Login />} />
                                 <Route element={<ProtectedRoute />}>
                                     <Route element={<Layout />}>
@@ -98,6 +107,11 @@ function App() {
                                         <Route path="/planning" element={
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><Planning /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                        <Route path="/admin/maintenance" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><MaintenanceAdmin /></ErrorBoundary>
                                             </Suspense>
                                         } />
                                     </Route>

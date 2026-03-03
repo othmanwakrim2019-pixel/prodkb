@@ -10,6 +10,8 @@ import { env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
 import v1Routes from './modules/v1.routes';
 import { eventRoutes } from './modules/events/events.routes';
+import { statusRoutes } from './modules/status/status.routes';
+import { registerWarRoomGateway } from './modules/warroom/warroom.gateway';
 import { registerSLARepeatable, slaQueue } from './modules/sla/sla.queue';
 import { webhookQueue } from './modules/webhooks/webhook.queue';
 import swaggerUi from 'swagger-ui-express';
@@ -178,6 +180,9 @@ createBullBoard({
 });
 app.use('/admin/queues', authenticate, authorize(['ADMIN']), bullBoardAdapter.getRouter());
 
+// Public status page (no auth) — safe non-sensitive data only
+app.use('/status-data', statusRoutes);
+
 // Auth routes with strict rate limiting — versioned
 app.use('/auth/v1', authLimiter, authRoutes);
 app.use('/auth', authLimiter, authRoutes); // backward compat
@@ -308,6 +313,14 @@ if (require.main === module) {
                 startMetricsInterval();
             }
         });
+
+        // Socket.io for War Room — attach to HTTP server
+        const { Server: SocketIOServer } = require('socket.io');
+        const io = new SocketIOServer(server, {
+            cors: { origin: allowedOrigins, credentials: true },
+            path: '/socket.io',
+        });
+        registerWarRoomGateway(io);
 
         // Graceful shutdown array for worker
         const shutdownWorker = async (signal: string) => {

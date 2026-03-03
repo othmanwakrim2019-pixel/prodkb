@@ -24,6 +24,8 @@ import { webhookRoutes } from './webhooks/webhook.routes';
 import { analyticsRoutes } from './analytics/analytics.routes';
 import { notificationRoutes } from './notifications/notification.routes';
 import { postMortemRoutes } from './postmortem/postmortem.routes';
+import { maintenanceRoutes } from './maintenance/maintenance.routes';
+import { warRoomRoutes } from './warroom/warroom.routes';
 
 const router = Router();
 
@@ -48,5 +50,9 @@ router.use('/webhooks', webhookRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/incidents', postMortemRoutes);
+
+// Phase 4 modules (Maintenance, War Room)
+router.use('/maintenance', maintenanceRoutes);
+router.use('/warroom', warRoomRoutes);
 
 export default router;
