@@ -106,10 +106,11 @@ class StatusService {
             })
         );
 
-        // Upcoming maintenances (next 7 days)
+        // Upcoming maintenances (active now or starting in next 7 days)
         const upcomingMaintenances = await prisma.maintenanceWindow.findMany({
             where: {
-                scheduledAt: { gte: now, lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
+                endsAt: { gt: now }, // not yet ended
+                scheduledAt: { lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) }, // starts within 7 days
                 status: { in: ['scheduled', 'active'] },
             },
             include: { system: { select: { name: true } } },
@@ -129,7 +130,7 @@ class StatusService {
             overallStatus,
             upcomingMaintenances: upcomingMaintenances.map(m => ({
                 id: m.id,
-                systemName: (m as any).system.name,
+                systemName: m.system.name,
                 title: m.title,
                 scheduledAt: m.scheduledAt,
                 endsAt: m.endsAt,

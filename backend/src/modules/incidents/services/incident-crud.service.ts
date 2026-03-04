@@ -135,7 +135,13 @@ export class IncidentCrudService {
         eventPublisher.emit({
             type: 'incident.created',
             incidentId: incident.id,
-            data: { id: incident.id, title: (incident as any).title, status: (incident as any).status, severity: (incident as any).severity, systemName: (incident as any).system?.name },
+            data: { 
+                id: incident.id, 
+                title: incident.title, 
+                status: incident.status, 
+                severity: incident.severity, 
+                systemName: incident.system?.name 
+            },
             timestamp: new Date().toISOString(),
         }).catch(() => { });
 
@@ -203,7 +209,13 @@ export class IncidentCrudService {
         eventPublisher.emit({
             type: isNowResolved ? 'incident.resolved' : 'incident.updated',
             incidentId: id,
-            data: { id, title: (incident as any).title, status: (incident as any).status, severity: (incident as any).severity, systemName: (incident as any).system?.name },
+            data: { 
+                id, 
+                title: incident.title, 
+                status: incident.status, 
+                severity: incident.severity, 
+                systemName: incident.system?.name 
+            },
             timestamp: new Date().toISOString(),
         }).catch(() => { });
 

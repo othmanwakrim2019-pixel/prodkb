@@ -36,48 +36,72 @@ export interface DashboardStats {
 }
 
 export const incidentService = {
-    getAll: (params?: IncidentQueryParams): Promise<PaginatedResponse<Incident>> =>
-        api.get('/api/v1/incidents', { params }).then(r => r.data),
+    getAll: async (params?: IncidentQueryParams): Promise<PaginatedResponse<Incident>> => {
+        const response = await api.get('/api/v1/incidents', { params });
+        return response.data;
+    },
 
-    getById: (id: string): Promise<Incident> =>
-        api.get(`/api/v1/incidents/${id}`).then(r => r.data),
+    getById: async (id: string): Promise<Incident> => {
+        const response = await api.get(`/api/v1/incidents/${id}`);
+        return response.data;
+    },
 
-    create: (data: Record<string, unknown>): Promise<Incident> =>
-        api.post('/api/v1/incidents', data).then(r => r.data),
+    create: async (data: Record<string, unknown>): Promise<Incident> => {
+        const response = await api.post('/api/v1/incidents', data);
+        return response.data;
+    },
 
-    update: (id: string, data: Record<string, unknown>): Promise<Incident> =>
-        api.put(`/api/v1/incidents/${id}`, data).then(r => r.data),
+    update: async (id: string, data: Record<string, unknown>): Promise<Incident> => {
+        const response = await api.put(`/api/v1/incidents/${id}`, data);
+        return response.data;
+    },
 
     delete: (id: string): Promise<void> =>
         api.delete(`/api/v1/incidents/${id}`),
 
-    updateStatus: (id: string, status: string): Promise<Incident> =>
-        api.put(`/api/v1/incidents/${id}/status`, { status }).then(r => r.data),
+    updateStatus: async (id: string, status: string): Promise<Incident> => {
+        const response = await api.put(`/api/v1/incidents/${id}/status`, { status });
+        return response.data;
+    },
 
-    acknowledge: (id: string): Promise<Incident> =>
-        api.post(`/api/v1/incidents/${id}/acknowledge`).then(r => r.data),
+    acknowledge: async (id: string): Promise<Incident> => {
+        const response = await api.post(`/api/v1/incidents/${id}/acknowledge`);
+        return response.data;
+    },
 
-    addLog: (id: string, data: { logType: string; rawLog: string }): Promise<Log> =>
-        api.post(`/api/v1/incidents/${id}/logs`, data).then(r => r.data),
+    addLog: async (id: string, data: { logType: string; rawLog: string }): Promise<Log> => {
+        const response = await api.post(`/api/v1/incidents/${id}/logs`, data);
+        return response.data;
+    },
 
-    uploadFile: (id: string, formData: FormData): Promise<unknown> =>
-        api.post(`/api/v1/incidents/${id}/upload`, formData, {
+    uploadFile: async (id: string, formData: FormData): Promise<unknown> => {
+        const response = await api.post(`/api/v1/incidents/${id}/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-        }).then(r => r.data),
+        });
+        return response.data;
+    },
 
-    downloadFile: (id: string, fileName: string): Promise<Blob> =>
-        api.get(`/api/v1/incidents/${id}/files/${fileName}`, {
+    downloadFile: async (id: string, fileName: string): Promise<Blob> => {
+        const response = await api.get(`/api/v1/incidents/${id}/files/${fileName}`, {
             responseType: 'blob',
-        }).then(r => r.data),
+        });
+        return response.data;
+    },
 
-    linkProcedure: (incidentId: string, procedureId: string): Promise<unknown> =>
-        api.post(`/api/v1/incidents/${incidentId}/link-procedure/${procedureId}`).then(r => r.data),
+    linkProcedure: async (incidentId: string, procedureId: string): Promise<unknown> => {
+        const response = await api.post(`/api/v1/incidents/${incidentId}/link-procedure/${procedureId}`);
+        return response.data;
+    },
 
-    getStats: (params?: { systemId?: string; teamId?: string }): Promise<DashboardStats> =>
-        api.get('/api/v1/incidents/stats', { params }).then(r => r.data),
+    getStats: async (params?: { systemId?: string; teamId?: string }): Promise<DashboardStats> => {
+        const response = await api.get('/api/v1/incidents/stats', { params });
+        return response.data;
+    },
 
-    search: (query: string): Promise<{ procedures: unknown[]; incidents: Incident[] }> =>
-        api.get('/api/v1/search', { params: { query } }).then(r => r.data),
+    search: async (query: string): Promise<{ procedures: unknown[]; incidents: Incident[] }> => {
+        const response = await api.get('/api/v1/search', { params: { query } });
+        return response.data;
+    },
 
     /** Returns the URL for inline file preview (Content-Disposition: inline) */
     getFilePreviewUrl: (id: string, fileName: string): string =>

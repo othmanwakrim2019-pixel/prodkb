@@ -91,6 +91,7 @@ export interface Log {
     logType: string;
     rawLog: string;
     errorMessage?: string;
+    errorCode?: string;
     fileName?: string;
     fileSize?: number;
     filePath?: string;

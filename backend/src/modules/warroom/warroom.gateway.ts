@@ -53,8 +53,7 @@ export function registerWarRoomGateway(io: SocketIOServer) {
             });
             if (!user) return next(new Error('User not found'));
 
-            (socket as any).userId = user.id;
-            (socket as any).userName = user.name || 'Unknown';
+            Object.assign(socket.data, { userId: user.id, userName: user.name || 'Unknown' });
             next();
         } catch {
             next(new Error('Invalid token'));
@@ -62,8 +61,8 @@ export function registerWarRoomGateway(io: SocketIOServer) {
     });
 
     warRoom.on('connection', (socket: Socket) => {
-        const userId: string = (socket as any).userId;
-        const userName: string = (socket as any).userName;
+        const userId: string = socket.data.userId as string;
+        const userName: string = socket.data.userName as string;
 
         logger.info(`WarRoom: user ${userName} connected`, { socketId: socket.id });
 

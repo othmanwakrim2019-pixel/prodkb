@@ -92,7 +92,7 @@ export const Incidents = () => {
                 )}
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => exportToCSV(incidents as any[], 'incidents', [
+                        onClick={() => exportToCSV(Array.isArray(incidents) ? incidents : [], 'incidents', [
                             { key: 'title', label: 'Title' },
                             { key: 'severity', label: 'Severity' },
                             { key: 'status', label: 'Status' },

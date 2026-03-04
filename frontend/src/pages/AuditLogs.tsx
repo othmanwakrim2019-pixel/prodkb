@@ -59,7 +59,7 @@ const AuditLogs = () => {
                     <p className="text-muted-foreground dark:text-slate-400">{t('admin.auditLogs.subtitle')}</p>
                 </div>
                 <button
-                    onClick={() => exportToCSV(logs as any[], 'audit_logs', [
+                    onClick={() => exportToCSV(Array.isArray(logs) ? logs : [], 'audit_logs', [
                         { key: 'timestamp', label: 'Timestamp' },
                         { key: 'actionType', label: 'Action' },
                         { key: 'entityType', label: 'Entity' },

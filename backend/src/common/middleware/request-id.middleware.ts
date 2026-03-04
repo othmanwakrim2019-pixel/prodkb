@@ -29,7 +29,7 @@ export const requestIdMiddleware = (req: Request, res: Response, next: NextFunct
     };
 
     requestContextStorage.run(context, () => {
-        (req as any)._requestContext = context;
+        (req as unknown as { _requestContext: RequestContext })._requestContext = context;
         next();
     });
 };

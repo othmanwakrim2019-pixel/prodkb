@@ -3,10 +3,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const defaultTemplates = [
-    {
-        name: 'INCIDENT_CREATED',
-        subject: '[{{incident.severity}}] Incident #{{incident.id}} - {{incident.title}}',
-        body: `
+  {
+    name: 'INCIDENT_CREATED',
+    subject: '[{{incident.severity}}] Incident #{{incident.id}} - {{incident.title}}',
+    body: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -59,12 +59,12 @@ const defaultTemplates = [
 </body>
 </html>
         `,
-        variables: '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.assignedTeam.name}}, {{appUrl}}'
-    },
-    {
-        name: 'INCIDENT_UPDATED',
-        subject: '[UPDATED] {{incident.title}}',
-        body: `
+    variables: '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.assignedTeam.name}}, {{appUrl}}'
+  },
+  {
+    name: 'INCIDENT_UPDATED',
+    subject: '[UPDATED] {{incident.title}}',
+    body: `
 <!DOCTYPE html>
 <html>
 <body>
@@ -79,12 +79,12 @@ const defaultTemplates = [
 </body>
 </html>
         `,
-        variables: '{{incident.id}}, {{incident.title}}, {{incident.status}}, {{incident.severity}}, {{appUrl}}'
-    },
-    {
-        name: 'INCIDENT_RESOLVED',
-        subject: '[RESOLVED] {{incident.title}}',
-        body: `
+    variables: '{{incident.id}}, {{incident.title}}, {{incident.status}}, {{incident.severity}}, {{appUrl}}'
+  },
+  {
+    name: 'INCIDENT_RESOLVED',
+    subject: '[RESOLVED] {{incident.title}}',
+    body: `
 <!DOCTYPE html>
 <html>
 <body>
@@ -98,29 +98,28 @@ const defaultTemplates = [
 </body>
 </html>
         `,
-        variables: '{{incident.id}}, {{incident.title}}, {{incident.timeToResolve}}, {{appUrl}}'
-    }
+    variables: '{{incident.id}}, {{incident.title}}, {{incident.timeToResolve}}, {{appUrl}}'
+  }
 ];
 
 async function main() {
-    console.log('Seeding email templates...');
-    for (const t of defaultTemplates) {
-        // Use any cast to avoid type errors in this script too
-        const exists = await (prisma as any).emailTemplate.findUnique({ where: { name: t.name } });
-        if (!exists) {
-            await (prisma as any).emailTemplate.create({ data: t });
-            console.log(`Created template: ${t.name}`);
-        } else {
-            console.log(`Template ${t.name} already exists.`);
-        }
+  console.log('Seeding email templates...');
+  for (const t of defaultTemplates) {
+    const exists = await prisma.emailTemplate.findUnique({ where: { name: t.name } });
+    if (!exists) {
+      await prisma.emailTemplate.create({ data: t });
+      console.log(`Created template: ${t.name}`);
+    } else {
+      console.log(`Template ${t.name} already exists.`);
     }
+  }
 }
 
 main()
-    .catch((e) => {
-        console.error(e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

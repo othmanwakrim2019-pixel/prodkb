@@ -34,30 +34,46 @@ export interface PlanningJob {
 
 export const planningService = {
     // ── Instances ──
-    getInstances: (params?: Record<string, unknown>): Promise<PlanningInstance[]> =>
-        api.get('/api/v1/planning/instances', { params }).then(r => r.data),
+    getInstances: async (params?: Record<string, unknown>): Promise<PlanningInstance[]> => {
+        const response = await api.get('/api/v1/planning/instances', { params });
+        return response.data;
+    },
 
-    createInstance: (data: Record<string, unknown>): Promise<PlanningInstance> =>
-        api.post('/api/v1/planning/instances', data).then(r => r.data),
+    createInstance: async (data: Record<string, unknown>): Promise<PlanningInstance> => {
+        const response = await api.post('/api/v1/planning/instances', data);
+        return response.data;
+    },
 
-    archiveInstance: (id: string): Promise<PlanningInstance> =>
-        api.patch(`/api/v1/planning/instances/${id}/archive`).then(r => r.data),
+    archiveInstance: async (id: string): Promise<PlanningInstance> => {
+        const response = await api.patch(`/api/v1/planning/instances/${id}/archive`);
+        return response.data;
+    },
 
-    reactivateInstance: (id: string): Promise<PlanningInstance> =>
-        api.patch(`/api/v1/planning/instances/${id}/reactivate`).then(r => r.data),
+    reactivateInstance: async (id: string): Promise<PlanningInstance> => {
+        const response = await api.patch(`/api/v1/planning/instances/${id}/reactivate`);
+        return response.data;
+    },
 
     // ── Jobs ──
-    getInstanceJobs: (instanceId: string): Promise<PlanningJob[]> =>
-        api.get(`/api/v1/planning/instances/${instanceId}/jobs`).then(r => r.data),
+    getInstanceJobs: async (instanceId: string): Promise<PlanningJob[]> => {
+        const response = await api.get(`/api/v1/planning/instances/${instanceId}/jobs`);
+        return response.data;
+    },
 
-    createJob: (data: Record<string, unknown>): Promise<PlanningJob> =>
-        api.post('/api/v1/planning/jobs', data).then(r => r.data),
+    createJob: async (data: Record<string, unknown>): Promise<PlanningJob> => {
+        const response = await api.post('/api/v1/planning/jobs', data);
+        return response.data;
+    },
 
-    updateJobStatus: (jobId: string, status: string): Promise<PlanningJob> =>
-        api.patch(`/api/v1/planning/jobs/${jobId}/status`, { status }).then(r => r.data),
+    updateJobStatus: async (jobId: string, status: string): Promise<PlanningJob> => {
+        const response = await api.patch(`/api/v1/planning/jobs/${jobId}/status`, { status });
+        return response.data;
+    },
 
-    updateJobPosition: (jobId: string, position: { x: number; y: number }): Promise<PlanningJob> =>
-        api.patch(`/api/v1/planning/jobs/${jobId}/position`, position).then(r => r.data),
+    updateJobPosition: async (jobId: string, position: { x: number; y: number }): Promise<PlanningJob> => {
+        const response = await api.patch(`/api/v1/planning/jobs/${jobId}/position`, position);
+        return response.data;
+    },
 
     deleteJob: (jobId: string): Promise<void> =>
         api.delete(`/api/v1/planning/jobs/${jobId}`),

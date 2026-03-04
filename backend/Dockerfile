@@ -45,8 +45,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY start.sh ./
 
-# Install OpenSSL (required for Prisma on Alpine)
-RUN apk add --no-cache openssl && chmod +x start.sh
+# Install OpenSSL (required for Prisma on Alpine 3.23+)
+RUN apk add --no-cache libssl3 libcrypto3 && chmod +x start.sh
 
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nodejs:nodejs /app

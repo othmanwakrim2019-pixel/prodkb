@@ -41,13 +41,24 @@ export default function MaintenanceAdmin() {
     // role is a plain string, e.g. 'ADMIN' — not an object
     const isAdmin = user?.role === 'ADMIN' || hasPermission('MAINTENANCE_MANAGE') || hasPermission('SYSTEM_ADMIN');
 
+    const [loadError, setLoadError] = useState<string | null>(null);
+
     const load = async () => {
-        const [mwRes, sysRes] = await Promise.all([
-            axiosInstance.get('/api/v1/maintenance'),
-            axiosInstance.get('/api/v1/systems'),
-        ]);
-        setWindows(mwRes.data?.data || []);
-        setSystems(sysRes.data?.data || sysRes.data || []);
+        setLoadError(null);
+        try {
+            const [mwRes, sysRes] = await Promise.all([
+                axiosInstance.get('/api/v1/maintenance'),
+                axiosInstance.get('/api/v1/systems'),
+            ]);
+            setWindows(Array.isArray(mwRes.data) ? mwRes.data : []);
+            // findAllSystems returns a paginated { data: [...], total, ... } wrapper
+            // so after axios unwraps the ApiResponse envelope, we need .data again
+            const sysArray = Array.isArray(sysRes.data) ? sysRes.data : (sysRes.data?.data ?? []);
+            setSystems(sysArray);
+        } catch (err: any) {
+            console.error('Failed to load maintenance data:', err);
+            setLoadError(err?.response?.data?.message || err?.message || 'Erreur lors du chargement.');
+        }
     };
 
     useEffect(() => { load(); }, []);
@@ -74,22 +85,64 @@ export default function MaintenanceAdmin() {
     const [saveError, setSaveError] = useState<string | null>(null);
 
     const save = async () => {
-        if (!form.systemId || !form.title || !form.scheduledAt || !form.endsAt) {
-            setSaveError('Veuillez remplir tous les champs obligatoires.');
+        // Validation
+        if (!form.systemId) {
+            setSaveError('Veuillez sélectionner un système.');
             return;
         }
+        if (!form.title || form.title.trim() === '') {
+            setSaveError('Le titre est obligatoire.');
+            return;
+        }
+        if (!form.scheduledAt) {
+            setSaveError('La date de début est obligatoire.');
+            return;
+        }
+        if (!form.endsAt) {
+            setSaveError('La date de fin est obligatoire.');
+            return;
+        }
+
+        // Validate date logic
+        const start = new Date(form.scheduledAt);
+        const end = new Date(form.endsAt);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            setSaveError('Format de date invalide.');
+            return;
+        }
+        if (end <= start) {
+            setSaveError('La date de fin doit être après la date de début.');
+            return;
+        }
+
         setSaving(true);
         setSaveError(null);
         try {
+            const payload = {
+                systemId: form.systemId,
+                title: form.title.trim(),
+                description: form.description ? form.description.trim() : undefined,
+                scheduledAt: form.scheduledAt,
+                endsAt: form.endsAt,
+            };
+
             if (editItem) {
-                await axiosInstance.put(`/api/v1/maintenance/${editItem.id}`, form);
+                console.log('Updating maintenance:', payload);
+                await axiosInstance.put(`/api/v1/maintenance/${editItem.id}`, payload);
             } else {
-                await axiosInstance.post('/api/v1/maintenance', form);
+                console.log('Creating maintenance:', payload);
+                await axiosInstance.post('/api/v1/maintenance', payload);
             }
             setShowForm(false);
-            load();
+            setSaveError(null);
+            setForm({ systemId: '', title: '', description: '', scheduledAt: '', endsAt: '' });
+            await load();
         } catch (err: any) {
-            const msg = err?.response?.data?.message || err?.message || 'Erreur lors de la sauvegarde.';
+            console.error('Save error:', err);
+            const msg = err?.response?.data?.message ||
+                err?.response?.data?.error?.message ||
+                err?.message ||
+                'Erreur lors de la sauvegarde.';
             setSaveError(msg);
         } finally {
             setSaving(false);
@@ -185,6 +238,14 @@ export default function MaintenanceAdmin() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Load Error */}
+            {loadError && (
+                <div className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                    <span>⚠️ {loadError}</span>
+                    <button onClick={load} className="ml-auto text-xs underline hover:no-underline">Réessayer</button>
                 </div>
             )}
 

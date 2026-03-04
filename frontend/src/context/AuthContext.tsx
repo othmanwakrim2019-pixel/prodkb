@@ -42,22 +42,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const initAuth = async () => {
-            // Skip token validation if we're on the login page
-            if (window.location.pathname === '/login') {
-                setIsLoading(false);
-                return;
-            }
-
             try {
-                // The httpOnly cookie is sent automatically by the browser
-                // No need to set Authorization header manually
+                // httpOnly cookie is sent automatically by the browser
                 const response = await axios.get('/auth/v1/me');
                 setUser(response.data);
-            } catch (error) {
-                console.error('Failed to fetch user', error);
+            } catch {
                 setUser(null);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
         initAuth();

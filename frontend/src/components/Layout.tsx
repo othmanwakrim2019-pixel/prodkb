@@ -50,11 +50,12 @@ interface CollapsibleGroupProps {
     currentPath: string;
     hasPermission: (perm: string) => boolean;
     onChildClick: (tab: string) => void;
+    onNavigatePath: (path: string) => void;
 }
 
 const CollapsibleGroup = ({
     label, icon: Icon, children, isOpen, onToggle,
-    currentTab, currentPath, hasPermission, onChildClick
+    currentTab, currentPath, hasPermission, onChildClick, onNavigatePath
 }: CollapsibleGroupProps) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [height, setHeight] = useState(0);
@@ -107,7 +108,7 @@ const CollapsibleGroup = ({
                         return (
                             <button
                                 key={child.tab || child.path}
-                                onClick={() => child.path ? window.location.href = child.path : onChildClick(child.tab!)}
+                                onClick={() => child.path ? onNavigatePath(child.path) : onChildClick(child.tab!)}
                                 className={clsx(
                                     'w-full flex items-center px-4 py-2 text-xs font-medium rounded-md transition-all duration-150',
                                     isActive
@@ -277,6 +278,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
 
@@ -292,6 +294,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
 
@@ -311,6 +314,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
                 </nav>
@@ -347,6 +351,8 @@ export const Layout = () => {
                             {location.pathname === '/search' && t('nav.search')}
                             {location.pathname === '/planning' && t('nav.planning')}
                             {location.pathname === '/admin' && t('common.administration')}
+                            {location.pathname === '/status' && 'Statut Public'}
+                            {location.pathname === '/admin/maintenance' && 'Maintenance Windows'}
                         </span>
                         {location.pathname === '/admin' && currentTab && (
                             <>

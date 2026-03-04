@@ -5,17 +5,25 @@ import { api } from '../lib/api';
 import type { Procedure } from '../types';
 
 export const procedureService = {
-    getAll: (params?: { search?: string }): Promise<Procedure[]> =>
-        api.get('/api/v1/procedures', { params }).then(r => r.data),
+    getAll: async (params?: { search?: string }): Promise<Procedure[]> => {
+        const response = await api.get('/api/v1/procedures', { params });
+        return response.data;
+    },
 
-    getById: (id: string): Promise<Procedure> =>
-        api.get(`/api/v1/procedures/${id}`).then(r => r.data),
+    getById: async (id: string): Promise<Procedure> => {
+        const response = await api.get(`/api/v1/procedures/${id}`);
+        return response.data;
+    },
 
-    create: (data: Record<string, unknown>): Promise<Procedure> =>
-        api.post('/api/v1/procedures', data).then(r => r.data),
+    create: async (data: Record<string, unknown>): Promise<Procedure> => {
+        const response = await api.post('/api/v1/procedures', data);
+        return response.data;
+    },
 
-    update: (id: string, data: Record<string, unknown>): Promise<Procedure> =>
-        api.put(`/api/v1/procedures/${id}`, data).then(r => r.data),
+    update: async (id: string, data: Record<string, unknown>): Promise<Procedure> => {
+        const response = await api.put(`/api/v1/procedures/${id}`, data);
+        return response.data;
+    },
 
     delete: (id: string): Promise<void> =>
         api.delete(`/api/v1/procedures/${id}`),

@@ -16,7 +16,7 @@ export const requestTimeout = (timeoutMs: number = 30000) => {
                     method: req.method,
                     path: req.path,
                     timeoutMs,
-                    requestId: (req as any).requestId,
+                    requestId: req.requestId,
                 });
                 res.status(408).json({
                     success: false,

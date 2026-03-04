@@ -129,7 +129,7 @@ export class IncidentController {
             if (authReq.user?.role !== UserRole.ADMIN) {
                 const userTeamIds = authReq.user?.teamIds || [];
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const incidentTeamId = (incident as any).assignedTeamId;
+                const incidentTeamId = incident.assignedTeamId;
                 if (incidentTeamId && !userTeamIds.includes(incidentTeamId)) {
                     throw new ForbiddenError('You do not have access to this incident');
                 }

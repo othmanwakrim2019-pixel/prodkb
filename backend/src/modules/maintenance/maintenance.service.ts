@@ -57,8 +57,17 @@ class MaintenanceService {
     }
 
     async create(data: CreateMaintenanceDTO, userId: string) {
-        const scheduledAt = new Date(data.scheduledAt);
-        const endsAt = new Date(data.endsAt);
+        // Parse dates from ISO string (datetime-local format: 2026-03-10T14:30)
+        const scheduledAt = typeof data.scheduledAt === 'string' 
+            ? new Date(data.scheduledAt) 
+            : data.scheduledAt;
+        const endsAt = typeof data.endsAt === 'string' 
+            ? new Date(data.endsAt) 
+            : data.endsAt;
+
+        if (isNaN(scheduledAt.getTime()) || isNaN(endsAt.getTime())) {
+            throw new ValidationError('Invalid date format');
+        }
 
         if (endsAt <= scheduledAt) {
             throw new ValidationError('End time must be after start time');
@@ -88,8 +97,24 @@ class MaintenanceService {
         const updateData: Record<string, unknown> = {};
         if (data.title) updateData.title = data.title;
         if (data.description !== undefined) updateData.description = data.description;
-        if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt);
-        if (data.endsAt) updateData.endsAt = new Date(data.endsAt);
+        if (data.scheduledAt) {
+            const scheduledAt = typeof data.scheduledAt === 'string' 
+                ? new Date(data.scheduledAt) 
+                : data.scheduledAt;
+            if (isNaN(scheduledAt.getTime())) {
+                throw new ValidationError('Invalid scheduledAt date format');
+            }
+            updateData.scheduledAt = scheduledAt;
+        }
+        if (data.endsAt) {
+            const endsAt = typeof data.endsAt === 'string' 
+                ? new Date(data.endsAt) 
+                : data.endsAt;
+            if (isNaN(endsAt.getTime())) {
+                throw new ValidationError('Invalid endsAt date format');
+            }
+            updateData.endsAt = endsAt;
+        }
         if (data.status) updateData.status = data.status;
 
         return prisma.maintenanceWindow.update({
