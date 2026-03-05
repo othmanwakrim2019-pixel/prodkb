@@ -3,8 +3,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { ShieldAlert } from 'lucide-react';
-import { SmartSolutionSearch } from '../components/SmartSolutionSearch';
-import { SimilarIncidents } from '../components/SimilarIncidents';
+import { SmartSolutionSearch } from '../components/incidents/SmartSolutionSearch';
+import { SimilarIncidents } from '../components/incidents/SimilarIncidents';
 import { LogEntryFields } from '../components/incidents/LogEntryFields';
 import { FileAttachmentSection } from '../components/incidents/FileAttachmentSection';
 import { useAuth } from '../context/AuthContext';
@@ -290,3 +290,5 @@ export const CreateIncident = () => {
 };
 
 export default CreateIncident;
+
+

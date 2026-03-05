@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import {
     Zap, CheckCircle, AlertTriangle, Search, XCircle,
     ArrowUpRight, RefreshCw, ShieldAlert, Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { TrendChart, StatusDonutChart, TopSystemsChart } from '../components/DashboardCharts';
+import { TrendChart, StatusDonutChart, TopSystemsChart } from '../components/dashboard/DashboardCharts';
 import { useTranslation } from 'react-i18next';
 import { AnimatedNumber, KPICard, PeriodPill } from '../components/dashboard/DashboardWidgets';
 import { SystemHealthWidget } from '../components/dashboard/SystemHealthWidget';
@@ -349,3 +349,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+

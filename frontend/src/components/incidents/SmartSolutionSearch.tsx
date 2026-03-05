@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, BookOpen, CheckCircle, ArrowRight } from 'lucide-react';
-import { api } from '../lib/api';
+import api from '../../utils/axios';
 import { Link } from 'react-router-dom';
 
-import { Incident } from '../types';
+import { Incident } from '../../types';
 
 interface SmartSearchProps {
     query: string;
@@ -98,3 +98,5 @@ export const SmartSolutionSearch = ({ query, systemId }: SmartSearchProps) => {
         </div>
     );
 };
+
+

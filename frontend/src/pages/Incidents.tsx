@@ -3,7 +3,7 @@ import axios from '../utils/axios';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Download, Radio } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { IncidentFilters } from '../components/IncidentFilters';
+import { IncidentFilters } from '../components/incidents/IncidentFilters';
 import { Incident } from '../types';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '../components/ui/Pagination';
@@ -220,4 +220,5 @@ export const Incidents = () => {
 };
 
 export default Incidents;
+
 

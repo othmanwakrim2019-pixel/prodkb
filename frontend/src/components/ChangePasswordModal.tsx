@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import { Key, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -131,3 +131,4 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
         </div>
     );
 };
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../lib/api';
+import api from '../../utils/axios';
 import { useTranslation } from 'react-i18next';
 
 interface PostMortem {
@@ -163,3 +163,4 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         </div>
     );
 };
+

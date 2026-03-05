@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 import axios from '../../utils/axios';
 import { Upload, Download, CheckCircle, AlertTriangle, X, FileText } from 'lucide-react';
-import type { PlanningPeriod } from './planning.types';
+import type { PlanningPeriod } from '../../types/planning';
 
 interface ImportResult {
     instance: { id: string; name: string };
@@ -348,3 +348,4 @@ export const ImportCsvModal = ({ isOpen, onClose, onImported }: ImportCsvModalPr
         </div>
     );
 };
+

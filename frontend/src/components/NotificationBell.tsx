@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, X } from 'lucide-react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import { useTranslation } from 'react-i18next';
 
 interface Notification {
@@ -179,3 +179,4 @@ export const NotificationBell = () => {
         </div>
     );
 };
+

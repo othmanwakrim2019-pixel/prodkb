@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import axios from '../../utils/axios';
-import type { PlanningJob } from './planning.types';
+import type { PlanningJob } from '../../types/planning';
 
 interface EditJobModalProps {
     job: PlanningJob | null;
@@ -215,3 +215,4 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
         </div>
     );
 };
+

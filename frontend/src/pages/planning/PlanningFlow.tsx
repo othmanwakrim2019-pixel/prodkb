@@ -15,7 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { JobNode } from './JobNode';
-import type { PlanningJob, PlanningStatusType } from './planning.types';
+import type { PlanningJob, PlanningStatusType } from '../../types/planning';
 import axios from '../../utils/axios';
 
 interface PlanningFlowProps {
@@ -282,3 +282,4 @@ export const PlanningFlow = ({ jobs, onStatusChange, onDelete, direction }: Plan
         </div>
     );
 };
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../lib/api';
+import api from '../../utils/axios';
 import { Plus, Pencil, Trash2, GitBranch } from 'lucide-react';
 import { Pagination } from '../../components/ui/Pagination';
 
@@ -223,3 +223,4 @@ export const AutoAssignManagement = () => {
         </div>
     );
 };
+

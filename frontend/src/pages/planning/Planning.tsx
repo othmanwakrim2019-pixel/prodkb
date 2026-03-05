@@ -12,7 +12,7 @@ import type {
     PlanningJob,
     PlanningPeriod,
     InstanceStatusType,
-} from './planning.types';
+} from '../../types/planning';
 import { Plus, Archive, RotateCcw, ArrowRight, ArrowDown, History, TableProperties, GitBranch, Copy, Trash2, Upload } from 'lucide-react';
 
 const PERIODS: { value: PlanningPeriod; label: string }[] = [
@@ -516,3 +516,4 @@ export const Planning = () => {
 };
 
 export default Planning;
+

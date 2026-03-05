@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
-import type { PlanningJob, CreatePlanningJobPayload, TaskType } from './planning.types';
+import type { PlanningJob, CreatePlanningJobPayload, TaskType } from '../../types/planning';
 import type { System, Job } from '../../types';
 import { Cpu, User } from 'lucide-react';
 
@@ -286,3 +286,4 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
         </div>
     );
 };
+

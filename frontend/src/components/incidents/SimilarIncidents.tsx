@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import api from '../../utils/axios';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SimilarIncident {
@@ -105,3 +105,4 @@ export const SimilarIncidents = ({ title }: Props) => {
         </div>
     );
 };
+

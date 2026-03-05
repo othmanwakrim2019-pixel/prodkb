@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import { Filter, Clock, User, Shield, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -179,3 +179,4 @@ const AuditLogs = () => {
 };
 
 export default AuditLogs;
+

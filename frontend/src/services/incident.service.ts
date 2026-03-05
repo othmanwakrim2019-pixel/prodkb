@@ -1,7 +1,7 @@
 /**
  * Incident API Service — typed abstraction over all incident endpoints
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import type { Incident, Log } from '../types';
 
 export interface PaginatedResponse<T> {
@@ -110,3 +110,4 @@ export const incidentService = {
     deleteFile: (id: string, fileName: string): Promise<void> =>
         api.delete(`/api/v1/incidents/${id}/files/${fileName}`),
 };
+

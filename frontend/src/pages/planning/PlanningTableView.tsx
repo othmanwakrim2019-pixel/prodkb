@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PlanningJob, PlanningStatusType } from './planning.types';
+import type { PlanningJob, PlanningStatusType } from '../../types/planning';
 import { CheckCircle, XCircle, Play, Clock, Ban, AlertTriangle, User, Cpu, AlertCircle, Trash2, Pencil } from 'lucide-react';
 import axios from '../../utils/axios';
 
@@ -370,3 +370,4 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
         </div>
     );
 };
+

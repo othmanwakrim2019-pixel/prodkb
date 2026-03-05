@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Team } from '../types';
+import { Team } from '../../types';
 
 export const EditTeamModal = ({ team, onClose, onSave }: { team: Team; onClose: () => void; onSave: (team: Team) => void }) => {
     const [editingTeam, setEditingTeam] = useState<Team>(team);
@@ -73,3 +73,4 @@ export const EditTeamModal = ({ team, onClose, onSave }: { team: Team; onClose: 
         </div>
     );
 };
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../lib/api'; // Corrected path to lib/api
+import api from '../../utils/axios'; // Corrected path to lib/api
 import { Edit, Save, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import DOMPurify from 'dompurify';
@@ -242,3 +242,4 @@ export const EmailTemplates = () => {
         </div>
     );
 };
+

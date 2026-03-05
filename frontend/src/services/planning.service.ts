@@ -2,7 +2,7 @@
  * Planning API Service — instances, jobs, scheduling
  * Types derived from OpenAPI spec via openapi-typescript
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 
 // ── Response Types ──
 
@@ -78,3 +78,4 @@ export const planningService = {
     deleteJob: (jobId: string): Promise<void> =>
         api.delete(`/api/v1/planning/jobs/${jobId}`),
 };
+

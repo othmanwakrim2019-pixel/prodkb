@@ -2,7 +2,7 @@
  * Admin API Service — consolidated CRUD for users, systems, teams, SLAs, roles, config
  * Typed service layer that eliminates raw axios calls across admin pages.
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import type { User, System, Team, Job, SLA, Role, Permission } from '../types';
 
 // ── Typed input interfaces ──
@@ -249,3 +249,4 @@ export const configService = {
     testSmtp: (email: string): Promise<{ success: boolean; message: string }> =>
         api.post('/api/v1/config/smtp/test', { email }).then(r => r.data),
 };
+

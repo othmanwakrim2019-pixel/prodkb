@@ -1,7 +1,7 @@
 /**
  * Procedure API Service — CRUD + search for procedures
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import type { Procedure } from '../types';
 
 export const procedureService = {
@@ -28,3 +28,4 @@ export const procedureService = {
     delete: (id: string): Promise<void> =>
         api.delete(`/api/v1/procedures/${id}`),
 };
+

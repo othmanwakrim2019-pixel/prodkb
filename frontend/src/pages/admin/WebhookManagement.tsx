@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../lib/api';
+import api from '../../utils/axios';
 import { Plus, Pencil, Trash2, Globe, Eye, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Webhook {
@@ -269,3 +269,4 @@ export const WebhookManagement = () => {
         </div>
     );
 };
+

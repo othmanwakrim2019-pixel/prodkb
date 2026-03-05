@@ -2,7 +2,7 @@
  * Auth API Service — login, refresh, logout, profile
  * Tokens are now stored in httpOnly cookies — no token handling needed on the frontend.
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 
 export interface LoginResponse {
     user: {
@@ -29,3 +29,4 @@ export const authService = {
     getMe: (): Promise<LoginResponse['user']> =>
         api.get('/auth/v1/me').then(r => r.data),
 };
+

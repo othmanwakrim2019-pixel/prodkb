@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
-import { EditTeamModal } from '../../components/EditTeamModal';
+import { EditTeamModal } from '../../components/admin/EditTeamModal';
 import { Team, User, TeamMember } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { teamService, userService } from '../../services/admin.service';
@@ -367,3 +367,4 @@ export const TeamManagement = () => {
         </div>
     );
 };
+
