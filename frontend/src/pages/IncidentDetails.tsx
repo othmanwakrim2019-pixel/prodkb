@@ -27,7 +27,7 @@ export const IncidentDetails = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [showFileUpload, setShowFileUpload] = useState(false);
-    const [editForm, setEditForm] = useState<any>({});
+    const [editForm, setEditForm] = useState<{ title?: string; description?: string; severity?: string; assignedTeamId?: string; slaId?: string }>({});
     const [noteForm, setNoteForm] = useState({ logType: 'investigation', content: '' });
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [activeTab, setActiveTab] = useState<'logs' | 'warroom'>('logs');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/axios';
 import { useTranslation } from 'react-i18next';
 
@@ -36,7 +36,7 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         status: 'DRAFT',
     });
 
-    const fetchPM = async () => {
+    const fetchPM = useCallback(async () => {
         try {
             const res = await api.get(`/api/v1/incidents/${incidentId}/postmortem`);
             if (res.data?.data) {
@@ -56,9 +56,9 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [incidentId]);
 
-    useEffect(() => { fetchPM(); }, [incidentId]);
+    useEffect(() => { fetchPM(); }, [fetchPM]);
 
     const handleSave = async () => {
         setSaving(true);

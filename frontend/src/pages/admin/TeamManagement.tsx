@@ -86,8 +86,9 @@ export const TeamManagement = () => {
             await teamService.delete(teamId);
             await fetchTeams();
             alert('Équipe supprimée avec succès !');
-        } catch (error: any) {
-            alert(error.response?.data?.message || 'Échec de la suppression.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            alert(e.response?.data?.message || 'Échec de la suppression.');
         }
     };
 

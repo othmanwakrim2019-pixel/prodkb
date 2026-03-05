@@ -96,8 +96,9 @@ export const SystemManagement = () => {
             await systemService.delete(systemId);
             await fetchSystems();
             alert('Système supprimé avec succès !');
-        } catch (error: any) {
-            alert(error.response?.data?.message || 'Échec de la suppression du système.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            alert(e.response?.data?.message || 'Échec de la suppression du système.');
         }
     };
 
@@ -124,8 +125,9 @@ export const SystemManagement = () => {
             await jobService.delete(jobId);
             await fetchSystems();
             alert('Job supprimé avec succès !');
-        } catch (error: any) {
-            alert(error.response?.data?.message || 'Échec de la suppression du job.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            alert(e.response?.data?.message || 'Échec de la suppression du job.');
         }
     };
 

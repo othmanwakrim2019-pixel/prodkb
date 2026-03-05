@@ -55,9 +55,10 @@ export default function MaintenanceAdmin() {
             // so after axios unwraps the ApiResponse envelope, we need .data again
             const sysArray = Array.isArray(sysRes.data) ? sysRes.data : (sysRes.data?.data ?? []);
             setSystems(sysArray);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to load maintenance data:', err);
-            setLoadError(err?.response?.data?.message || err?.message || 'Erreur lors du chargement.');
+            const e = err as { response?: { data?: { message?: string } }; message?: string };
+            setLoadError(e?.response?.data?.message || e?.message || 'Erreur lors du chargement.');
         }
     };
 
@@ -137,11 +138,12 @@ export default function MaintenanceAdmin() {
             setSaveError(null);
             setForm({ systemId: '', title: '', description: '', scheduledAt: '', endsAt: '' });
             await load();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Save error:', err);
-            const msg = err?.response?.data?.message ||
-                err?.response?.data?.error?.message ||
-                err?.message ||
+            const e = err as { response?: { data?: { message?: string; error?: { message?: string } } }; message?: string };
+            const msg = e?.response?.data?.message ||
+                e?.response?.data?.error?.message ||
+                e?.message ||
                 'Erreur lors de la sauvegarde.';
             setSaveError(msg);
         } finally {

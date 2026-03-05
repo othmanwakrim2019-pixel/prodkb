@@ -162,8 +162,9 @@ export const Planning = () => {
             const cloned = res.data?.data;
             await fetchInstances();
             if (cloned?.id) setSelectedInstanceId(cloned.id);
-        } catch (err: any) {
-            alert(err?.response?.data?.message || 'Failed to clone planning instance.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            alert(e?.response?.data?.message || 'Failed to clone planning instance.');
         } finally {
             setCloning(false);
         }
