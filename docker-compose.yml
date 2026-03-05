@@ -13,9 +13,10 @@ services:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-prodkb} -d ${POSTGRES_DB:-prodkb}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - prodkb-network
     restart: unless-stopped
@@ -55,10 +56,11 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-prodkb}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 5432 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - prodkb-network
     restart: unless-stopped
@@ -93,9 +95,10 @@ services:
       - minio-data:/data
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - prodkb-network
     restart: unless-stopped
@@ -188,6 +191,8 @@ services:
       dockerfile: Dockerfile
     container_name: prodkb-sla-worker
     command: [ "node", "dist/src/workers/sla.worker.js" ]
+    healthcheck:
+      disable: true
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
@@ -228,6 +233,8 @@ services:
       dockerfile: Dockerfile
     container_name: prodkb-webhook-worker
     command: [ "node", "dist/src/workers/webhook.worker.js" ]
+    healthcheck:
+      disable: true
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - REDIS_URL=redis://redis:6379
@@ -254,6 +261,8 @@ services:
       dockerfile: Dockerfile
     container_name: prodkb-cleanup-worker
     command: [ "node", "dist/src/workers/cleanup.worker.js" ]
+    healthcheck:
+      disable: true
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
       - REDIS_URL=redis://redis:6379
