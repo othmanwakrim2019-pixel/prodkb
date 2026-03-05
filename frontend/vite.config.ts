@@ -21,12 +21,8 @@ export default defineConfig({
         globals: true,
         environment: 'happy-dom',
         setupFiles: './src/setupTests.ts',
+        testTimeout: 15000,
         pool: 'forks',
-        poolOptions: {
-            forks: {
-                singleFork: true,
-            },
-        },
     },
     server: {
         proxy: {
