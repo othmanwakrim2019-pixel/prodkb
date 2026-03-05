@@ -147,6 +147,9 @@ jobs:
 
       - name: Start services via Docker Compose
         run: docker compose up -d
+        env:
+          JWT_SECRET: ci-e2e-test-jwt-secret-long-enough-for-validation
+          NODE_ENV: test
 
       - name: Wait for services
         run: sleep 15

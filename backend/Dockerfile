@@ -15,8 +15,6 @@ COPY . .
 RUN npm run build
 # Copy static assets that tsc doesn't handle
 RUN cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true
-# Compile seed script
-RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --target ES2022 --module commonjs --moduleResolution node --skipLibCheck
 # Generate Prisma Client
 # We need a dummy DATABASE_URL for prisma generate to work if it's referenced in schema
 ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
