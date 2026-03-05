@@ -11,8 +11,9 @@ RUN npm ci
 
 COPY . .
 
-# Build TypeScript code
+# Build TypeScript code and seeds
 RUN npm run build
+RUN npx tsc prisma/seeds/index.ts --outDir dist/prisma/seeds --esModuleInterop --target ES2022 --module commonjs --moduleResolution node --skipLibCheck || true
 # Copy static assets that tsc doesn't handle
 RUN cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true
 # Generate Prisma Client

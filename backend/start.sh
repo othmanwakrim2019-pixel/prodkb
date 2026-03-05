@@ -77,7 +77,7 @@ npx prisma generate
 # 4. Seed database (only in non-production OR if SEED=true is explicitly set)
 if [ "$NODE_ENV" != "production" ] || [ "$SEED" = "true" ]; then
     echo "Seeding database (NODE_ENV=$NODE_ENV, SEED=$SEED)..."
-    node dist/prisma/seed.js || echo "WARN: Seed script failed (non-fatal)"
+    node dist/prisma/seeds/index.js || echo "WARN: Seed script failed (non-fatal)"
 else
     echo "Skipping seed (production mode, SEED not set)"
 fi
