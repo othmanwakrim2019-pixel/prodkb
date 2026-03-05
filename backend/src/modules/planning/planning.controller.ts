@@ -9,9 +9,10 @@ import {
     createInstanceSchema, createPlanningJobSchema, updatePlanningJobSchema,
     updateStatusSchema, updatePositionSchema, batchPositionsSchema,
 } from './planning.schema';
+import { TaskType, PlanningPeriod } from '@prisma/client';
+import Papa from 'papaparse';
 
 // --- Instance Controller ---
-
 
 export class PlanningController {
 
@@ -50,7 +51,7 @@ export class PlanningController {
             await logAudit({
                 userId: req.user!.id,
                 actionType: 'CREATE',
-                entityType: 'PLANNING_JOB',
+                entityType: 'PLANNING_INSTANCE',
                 entityId: instance.id,
                 details: JSON.stringify({ name: data.name, period: data.period }),
                 req,
@@ -69,7 +70,7 @@ export class PlanningController {
             await logAudit({
                 userId: req.user!.id,
                 actionType: 'UPDATE',
-                entityType: 'PLANNING_JOB',
+                entityType: 'PLANNING_INSTANCE',
                 entityId: req.params.id,
                 details: JSON.stringify({ action: 'ARCHIVE' }),
                 req,
@@ -85,6 +86,46 @@ export class PlanningController {
         try {
             const instance = await planningInstanceService.reactivate(req.params.id);
             res.json(createResponse(true, instance, 'Instance reactivated'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /** Clone a planning instance for the next month */
+    static async cloneInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const cloned = await planningInstanceService.cloneForNextMonth(req.params.id, req.user!.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'CREATE',
+                entityType: 'PLANNING_INSTANCE',
+                entityId: cloned!.id,
+                details: JSON.stringify({ action: 'CLONE', sourceInstanceId: req.params.id }),
+                req,
+            });
+
+            res.status(201).json(createResponse(true, cloned, 'Instance cloned for next month'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /** Delete a planning instance and all its jobs */
+    static async deleteInstance(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const instance = await planningInstanceService.delete(req.params.id);
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'DELETE',
+                entityType: 'PLANNING_INSTANCE',
+                entityId: req.params.id,
+                details: JSON.stringify({ name: instance.name }),
+                req,
+            });
+
+            res.json(createResponse(true, null, 'Planning instance deleted'));
         } catch (error) {
             next(error);
         }
@@ -107,6 +148,7 @@ export class PlanningController {
             const job = await planningJobService.create({
                 ...data,
                 scheduledTime: new Date(data.scheduledTime),
+                taskType: data.taskType as TaskType | undefined,
             });
 
             await logAudit({
@@ -114,7 +156,7 @@ export class PlanningController {
                 actionType: 'CREATE',
                 entityType: 'PLANNING_JOB',
                 entityId: job.id,
-                details: JSON.stringify({ instanceId: data.instanceId, systemId: data.systemId, jobId: data.jobId }),
+                details: JSON.stringify({ instanceId: data.instanceId, jobId: data.jobId, taskType: data.taskType }),
                 req,
             });
 
@@ -129,10 +171,17 @@ export class PlanningController {
             const { id } = req.params;
             const data = updatePlanningJobSchema.parse(req.body);
 
-            const updateData: Record<string, unknown> = { ...data };
-            if (data.scheduledTime) updateData.scheduledTime = new Date(data.scheduledTime);
+            const updateData: Parameters<typeof planningJobService.update>[1] = {
+                ...(data.systemId !== undefined && { systemId: data.systemId }),
+                ...(data.jobId !== undefined && { jobId: data.jobId }),
+                ...(data.scheduledTime !== undefined && { scheduledTime: new Date(data.scheduledTime) }),
+                ...(data.dependencies !== undefined && { dependencies: data.dependencies }),
+                ...(data.taskType !== undefined && { taskType: data.taskType as TaskType }),
+                ...(data.supportContact !== undefined && { supportContact: data.supportContact }),
+                ...(data.notes !== undefined && { notes: data.notes }),
+            };
 
-            const updated = await planningJobService.update(id, updateData as Parameters<typeof planningJobService.update>[1]);
+            const updated = await planningJobService.update(id, updateData);
 
             await logAudit({
                 userId: req.user!.id,
@@ -172,8 +221,8 @@ export class PlanningController {
     static async updateJobStatus(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const { status } = updateStatusSchema.parse(req.body);
-            const updated = await planningJobService.updateStatus(id, status, req.user!.id);
+            const { status, notes } = updateStatusSchema.parse(req.body);
+            const updated = await planningJobService.updateStatus(id, status, req.user!.id, notes);
 
             await logAudit({
                 userId: req.user!.id,
@@ -193,18 +242,19 @@ export class PlanningController {
     static async completeJob(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const completed = await planningJobService.complete(id, req.user!.id);
+            const { notes } = req.body;
+            const completed = await planningJobService.complete(id, req.user!.id, notes);
 
             await logAudit({
                 userId: req.user!.id,
                 actionType: 'UPDATE',
                 entityType: 'PLANNING_JOB',
                 entityId: id,
-                details: JSON.stringify({ action: 'COMPLETE' }),
+                details: JSON.stringify({ action: 'COMPLETE', notes }),
                 req,
             });
 
-            res.json(createResponse(true, completed, 'Job completed. Downstream jobs activated if ready.'));
+            res.json(createResponse(true, completed, 'Job completed. Downstream jobs unblocked if ready.'));
         } catch (error) {
             next(error);
         }
@@ -226,6 +276,58 @@ export class PlanningController {
             const { positions } = batchPositionsSchema.parse(req.body);
             await planningJobService.updatePositions(positions);
             res.json(createResponse(true, null, `${positions.length} positions saved`));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // -- CSV Import --
+
+    static async importCsv(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            if (!req.file) {
+                res.status(400).json(createResponse(false, null, 'No CSV file uploaded'));
+                return;
+            }
+
+            const instanceName = (req.body.instanceName as string)?.trim();
+            const period = req.body.period as string;
+
+            if (!instanceName) {
+                res.status(400).json(createResponse(false, null, 'instanceName is required'));
+                return;
+            }
+
+            const validPeriods: PlanningPeriod[] = ['monthly', 'quarterly', 'annual'];
+            if (!validPeriods.includes(period as PlanningPeriod)) {
+                res.status(400).json(createResponse(false, null, 'period must be monthly, quarterly, or annual'));
+                return;
+            }
+
+            const csvText = req.file.buffer.toString('utf-8');
+            const { data } = Papa.parse<Record<string, string>>(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, '_'),
+            });
+
+            const result = await planningInstanceService.importFromCsv({
+                instanceName,
+                period: period as PlanningPeriod,
+                rows: data,
+                createdById: req.user!.id,
+            });
+
+            await logAudit({
+                userId: req.user!.id,
+                actionType: 'CREATE',
+                entityType: 'PLANNING_INSTANCE',
+                entityId: result.instance.id,
+                details: JSON.stringify({ action: 'CSV_IMPORT', jobsCreated: result.jobsCreated }),
+                req,
+            });
+
+            res.status(201).json(createResponse(true, result, `Imported ${result.jobsCreated} tasks into "${instanceName}"`));
         } catch (error) {
             next(error);
         }

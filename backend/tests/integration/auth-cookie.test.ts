@@ -3,7 +3,7 @@
  * Verifies that login sets httpOnly cookies and protected routes work with cookie auth.
  */
 import request from 'supertest';
-import { app } from '../../src/server';
+import { app } from '../../src/app';
 import { prisma } from '../../src/common/utils/prisma';
 import { authService } from '../../src/modules/auth/auth.service';
 

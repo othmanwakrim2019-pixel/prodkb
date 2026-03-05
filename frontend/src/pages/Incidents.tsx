@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from '../utils/axios';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, Radio } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { IncidentFilters } from '../components/IncidentFilters';
+import { IncidentFilters } from '../components/incidents/IncidentFilters';
 import { Incident } from '../types';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '../components/ui/Pagination';
 import { exportToCSV } from '../utils/exportCSV';
+import { useIncidentStream } from '../hooks/useIncidentStream';
 
 export const Incidents = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -31,35 +32,40 @@ export const Incidents = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchIncidents = async () => {
-            setLoading(true);
-            try {
-                // Ensure page and limit are set
-                const currentParams = new URLSearchParams(searchParams);
-                if (!currentParams.get('page')) currentParams.set('page', '1');
-                if (!currentParams.get('limit')) currentParams.set('limit', '20');
+    const fetchIncidents = useCallback(async () => {
+        setLoading(true);
+        try {
+            const currentParams = new URLSearchParams(searchParams);
+            if (!currentParams.get('page')) currentParams.set('page', '1');
+            if (!currentParams.get('limit')) currentParams.set('limit', '20');
 
-                const response = await axios.get(`/api/v1/incidents?${currentParams.toString()}`);
+            const response = await axios.get(`/api/v1/incidents?${currentParams.toString()}`);
+            const payload = response.data;
+            const incidentData = payload?.items || (Array.isArray(payload) ? payload : []);
+            const metaData = payload?.meta || { total: incidentData.length, page: 1, limit: 20, totalPages: 1 };
 
-                // Axios interceptor already unwraps { success, data } → data
-                // So response.data is already { items: [...], meta: {...} }
-                const payload = response.data;
-                const incidentData = payload?.items || (Array.isArray(payload) ? payload : []);
-                const metaData = payload?.meta || { total: incidentData.length, page: 1, limit: 20, totalPages: 1 };
-
-                setIncidents(incidentData);
-                setMeta(metaData);
-            } catch (error) {
-                console.error('Failed to fetch incidents', error);
-                setIncidents([]); // Fallback to empty
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchIncidents();
+            setIncidents(incidentData);
+            setMeta(metaData);
+        } catch (error) {
+            console.error('Failed to fetch incidents', error);
+            setIncidents([]);
+        } finally {
+            setLoading(false);
+        }
     }, [searchParams]);
+
+    useEffect(() => {
+        fetchIncidents();
+    }, [fetchIncidents]);
+
+    // Real-time updates: auto-refresh when any incident event arrives
+    const { isConnected } = useIncidentStream({
+        onEvent: (event) => {
+            if (event.type !== 'connected') {
+                fetchIncidents();
+            }
+        },
+    });
 
     const handlePageChange = (newPage: number) => {
         const newParams = new URLSearchParams(searchParams);
@@ -78,9 +84,15 @@ export const Incidents = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('incidents.title')}</h1>
+                {isConnected && (
+                    <span className="inline-flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <Radio className="h-3 w-3 animate-pulse" />
+                        Live
+                    </span>
+                )}
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => exportToCSV(incidents as any[], 'incidents', [
+                        onClick={() => exportToCSV(Array.isArray(incidents) ? incidents : [], 'incidents', [
                             { key: 'title', label: 'Title' },
                             { key: 'severity', label: 'Severity' },
                             { key: 'status', label: 'Status' },
@@ -208,4 +220,5 @@ export const Incidents = () => {
 };
 
 export default Incidents;
+
 

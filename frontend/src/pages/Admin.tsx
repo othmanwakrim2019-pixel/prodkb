@@ -30,7 +30,7 @@ export const Admin = () => {
         if (tab && tab !== activeTab) {
             setActiveTab(tab);
         }
-    }, [searchParams]);
+    }, [searchParams, activeTab]);
 
     useEffect(() => {
         if (!user) navigate('/');

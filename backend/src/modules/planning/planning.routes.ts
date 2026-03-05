@@ -1,9 +1,11 @@
 
 import { Router } from 'express';
+import multer from 'multer';
 import { PlanningController } from './planning.controller';
 import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
 
 router.use(authenticate);
 
@@ -11,8 +13,13 @@ router.use(authenticate);
 router.get('/instances', checkPermission('PLANNING_VIEW'), PlanningController.getInstances);
 router.get('/instances/:id', checkPermission('PLANNING_VIEW'), PlanningController.getInstance);
 router.post('/instances', checkPermission('PLANNING_MANAGE'), PlanningController.createInstance);
+router.post('/instances/:id/clone', checkPermission('PLANNING_MANAGE'), PlanningController.cloneInstance);
 router.patch('/instances/:id/archive', checkPermission('PLANNING_MANAGE'), PlanningController.archiveInstance);
 router.patch('/instances/:id/reactivate', checkPermission('PLANNING_MANAGE'), PlanningController.reactivateInstance);
+router.delete('/instances/:id', checkPermission('PLANNING_MANAGE'), PlanningController.deleteInstance);
+
+// --- CSV Import ---
+router.post('/import', checkPermission('PLANNING_MANAGE'), upload.single('file'), PlanningController.importCsv);
 
 // --- Jobs within instances ---
 router.get('/instances/:id/jobs', checkPermission('PLANNING_VIEW'), PlanningController.getJobsByInstance);
@@ -26,4 +33,3 @@ router.patch('/jobs/:id/complete', checkPermission('PLANNING_MANAGE'), PlanningC
 router.patch('/jobs/:id/position', checkPermission('PLANNING_MANAGE'), PlanningController.updateJobPosition);
 
 export const planningRoutes = router;
-

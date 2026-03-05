@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
-import type { CreateInstancePayload, PlanningPeriod } from './planning.types';
+import type { CreateInstancePayload, PlanningPeriod } from '../../types/planning';
 
 interface CreateInstanceModalProps {
     isOpen: boolean;
@@ -168,3 +168,4 @@ export const CreateInstanceModal = ({ isOpen, onClose, onCreated, period }: Crea
         </div>
     );
 };
+

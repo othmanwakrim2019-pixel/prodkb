@@ -4,8 +4,9 @@ import { incidentCrudService, FindAllFilters } from './services/incident-crud.se
 import { incidentStatusService } from './services/incident-status.service';
 import { incidentAnalyticsService } from './services/incident-analytics.service';
 import { incidentFileService } from './services/incident-file.service';
+import { incidentSuggestionService } from './services/suggestion.service';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
-import { fileUploadService } from '../../common/services/fileUploadService';
+import { fileUploadService } from '../../common/services/file-upload.service';
 import { createIncidentSchema, updateIncidentSchema, addIncidentLogSchema } from './incident.schema';
 import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../common/errors/app.error';
 import { sanitizeObject } from '../../common/utils/sanitize';
@@ -45,6 +46,23 @@ export class IncidentController {
 
             const incidents = await incidentCrudService.searchSimilar(query as string);
             res.json(createResponse(true, incidents));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async suggestProcedures(req: Request, res: Response, next: NextFunction) {
+        try {
+            const systemId = req.query.systemId as string;
+            if (!systemId) {
+                res.json(createResponse(true, []));
+                return;
+            }
+            const jobId = req.query.jobId as string | undefined;
+            const severity = req.query.severity as string | undefined;
+
+            const suggestions = await incidentSuggestionService.suggestProcedures(systemId, jobId, severity);
+            res.json(createResponse(true, suggestions));
         } catch (error) {
             next(error);
         }
@@ -111,7 +129,7 @@ export class IncidentController {
             if (authReq.user?.role !== UserRole.ADMIN) {
                 const userTeamIds = authReq.user?.teamIds || [];
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const incidentTeamId = (incident as any).assignedTeamId;
+                const incidentTeamId = incident.assignedTeamId;
                 if (incidentTeamId && !userTeamIds.includes(incidentTeamId)) {
                     throw new ForbiddenError('You do not have access to this incident');
                 }

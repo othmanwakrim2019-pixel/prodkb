@@ -21,7 +21,9 @@ import {
     Globe,
     FileEdit,
     Mail,
-    ShieldCheck
+    ShieldCheck,
+    Wrench,
+    ActivitySquare
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from './ChangePasswordModal';
@@ -32,7 +34,8 @@ import { ThemeToggle } from './ThemeToggle';
 // ── Collapsible group for sidebar sub-navigation ──
 interface NavChild {
     label: string;
-    tab: string;
+    tab?: string;
+    path?: string;
     icon: React.ElementType;
     permission?: string;
 }
@@ -47,11 +50,12 @@ interface CollapsibleGroupProps {
     currentPath: string;
     hasPermission: (perm: string) => boolean;
     onChildClick: (tab: string) => void;
+    onNavigatePath: (path: string) => void;
 }
 
 const CollapsibleGroup = ({
     label, icon: Icon, children, isOpen, onToggle,
-    currentTab, currentPath, hasPermission, onChildClick
+    currentTab, currentPath, hasPermission, onChildClick, onNavigatePath
 }: CollapsibleGroupProps) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [height, setHeight] = useState(0);
@@ -67,8 +71,9 @@ const CollapsibleGroup = ({
     );
     if (visibleChildren.length === 0) return null;
 
-    const isAnyChildActive = currentPath === '/admin' &&
-        visibleChildren.some(c => c.tab === currentTab);
+    const isAnyChildActive = visibleChildren.some(c =>
+        c.path ? currentPath === c.path : currentPath === '/admin' && c.tab === currentTab
+    );
 
     return (
         <div>
@@ -97,11 +102,13 @@ const CollapsibleGroup = ({
                 <div ref={contentRef} className="pl-4 py-1 space-y-0.5">
                     {visibleChildren.map(child => {
                         const ChildIcon = child.icon;
-                        const isActive = currentPath === '/admin' && currentTab === child.tab;
+                        const isActive = child.path
+                            ? currentPath === child.path
+                            : currentPath === '/admin' && currentTab === child.tab;
                         return (
                             <button
-                                key={child.tab}
-                                onClick={() => onChildClick(child.tab)}
+                                key={child.tab || child.path}
+                                onClick={() => child.path ? onNavigatePath(child.path) : onChildClick(child.tab!)}
                                 className={clsx(
                                     'w-full flex items-center px-4 py-2 text-xs font-medium rounded-md transition-all duration-150',
                                     isActive
@@ -182,6 +189,12 @@ export const Layout = () => {
             icon: CalendarClock,
             requiredPermission: 'PLANNING_VIEW'
         },
+        {
+            label: 'Public Status',
+            path: '/status',
+            icon: ActivitySquare,
+            requiredPermission: 'DASHBOARD_VIEW'
+        },
     ];
 
     const visibleTopNav = topNavItems.filter(item => hasPermission(item.requiredPermission));
@@ -189,6 +202,7 @@ export const Layout = () => {
     // Settings sub-items
     const settingsChildren: NavChild[] = [
         { label: t('admin.tabs.systems', 'Applications'), tab: 'systems', icon: Database, permission: 'SYSTEM_MANAGE' },
+        { label: 'Maintenance Windows', path: '/admin/maintenance', icon: Wrench, permission: 'SYSTEM_MANAGE' },
         { label: t('admin.tabs.teams', 'Teams'), tab: 'teams', icon: UsersIcon, permission: 'TEAM_MANAGE' },
         { label: t('admin.tabs.slas', 'SLAs'), tab: 'slas', icon: Clock, permission: 'SLA_MANAGE' },
         { label: 'Escalation', tab: 'escalation', icon: AlertTriangle, permission: 'ESCALATION_MANAGE' },
@@ -264,6 +278,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
 
@@ -279,6 +294,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
 
@@ -298,6 +314,7 @@ export const Layout = () => {
                             currentPath={location.pathname}
                             hasPermission={checkPerm}
                             onChildClick={navigateToAdminTab}
+                            onNavigatePath={navigate}
                         />
                     )}
                 </nav>
@@ -334,6 +351,8 @@ export const Layout = () => {
                             {location.pathname === '/search' && t('nav.search')}
                             {location.pathname === '/planning' && t('nav.planning')}
                             {location.pathname === '/admin' && t('common.administration')}
+                            {location.pathname === '/status' && 'Statut Public'}
+                            {location.pathname === '/admin/maintenance' && 'Maintenance Windows'}
                         </span>
                         {location.pathname === '/admin' && currentTab && (
                             <>

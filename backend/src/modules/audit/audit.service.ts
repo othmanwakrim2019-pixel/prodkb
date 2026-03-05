@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { logger } from '../../common/utils/logger';
 
 export type AuditActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT';
-export type AuditEntityType = 'INCIDENT' | 'USER' | 'TEAM' | 'ROLE' | 'PROCEDURE' | 'SYSTEM' | 'JOB' | 'SLA' | 'PLANNING_JOB';
+export type AuditEntityType = 'INCIDENT' | 'USER' | 'TEAM' | 'ROLE' | 'PROCEDURE' | 'SYSTEM' | 'JOB' | 'SLA' | 'PLANNING_JOB' | 'PLANNING_INSTANCE';
 
 interface AuditLogParams {
     userId: string;

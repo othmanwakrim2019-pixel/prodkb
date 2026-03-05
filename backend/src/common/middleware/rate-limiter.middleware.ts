@@ -38,6 +38,17 @@ function createLimiter(opts: { windowMs: number; max: number; message: string | 
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests: opts.skipSuccessfulRequests,
+        // Combine the validated IP key with User-Agent so each device is treated
+        // separately even on shared NAT networks.
+        // Disable keyGeneratorIpFallback validation — we handle IP ourselves.
+        validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
+        keyGenerator: (req) => {
+            // Strip port from IP if present (e.g. "[::1]:12345" → "::1")
+            let ip = req.ip || req.socket.remoteAddress || 'unknown';
+            ip = ip.replace(/^\[/, '').replace(/\]:\d+$/, '').replace(/:\d+$/, '');
+            const ua = req.headers['user-agent'] || 'unknown-ua';
+            return `${ip}::${ua.slice(0, 80)}`;
+        },
         ...storeOpts,
     });
 }

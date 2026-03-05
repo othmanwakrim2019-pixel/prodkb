@@ -2,7 +2,7 @@
  * Analytics API Service — backend analytics endpoints
  * Types derived from OpenAPI spec via openapi-typescript
  */
-import { api } from '../lib/api';
+import api from '../utils/axios';
 
 // ── Response Types ──
 
@@ -62,3 +62,4 @@ export const analyticsService = {
     getSeverityDistribution: (params?: AnalyticsParams): Promise<SeverityDistributionData[]> =>
         api.get('/api/v1/analytics/severity-distribution', { params }).then(r => r.data),
 };
+

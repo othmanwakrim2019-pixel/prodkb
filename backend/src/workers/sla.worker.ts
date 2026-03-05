@@ -15,7 +15,7 @@ import { SLA_QUEUE_NAME } from '../modules/sla/sla.queue';
 import { slaEnforcementService } from '../modules/sla/sla-enforcement.service';
 import { logger } from '../common/utils/logger';
 import { prisma } from '../common/utils/prisma';
-import { parseRedisUrl } from '../common/utils/redis-url';
+import { parseRedisUrl } from '../common/utils/redis';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const connection = parseRedisUrl(REDIS_URL);

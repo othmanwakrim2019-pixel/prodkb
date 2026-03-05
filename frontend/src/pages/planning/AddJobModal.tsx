@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from '../../utils/axios';
-import type { PlanningJob, CreatePlanningJobPayload } from './planning.types';
+import type { PlanningJob, CreatePlanningJobPayload, TaskType } from '../../types/planning';
 import type { System, Job } from '../../types';
+import { Cpu, User } from 'lucide-react';
 
 interface AddJobModalProps {
     isOpen: boolean;
@@ -15,8 +16,11 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
     const [systems, setSystems] = useState<System[]>([]);
     const [selectedSystemId, setSelectedSystemId] = useState('');
     const [selectedJobId, setSelectedJobId] = useState('');
+    const [customTaskName, setCustomTaskName] = useState('');
     const [scheduledTime, setScheduledTime] = useState('');
     const [dependencies, setDependencies] = useState<string[]>([]);
+    const [taskType, setTaskType] = useState<TaskType>('BATCH');
+    const [supportContact, setSupportContact] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -26,8 +30,11 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
             fetchSystems();
             setSelectedSystemId('');
             setSelectedJobId('');
+            setCustomTaskName('');
             setScheduledTime('');
             setDependencies([]);
+            setTaskType('BATCH');
+            setSupportContact('');
             setError('');
         }
     }, [isOpen]);
@@ -45,22 +52,34 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
     const selectedSystem = systems.find(s => s.id === selectedSystemId);
     const availableJobs: Job[] = selectedSystem?.jobs || [];
 
+    const isBatch = taskType === 'BATCH';
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedSystemId || !selectedJobId) {
-            setError('Please select a system and a job.');
+
+        if (isBatch && (!selectedSystemId || !selectedJobId)) {
+            setError('Please select a system and a job for BATCH tasks.');
             return;
         }
+        if (!isBatch && !customTaskName.trim()) {
+            setError('Please enter a task description for Manual Action.');
+            return;
+        }
+
         setSubmitting(true);
         setError('');
 
         try {
             const payload: CreatePlanningJobPayload = {
                 instanceId,
-                systemId: selectedSystemId,
-                jobId: selectedJobId,
                 scheduledTime: new Date(scheduledTime).toISOString(),
                 dependencies,
+                taskType,
+                supportContact: supportContact.trim() || undefined,
+                ...(isBatch
+                    ? { systemId: selectedSystemId, jobId: selectedJobId }
+                    : { customTaskName: customTaskName.trim() }
+                ),
             };
             await axios.post('/api/v1/planning/jobs', payload);
             onCreated();
@@ -68,7 +87,7 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
         } catch (err: unknown) {
             console.error('Failed to create planning job:', err);
             const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-            setError(msg || 'Failed to create job. Please check the form.');
+            setError(msg || 'Failed to create task. Please check the form.');
         } finally {
             setSubmitting(false);
         }
@@ -86,7 +105,7 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-                    <h2 className="text-lg font-semibold text-slate-800">Add Job to Plan</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">Add Task to Plan</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">✕</button>
                 </div>
 
@@ -95,44 +114,93 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-md">{error}</div>
                     )}
 
-                    {/* System Selector */}
+                    {/* Task Type Toggle — FIRST so the form adapts */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Application / System</label>
-                        <select
-                            value={selectedSystemId}
-                            onChange={e => {
-                                setSelectedSystemId(e.target.value);
-                                setSelectedJobId('');
-                            }}
-                            required
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        >
-                            <option value="">— Select a system —</option>
-                            {systems.map(s => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                        </select>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Task Type</label>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setTaskType('BATCH')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${isBatch
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                    }`}
+                            >
+                                <Cpu className="w-4 h-4" /> ⚙️ Automated Batch
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTaskType('MANUAL_ACTION')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${!isBatch
+                                    ? 'border-violet-500 bg-violet-50 text-violet-700'
+                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                    }`}
+                            >
+                                <User className="w-4 h-4" /> 👤 Manual Action
+                            </button>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1.5">
+                            {isBatch ? '⚙️ Automated job — select system & job below' : '👤 Human task — type the task description below'}
+                        </p>
                     </div>
 
-                    {/* Job Selector (filtered by system) */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Job / Uproc</label>
-                        <select
-                            value={selectedJobId}
-                            onChange={e => setSelectedJobId(e.target.value)}
-                            required
-                            disabled={!selectedSystemId}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:opacity-50 disabled:bg-slate-50"
-                        >
-                            <option value="">— Select a job —</option>
-                            {availableJobs.map(j => (
-                                <option key={j.id} value={j.id}>{j.name} ({j.code})</option>
-                            ))}
-                        </select>
-                        {selectedSystemId && availableJobs.length === 0 && (
-                            <p className="text-xs text-slate-400 mt-1 italic">No jobs found for this system.</p>
-                        )}
-                    </div>
+                    {/* --- BATCH: System + Job selectors --- */}
+                    {isBatch && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Application / System</label>
+                                <select
+                                    value={selectedSystemId}
+                                    onChange={e => {
+                                        setSelectedSystemId(e.target.value);
+                                        setSelectedJobId('');
+                                    }}
+                                    required
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">— Select a system —</option>
+                                    {systems.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Job / Uproc</label>
+                                <select
+                                    value={selectedJobId}
+                                    onChange={e => setSelectedJobId(e.target.value)}
+                                    required
+                                    disabled={!selectedSystemId}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:opacity-50 disabled:bg-slate-50"
+                                >
+                                    <option value="">— Select a job —</option>
+                                    {availableJobs.map(j => (
+                                        <option key={j.id} value={j.id}>{j.name} ({j.code})</option>
+                                    ))}
+                                </select>
+                                {selectedSystemId && availableJobs.length === 0 && (
+                                    <p className="text-xs text-slate-400 mt-1 italic">No jobs found for this system.</p>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/* --- MANUAL: Free-text task name --- */}
+                    {!isBatch && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Task Description</label>
+                            <input
+                                type="text"
+                                value={customTaskName}
+                                onChange={e => setCustomTaskName(e.target.value)}
+                                required
+                                placeholder={'e.g. "Fermeture de l\'ensemble des Agences"'}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm"
+                            />
+                            <p className="text-xs text-slate-400 mt-1">This task won't be linked to a system/job in the application.</p>
+                        </div>
+                    )}
 
                     {/* Scheduled Time */}
                     <div>
@@ -168,9 +236,9 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                                         />
                                         <div className="flex-1 min-w-0">
                                             <span className="text-sm font-medium text-slate-700 truncate block">
-                                                {pj.job.name} ({pj.job.code})
+                                                {pj.customTaskName || (pj.job ? `${pj.job.name} (${pj.job.code})` : 'Unknown task')}
                                             </span>
-                                            <span className="text-xs text-slate-400">{pj.system.name}</span>
+                                            <span className="text-xs text-slate-400">{pj.system?.name || 'Manual'}</span>
                                         </div>
                                         <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${pj.status === 'done' ? 'bg-emerald-100 text-emerald-700' :
                                             pj.status === 'running' ? 'bg-blue-100 text-blue-700' :
@@ -182,6 +250,18 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* Support Contact */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Support Contact <span className="text-slate-400 font-normal">(optional)</span></label>
+                        <input
+                            type="text"
+                            value={supportContact}
+                            onChange={e => setSupportContact(e.target.value)}
+                            placeholder='e.g. "Radouane", "Réseaux et Télécoms"'
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                     </div>
 
                     {/* Actions */}
@@ -196,9 +276,9 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${isBatch ? 'bg-blue-600 hover:bg-blue-700' : 'bg-violet-600 hover:bg-violet-700'}`}
                         >
-                            {submitting ? 'Adding...' : 'Add Job'}
+                            {submitting ? 'Adding...' : isBatch ? '⚙️ Add Batch Job' : '👤 Add Manual Task'}
                         </button>
                     </div>
                 </form>
@@ -206,3 +286,4 @@ export const AddJobModal = ({ isOpen, onClose, onCreated, instanceId, existingJo
         </div>
     );
 };
+

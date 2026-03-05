@@ -1,6 +1,37 @@
-import { Severity, Environment, IncidentStatus } from './enums';
-export * from './enums';
+// ── Enums (inlined — was types/enums.ts) ──
+
+export enum IncidentStatus {
+    OPEN = 'Open',
+    IN_PROGRESS = 'In Progress',
+    RESOLVED = 'Resolved',
+    CLOSED = 'Closed',
+}
+
+export enum Severity {
+    CRITICAL = 'Critical',
+    HIGH = 'High',
+    MEDIUM = 'Medium',
+    LOW = 'Low',
+}
+
+export enum Environment {
+    PROD = 'PROD',
+    PREPROD = 'PREPROD',
+    RECETTE = 'RECETTE',
+}
+
+export enum UserRole {
+    ADMIN = 'ADMIN',
+    EXPERT = 'EXPERT',
+    OPERATOR = 'OPERATOR',
+    VIEWER = 'VIEWER',
+}
+
+// ── Generated API types ──
 export type { paths, components } from './api.generated';
+
+// ── Planning types ──
+export type * from './planning';
 
 export interface User {
     id: string;
@@ -91,6 +122,7 @@ export interface Log {
     logType: string;
     rawLog: string;
     errorMessage?: string;
+    errorCode?: string;
     fileName?: string;
     fileSize?: number;
     filePath?: string;

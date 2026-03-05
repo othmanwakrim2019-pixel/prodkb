@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 // Systems
+router.get('/health-leaderboard', SystemController.getHealthLeaderboard);
 router.get('/', SystemController.getSystems);
 router.post('/', checkPermission('SYSTEM_MANAGE'), SystemController.createSystem);
 router.put('/:id', checkPermission('SYSTEM_MANAGE'), SystemController.updateSystem);

@@ -19,6 +19,7 @@ const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
+    secure: process.env.SECURITY_MODE === 'strict', // Only mark Secure when running behind HTTPS
     //secure: isProduction,          // HTTPS only in production
     secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
     sameSite: 'strict' as const,

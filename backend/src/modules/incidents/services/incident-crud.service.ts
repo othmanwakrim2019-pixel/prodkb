@@ -6,6 +6,7 @@ import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, 
 import { autoAssignService } from '../../auto-assign/auto-assign.service';
 import { webhookService } from '../../webhooks/webhook.service';
 import { defaultInclude, validateStatusTransition, sendNotification } from './incident-shared';
+import { eventPublisher } from '../../events/event.publisher';
 
 export interface FindAllFilters {
     status?: string;
@@ -49,8 +50,8 @@ export class IncidentCrudService {
         }
         if (filters.search) {
             where.OR = [
-                { title: { contains: filters.search } },
-                { description: { contains: filters.search } },
+                { title: { contains: filters.search, mode: 'insensitive' } },
+                { description: { contains: filters.search, mode: 'insensitive' } },
             ];
         }
 
@@ -131,6 +132,18 @@ export class IncidentCrudService {
         logger.info('Incident created', { incidentId: incident.id, userId, severity: data.severity });
         sendNotification(incident, 'created').catch((err) => { logger.error('Failed to send creation notification', { error: err }); });
         webhookService.dispatch('incident.created', { incident }).catch((err) => { logger.error('Failed to dispatch webhook for creation', { error: err }); });
+        eventPublisher.emit({
+            type: 'incident.created',
+            incidentId: incident.id,
+            data: { 
+                id: incident.id, 
+                title: incident.title, 
+                status: incident.status, 
+                severity: incident.severity, 
+                systemName: incident.system?.name 
+            },
+            timestamp: new Date().toISOString(),
+        }).catch(() => { });
 
         return incident as unknown as IIncident;
     }
@@ -193,6 +206,18 @@ export class IncidentCrudService {
 
         const webhookEvent = isNowResolved ? 'incident.resolved' : 'incident.updated';
         webhookService.dispatch(webhookEvent, { incident }).catch((err) => { logger.error('Failed to dispatch webhook for update', { error: err }); });
+        eventPublisher.emit({
+            type: isNowResolved ? 'incident.resolved' : 'incident.updated',
+            incidentId: id,
+            data: { 
+                id, 
+                title: incident.title, 
+                status: incident.status, 
+                severity: incident.severity, 
+                systemName: incident.system?.name 
+            },
+            timestamp: new Date().toISOString(),
+        }).catch(() => { });
 
         return incident as unknown as IIncident;
     }
@@ -201,6 +226,12 @@ export class IncidentCrudService {
         await this.findById(id);
         await prisma.incident.delete({ where: { id } });
         logger.info('Incident deleted', { incidentId: id, userId });
+        eventPublisher.emit({
+            type: 'incident.deleted',
+            incidentId: id,
+            data: { id },
+            timestamp: new Date().toISOString(),
+        }).catch(() => { });
     }
 
     async linkProcedure(incidentId: string, procedureId: string): Promise<IIncident> {

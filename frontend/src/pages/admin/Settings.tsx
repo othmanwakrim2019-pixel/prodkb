@@ -24,8 +24,14 @@ export const Settings = () => {
     const fetchConfig = async () => {
         try {
             const data = await configService.getSmtp();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setConfig(data as any);
+            setConfig({
+                host: data.host ?? '',
+                port: data.port ?? 587,
+                user: data.user ?? '',
+                pass: (data as unknown as { pass?: string }).pass ?? '',
+                from: data.from ?? '',
+                secure: data.secure ?? false,
+            });
         } catch (error) {
             console.error("Failed to fetch SMTP config", error);
         } finally {

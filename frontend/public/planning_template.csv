@@ -1,0 +1,14 @@
+ref,task_type,date,time,task_name,system_name,job_code,support_contact,depends_on
+# Lines starting with # are comments and are ignored
+# task_type must be BATCH or MANUAL
+# date format: DD/MM/YYYY or MM/DD/YY
+# time format: HH:MM (24h)
+# MANUAL tasks: fill ref, task_type, date, time, task_name, support_contact. Leave system_name and job_code empty.
+# BATCH tasks: fill all columns. system_name and job_code must match names in the application database.
+# depends_on: comma-separated list of ref values this task depends on (e.g. T1,T3)
+T1,MANUAL,28/02/2026,06:00,Fermeture de l'ensemble des Agences,,, exploitation_centrale,
+T2,MANUAL,28/02/2026,07:00,Ouverture de la periode comptable et saisie des cours de devises,,,exploitation_centrale,T1
+T3,BATCH,28/02/2026,08:00,Traitement GP Fin de Mois,BNIF-GP,GP_FDM,exploitation_centrale,T1
+T4,BATCH,28/02/2026,09:00,Traitements PACK et SB Mensuels,BNIF-PACK,PACK_MENS,exploitation_centrale,T3
+T5,MANUAL,01/03/2026,08:00,Traitement ICNE SOFAC Mensuel,,,exploitation_centrale,T3 T4
+T6,BATCH,01/03/2026,10:00,ICNE EVOLAN Mensuel,BNIF-EVOLAN,ICNE_MENS,,T5

@@ -1,7 +1,7 @@
 import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../../common/errors/app.error';
-import { fileUploadService } from '../../../common/services/fileUploadService';
+import { fileUploadService } from '../../../common/services/file-upload.service';
 import type { IIncidentLog } from '../../../types';
 import { incidentCrudService } from './incident-crud.service';
 import { defaultInclude, sendNoteNotification } from './incident-shared';

@@ -45,13 +45,12 @@ export function generateCsrfToken(): string {
  * Called after login and token refresh.
  */
 export function setCsrfCookie(res: Response, token: string): void {
-    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie(CSRF_COOKIE_NAME, token, {
         httpOnly: false,     // JS must be able to read this
-        secure: isProduction,
+        secure: process.env.SECURITY_MODE === 'strict',
         sameSite: 'strict',
         path: '/',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (matches refresh token)
+        maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 }
 
@@ -59,10 +58,9 @@ export function setCsrfCookie(res: Response, token: string): void {
  * Clear the CSRF cookie on logout.
  */
 export function clearCsrfCookie(res: Response): void {
-    const isProduction = process.env.NODE_ENV === 'production';
     res.clearCookie(CSRF_COOKIE_NAME, {
         httpOnly: false,
-        secure: isProduction,
+        secure: process.env.SECURITY_MODE === 'strict',
         sameSite: 'strict',
         path: '/',
     });

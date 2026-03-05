@@ -52,7 +52,6 @@ export const Login = () => {
             const errorMessage = backendMessage || errorCode || err.message || t('login.loginFailed');
             setError(errorMessage);
             sessionStorage.setItem('loginError', errorMessage);
-            console.log('Login failed with error:', errorMessage);
         } finally {
             setIsLoading(false);
         }

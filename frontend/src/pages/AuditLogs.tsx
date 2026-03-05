@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import { Filter, Clock, User, Shield, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -59,7 +59,7 @@ const AuditLogs = () => {
                     <p className="text-muted-foreground dark:text-slate-400">{t('admin.auditLogs.subtitle')}</p>
                 </div>
                 <button
-                    onClick={() => exportToCSV(logs as any[], 'audit_logs', [
+                    onClick={() => exportToCSV(Array.isArray(logs) ? logs : [], 'audit_logs', [
                         { key: 'timestamp', label: 'Timestamp' },
                         { key: 'actionType', label: 'Action' },
                         { key: 'entityType', label: 'Entity' },
@@ -179,3 +179,4 @@ const AuditLogs = () => {
 };
 
 export default AuditLogs;
+

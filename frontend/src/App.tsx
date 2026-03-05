@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PermissionRoute } from './components/PermissionRoute';
+import { GuestRoute } from './components/GuestRoute';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import { ConfirmProvider } from './components/ui/ConfirmDialog';
@@ -21,6 +22,8 @@ const CreateProcedure = lazy(() => import('./pages/CreateProcedure'));
 const Search = lazy(() => import('./pages/Search'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Planning = lazy(() => import('./pages/planning/Planning'));
+const StatusPage = lazy(() => import('./pages/StatusPage'));
+const MaintenanceAdmin = lazy(() => import('./pages/admin/MaintenanceAdmin'));
 
 function App() {
     return (
@@ -30,7 +33,10 @@ function App() {
                     <ConfirmProvider>
                         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                             <Routes>
-                                <Route path="/login" element={<Login />} />
+
+                                <Route element={<GuestRoute />}>
+                                    <Route path="/login" element={<Login />} />
+                                </Route>
                                 <Route element={<ProtectedRoute />}>
                                     <Route element={<Layout />}>
                                         <Route path="/" element={
@@ -98,6 +104,16 @@ function App() {
                                         <Route path="/planning" element={
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><Planning /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                        <Route path="/admin/maintenance" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><MaintenanceAdmin /></ErrorBoundary>
+                                            </Suspense>
+                                        } />
+                                        <Route path="/status" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><StatusPage /></ErrorBoundary>
                                             </Suspense>
                                         } />
                                     </Route>

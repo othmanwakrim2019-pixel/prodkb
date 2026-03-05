@@ -47,7 +47,10 @@ export class UserController {
             const updatedUser = await userService.update(id, updates);
 
             // Audit
-            const changes = generateAuditDiff(existingUser as any, updatedUser as any);
+            const changes = generateAuditDiff(
+                existingUser as unknown as Record<string, unknown>,
+                updatedUser as unknown as Record<string, unknown>,
+            );
             if (changes !== 'No changes detected') {
                 await logAudit({
                     userId: req.user?.id || 'unknown',

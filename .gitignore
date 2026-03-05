@@ -38,3 +38,10 @@ prodkb.pem
 
 # Uploaded files
 backend/uploads/
+
+# TypeScript build info (auto-generated, not needed in version control)
+*.tsbuildinfo
+
+# Compiled Vite config artifacts
+frontend/vite.config.js
+frontend/vite.config.d.ts

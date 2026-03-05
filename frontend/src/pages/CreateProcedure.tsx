@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import { useAuth } from '../context/AuthContext';
 import { ShieldAlert } from 'lucide-react';
-import { System, Job } from '../types';
+import { System, Job, Log } from '../types';
 import { useTranslation } from 'react-i18next';
 
 interface CreateProcedureFormValues {
@@ -141,15 +141,12 @@ export const CreateProcedure = () => {
                     if (incident.jobId) setTargetJobId(incident.jobId);
 
                     // Compile resolution steps from logs and find error code
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const resolutionLogs = incident.logs?.filter((l: any) => l.logType === 'resolution' || l.logType === 'investigation') || [];
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const steps = resolutionLogs.map((l: any) => `[${l.logType.toUpperCase()}] ${l.rawLog}`).join('\n\n');
+                    const resolutionLogs = incident.logs?.filter((l: Log) => l.logType === 'resolution' || l.logType === 'investigation') || [];
+                    const steps = resolutionLogs.map((l: Log) => `[${l.logType.toUpperCase()}] ${l.rawLog}`).join('\n\n');
                     setValue('resolutionSteps', steps || 'No resolution logs found in incident.');
 
                     // Find first error code
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const logWithErrorCode = incident.logs?.find((l: any) => l.errorCode);
+                    const logWithErrorCode = incident.logs?.find((l: Log) => l.errorCode);
                     if (logWithErrorCode) {
                         setValue('errorCode', logWithErrorCode.errorCode);
                     }

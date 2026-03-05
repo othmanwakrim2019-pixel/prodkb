@@ -14,7 +14,7 @@ import { Worker, Job } from 'bullmq';
 import { WEBHOOK_QUEUE_NAME } from '../modules/webhooks/webhook.queue';
 import { logger } from '../common/utils/logger';
 import { prisma } from '../common/utils/prisma';
-import { parseRedisUrl } from '../common/utils/redis-url';
+import { parseRedisUrl } from '../common/utils/redis';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 

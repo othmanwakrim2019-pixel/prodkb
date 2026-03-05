@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { api } from '../../lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import api from '../../utils/axios';
 import { useTranslation } from 'react-i18next';
 
 interface PostMortem {
@@ -36,7 +36,7 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         status: 'DRAFT',
     });
 
-    const fetchPM = async () => {
+    const fetchPM = useCallback(async () => {
         try {
             const res = await api.get(`/api/v1/incidents/${incidentId}/postmortem`);
             if (res.data?.data) {
@@ -56,9 +56,9 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [incidentId]);
 
-    useEffect(() => { fetchPM(); }, [incidentId]);
+    useEffect(() => { fetchPM(); }, [fetchPM]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -105,7 +105,7 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
                     <div key={f.key} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                         <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{f.label}</h4>
                         <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                            {(pm as any)[f.key] || '-'}
+                            {(pm?.[f.key as keyof typeof pm] as string) || '-'}
                         </p>
                     </div>
                 ))}
@@ -132,7 +132,7 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
                         <div key={f.key}>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{f.label}</label>
                             <textarea
-                                value={(form as any)[f.key]}
+                                value={(form?.[f.key as keyof typeof form] as string) || ''}
                                 onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                                 rows={f.rows}
                                 className="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white shadow-sm p-2 border text-sm focus:border-primary focus:ring-primary"
@@ -163,3 +163,4 @@ export const PostMortemTab = ({ incidentId, canEdit }: Props) => {
         </div>
     );
 };
+

@@ -12,7 +12,7 @@
 
 import { Worker, Queue } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
-import { parseRedisUrl } from '../common/utils/redis-url';
+import { parseRedisUrl } from '../common/utils/redis';
 import { logger } from '../common/utils/logger';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';

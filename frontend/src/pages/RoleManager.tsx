@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { api } from '../lib/api';
+import api from '../utils/axios';
 import { Plus, Check, Shield, Trash2, Edit } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -337,3 +337,4 @@ export const RoleManager = () => {
         </div>
     );
 };
+

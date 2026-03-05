@@ -1,21 +1,62 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ═══════════════════════════════════════════════════════════════
+// ProdKB — Prisma Schema
+// ═══════════════════════════════════════════════════════════════
+// Models are grouped by domain. Enums are declared first.
+// Field order: id → required fields → optional fields → timestamps → relations
+// Every foreign key has an @@index unless it has @@unique.
+// ═══════════════════════════════════════════════════════════════
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// PostgreSQL configuration (Docker/Production)
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+/// Planning period granularity
+enum PlanningPeriod {
+  monthly
+  quarterly
+  annual
+}
+
+/// Task type for planning jobs
+enum TaskType {
+  BATCH         // Automated server job (GP, PACK, ICNE, etc.)
+  MANUAL_ACTION // Human task (close branches, open accounting period, etc.)
+}
+
+/// Status of an individual planning job
+enum PlanningStatus {
+  pending
+  running  // BATCH: job was launched and is executing
+  done
+  failed   // Job failed — can trigger an Incident
+  blocked  // Waiting on a dependency that is not yet done
+}
+
+/// Status of a planning instance (monthly/quarterly cycle)
+enum InstanceStatus {
+  active
+  archived
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IDENTITY & ACCESS
+// ═══════════════════════════════════════════════════════════════
+
+/// Application user — authenticates via email/password, assigned one Role
 model User {
   id       String  @id @default(uuid())
   name     String
   email    String  @unique
-  password String
+  password String                        // bcrypt hash
   isActive Boolean @default(true)
 
   roleId String?
@@ -24,97 +65,119 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdIncidents  Incident[]    @relation("CreatedIncidents")
-  resolvedIncidents Incident[]    @relation("ResolvedIncidents")
-  updatedIncidents  Incident[]    @relation("UpdatedIncidents")
-  createdProcedures Procedure[]   @relation("CreatedProcedures")
-  updatedProcedures Procedure[]   @relation("UpdatedProcedures")
-  updatedTeams      Team[]        @relation("UpdatedTeams")
-  updatedSystems    System[]      @relation("UpdatedSystems")
-  updatedJobs       Job[]         @relation("UpdatedJobs")
-  updatedSLAs       SLA[]         @relation("UpdatedSLAs")
-  updatedRoles      Role[]        @relation("UpdatedRoles")
-  createdLogs       IncidentLog[] @relation("CreatedLogs")
-  auditLogs         AuditLog[]
-  teamMemberships   TeamMember[]
-  createdInstances  PlanningInstance[] @relation("CreatedInstances")
-  completedPlanningJobs PlanningJob[] @relation("CompletedPlanningJobs")
-  refreshTokens     RefreshToken[]
-  notifications     Notification[]
-  postMortems       PostMortem[]
+  // ── Relations ──
+  createdIncidents      Incident[]          @relation("CreatedIncidents")
+  resolvedIncidents     Incident[]          @relation("ResolvedIncidents")
+  updatedIncidents      Incident[]          @relation("UpdatedIncidents")
+  createdProcedures     Procedure[]         @relation("CreatedProcedures")
+  updatedProcedures     Procedure[]         @relation("UpdatedProcedures")
+  updatedTeams          Team[]              @relation("UpdatedTeams")
+  updatedSystems        System[]            @relation("UpdatedSystems")
+  updatedJobs           Job[]               @relation("UpdatedJobs")
+  updatedSLAs           SLA[]               @relation("UpdatedSLAs")
+  updatedRoles          Role[]              @relation("UpdatedRoles")
+  createdLogs           IncidentLog[]       @relation("CreatedLogs")
+  auditLogs             AuditLog[]
+  teamMemberships       TeamMember[]
+  createdInstances      PlanningInstance[]   @relation("CreatedInstances")
+  completedPlanningJobs PlanningJob[]       @relation("CompletedPlanningJobs")
+  launchedPlanningJobs  PlanningJob[]       @relation("LaunchedPlanningJobs")
+  refreshTokens         RefreshToken[]
+  notifications         Notification[]
+  postMortems           PostMortem[]
+  maintenanceCreated    MaintenanceWindow[] @relation("MaintenanceCreatedBy")
+  warRoomMessages       WarRoomMessage[]    @relation("WarRoomMessages")
 
   @@index([roleId])
 }
 
+/// Named role (ADMIN, EXPERT, OPERATOR, VIEWER) with many-to-many permissions
 model Role {
-  id          String       @id @default(uuid())
-  name        String       @unique
+  id          String   @id @default(uuid())
+  name        String   @unique
   description String?
+
+  updatedById String?
+  updatedBy   User?    @relation("UpdatedRoles", fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ──
   users       User[]
   permissions Permission[]
-  updatedById String?
-  updatedBy   User?        @relation("UpdatedRoles", fields: [updatedById], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+
+  @@index([updatedById])
 }
 
+/// Granular permission code (INCIDENT_CREATE, USER_MANAGE, etc.) linked to Roles
 model Permission {
   id          String   @id @default(uuid())
-  code        String   @unique
+  code        String   @unique               // e.g. INCIDENT_CREATE, AUDIT_VIEW
   description String?
-  roles       Role[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
 
-model SystemConfig {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // ── Relations ──
+  roles Role[]
 }
 
-model EmailTemplate {
-  id        String   @id @default(uuid())
-  name      String   @unique // e.g., "INCIDENT_CREATED", "INCIDENT_UPDATED"
-  subject   String
-  body      String   @db.Text
-  variables String? // Comma-separated list of available variables
-  enabled   Boolean  @default(true)
-  cc        String? // Comma-separated list of CC emails
+/// JWT refresh token for token rotation — revoked on logout or expiry
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?                        // set when explicitly revoked
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ORGANIZATION
+// ═══════════════════════════════════════════════════════════════
+
+/// Operations team — incidents can be assigned to teams, teams receive email notifications
 model Team {
   id                String   @id @default(uuid())
   name              String   @unique
   description       String?
-  emailDistribution String
+  emailDistribution String                   // distribution list email address
   isActive          Boolean  @default(true)
-  sendEmail         Boolean  @default(true)
-  updatedById       String?
-  updatedBy         User?    @relation("UpdatedTeams", fields: [updatedById], references: [id])
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  sendEmail         Boolean  @default(true)  // whether to send email on incident assignment
 
-  members   TeamMember[]
-  jobs      Job[]
-  incidents Incident[]
-  escalationRules EscalationRule[] @relation("EscalationTeam")
-  autoAssignRules AutoAssignmentRule[] @relation("AutoAssignTeam")
+  updatedById String?
+  updatedBy   User?    @relation("UpdatedTeams", fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ──
+  members         TeamMember[]
+  jobs            Job[]
+  incidents       Incident[]
+  escalationRules EscalationRule[]      @relation("EscalationTeam")
+  autoAssignRules AutoAssignmentRule[]  @relation("AutoAssignTeam")
 
   @@index([name])
+  @@index([updatedById])
 }
 
+/// Join table: User ↔ Team with a role (LEAD or MEMBER)
 model TeamMember {
-  id        String   @id @default(uuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String
+  id     String @id @default(uuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   String                              // LEAD | MEMBER
+
   createdAt DateTime @default(now())
 
   @@unique([teamId, userId])
@@ -122,161 +185,172 @@ model TeamMember {
   @@index([userId])
 }
 
-model SLA {
-  id                     String   @id @default(uuid())
-  name                   String   @unique
-  description            String?
-  severity               String
-  acknowledgeTimeMinutes Int
-  resolveTimeMinutes     Int
-  isActive               Boolean  @default(true)
-  updatedById            String?
-  updatedBy              User?    @relation("UpdatedSLAs", fields: [updatedById], references: [id])
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+// ═══════════════════════════════════════════════════════════════
+// INFRASTRUCTURE — Systems, Jobs, SLAs
+// ═══════════════════════════════════════════════════════════════
 
-  incidents Incident[]
-
-  @@index([severity])
-}
-
+/// IT system or application being monitored (e.g. "Core Banking", "API Gateway")
 model System {
-  id          String      @id @default(uuid())
-  name        String      @unique
+  id          String  @id @default(uuid())
+  name        String  @unique
   description String?
-  jobs        Job[]
-  incidents   Incident[]
-  planningJobs PlanningJob[]
-  procedures  Procedure[]
-  escalationRules EscalationRule[]
-  autoAssignRules AutoAssignmentRule[]
+
   updatedById String?
-  updatedBy   User?       @relation("UpdatedSystems", fields: [updatedById], references: [id])
+  updatedBy   User?   @relation("UpdatedSystems", fields: [updatedById], references: [id])
+
+  // ── Relations ──
+  jobs               Job[]
+  incidents          Incident[]
+  procedures         Procedure[]
+  planningJobs       PlanningJob[]
+  escalationRules    EscalationRule[]
+  autoAssignRules    AutoAssignmentRule[]
+  healthSnapshots    SystemHealthSnapshot[]
+  maintenanceWindows MaintenanceWindow[]
 
   @@index([name])
+  @@index([updatedById])
 }
 
+/// Batch job or scheduled process that belongs to a System
 model Job {
-  id          String      @id @default(uuid())
-  name        String
-  code        String      @unique
-  systemId    String
-  system      System      @relation(fields: [systemId], references: [id])
-  teamId      String?
-  team        Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  incidents   Incident[]
-  procedures  Procedure[]
-  planningJobs PlanningJob[]
+  id       String @id @default(uuid())
+  name     String
+  code     String @unique                   // unique job code (e.g. GP_001)
+  systemId String
+  system   System @relation(fields: [systemId], references: [id])
+  teamId   String?
+  team     Team?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
   updatedById String?
-  updatedBy   User?       @relation("UpdatedJobs", fields: [updatedById], references: [id])
+  updatedBy   User?  @relation("UpdatedJobs", fields: [updatedById], references: [id])
+
+  // ── Relations ──
+  incidents    Incident[]
+  procedures   Procedure[]
+  planningJobs PlanningJob[]
 
   @@index([systemId])
   @@index([teamId])
   @@index([code])
+  @@index([updatedById])
 }
 
-model Incident {
-  id              String    @id @default(uuid())
-  title           String
-  description     String
-  environment     String
-  severity        String
-  status          String
-  impact          String?
-  detectionSource String?
-  startDatetime   DateTime?
-  endDatetime     DateTime?
-
-  systemId String
-  system   System @relation(fields: [systemId], references: [id])
-
-  jobId String?
-  job   Job?    @relation(fields: [jobId], references: [id])
-
-  createdById String
-  createdBy   User   @relation("CreatedIncidents", fields: [createdById], references: [id])
-
-  resolvedById String?
-  resolvedBy   User?   @relation("ResolvedIncidents", fields: [resolvedById], references: [id])
+/// Service Level Agreement — defines response/resolve time targets per severity
+model SLA {
+  id                     String   @id @default(uuid())
+  name                   String   @unique
+  description            String?
+  severity               String                  // Critical, High, Medium, Low
+  acknowledgeTimeMinutes Int                     // max minutes to acknowledge
+  resolveTimeMinutes     Int                     // max minutes to resolve
+  isActive               Boolean  @default(true)
 
   updatedById String?
-  updatedBy   User?   @relation("UpdatedIncidents", fields: [updatedById], references: [id])
-
-  assignedTeamId String?
-  assignedTeam   Team?   @relation(fields: [assignedTeamId], references: [id], onDelete: SetNull)
-
-  slaId String?
-  sla   SLA?    @relation(fields: [slaId], references: [id], onDelete: SetNull)
-
-  acknowledgedAt    DateTime?
-  resolvedAt        DateTime?
-  timeToAcknowledge Int?
-  timeToResolve     Int?
-
-  // Phase 2: Optimistic locking + SLA enforcement
-  version            Int       @default(1)
-  escalationLevel    Int       @default(0)
-  slaBreached        Boolean   @default(false)
-  slaBreachNotifiedAt DateTime?
-
-  linkedProcedureId String?
-  linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
-
-  logs IncidentLog[]
-  postMortem PostMortem?
+  updatedBy   User?    @relation("UpdatedSLAs", fields: [updatedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ── Relations ──
+  incidents Incident[]
+
+  @@index([severity])
+  @@index([updatedById])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INCIDENTS — Core domain
+// ═══════════════════════════════════════════════════════════════
+
+/// Production incident — the central entity of ProdKB
+model Incident {
+  id              String    @id @default(uuid())
+  title           String
+  description     String
+  environment     String                       // PROD, PREPROD, RECETTE
+  severity        String                       // Critical, High, Medium, Low
+  status          String                       // Open, Acknowledged, In Progress, Resolved, Closed
+  impact          String?
+  detectionSource String?                      // monitoring, user_report, etc.
+  startDatetime   DateTime?
+  endDatetime     DateTime?
+
+  // Foreign keys
+  systemId       String
+  system         System    @relation(fields: [systemId], references: [id])
+  jobId          String?
+  job            Job?      @relation(fields: [jobId], references: [id])
+  createdById    String
+  createdBy      User      @relation("CreatedIncidents", fields: [createdById], references: [id])
+  resolvedById   String?
+  resolvedBy     User?     @relation("ResolvedIncidents", fields: [resolvedById], references: [id])
+  updatedById    String?
+  updatedBy      User?     @relation("UpdatedIncidents", fields: [updatedById], references: [id])
+  assignedTeamId String?
+  assignedTeam   Team?     @relation(fields: [assignedTeamId], references: [id], onDelete: SetNull)
+  slaId          String?
+  sla            SLA?      @relation(fields: [slaId], references: [id], onDelete: SetNull)
+
+  // SLA tracking
+  acknowledgedAt    DateTime?
+  resolvedAt        DateTime?
+  timeToAcknowledge Int?                       // computed minutes to acknowledge
+  timeToResolve     Int?                       // computed minutes to resolve
+
+  // Optimistic locking + SLA enforcement
+  version             Int       @default(1)
+  escalationLevel     Int       @default(0)
+  slaBreached         Boolean   @default(false)
+  slaBreachNotifiedAt DateTime?
+
+  // Linked resolution procedure
+  linkedProcedureId String?
+  linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ──
+  logs            IncidentLog[]
+  postMortem      PostMortem?
+  warRoomMessages WarRoomMessage[]
+
+  @@index([systemId])
+  @@index([jobId])
+  @@index([createdById])
+  @@index([resolvedById])
+  @@index([updatedById])
   @@index([assignedTeamId])
   @@index([slaId])
   @@index([status])
   @@index([severity])
-  @@index([systemId])
   @@index([createdAt])
   @@index([environment])
-  @@index([status, createdAt]) // Optimized for dashboard
-  @@index([slaBreached, status]) // SLA enforcement queries
+  @@index([linkedProcedureId])
+  @@index([status, createdAt])        // dashboard: recent incidents by status
+  @@index([slaBreached, status])      // SLA enforcement queries
 }
 
-// ── Post-Mortem / Root Cause Analysis ──
-model PostMortem {
-  id                 String   @id @default(uuid())
-  incidentId         String   @unique
-  incident           Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  summary            String   @db.Text
-  rootCause          String   @db.Text
-  timeline           String   @db.Text
-  impact             String   @db.Text
-  lessonsLearned     String   @db.Text
-  preventiveActions  String   @db.Text
-  status             String   @default("DRAFT") // DRAFT | PUBLISHED
-  createdById        String
-  createdBy          User     @relation(fields: [createdById], references: [id])
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  @@index([incidentId])
-  @@index([status])
-}
-
+/// Log entry attached to an incident (raw log, screenshot, file, note)
 model IncidentLog {
   id           String   @id @default(uuid())
   incidentId   String
   incident     Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  logType      String
+  logType      String                         // raw_log, screenshot, file, error_message, note
   errorCode    String?
   errorMessage String?
   rawLog       String?
-  metadata     String?
+  metadata     String?                        // JSON blob for extra context
 
+  // File attachment fields
   filePath String?
   fileName String?
   fileSize Int?
   mimeType String?
 
   createdById String?
-  createdBy   User?   @relation("CreatedLogs", fields: [createdById], references: [id])
+  createdBy   User?    @relation("CreatedLogs", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -285,77 +359,91 @@ model IncidentLog {
   @@index([createdById])
 }
 
-model Procedure {
-  id              String  @id @default(uuid())
-  title           String
-  description     String
-  rootCause       String?
-  resolutionSteps String
-  workaround      String?
-  commands        String?
-  errorCode       String?
-  tags            String?
-
-  systemId String
-  system   System @relation(fields: [systemId], references: [id])
-
-  jobId String?
-  job   Job?    @relation(fields: [jobId], references: [id])
+/// Post-mortem / Root Cause Analysis — one per incident
+model PostMortem {
+  id                String   @id @default(uuid())
+  incidentId        String   @unique
+  incident          Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  summary           String   @db.Text
+  rootCause         String   @db.Text
+  timeline          String   @db.Text
+  impact            String   @db.Text
+  lessonsLearned    String   @db.Text
+  preventiveActions String   @db.Text
+  status            String   @default("DRAFT")  // DRAFT | PUBLISHED
 
   createdById String
-  createdBy   User   @relation("CreatedProcedures", fields: [createdById], references: [id])
-
-  updatedById String?
-  updatedBy   User?   @relation("UpdatedProcedures", fields: [updatedById], references: [id])
-
-  incidents Incident[]
+  createdBy   User     @relation(fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([incidentId])
+  @@index([status])
+  @@index([createdById])
+}
+
+/// Real-time chat message in an incident War Room
+model WarRoomMessage {
+  id         String   @id @default(uuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("WarRoomMessages", fields: [userId], references: [id])
+  content    String
+  type       String   @default("message")     // message | system_event
+
+  createdAt DateTime @default(now())
+
+  @@index([incidentId, createdAt])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KNOWLEDGE BASE — Procedures
+// ═══════════════════════════════════════════════════════════════
+
+/// Resolution procedure / runbook — reusable fix documentation
+model Procedure {
+  id              String  @id @default(uuid())
+  title           String
+  description     String
+  resolutionSteps String
+  rootCause       String?
+  workaround      String?
+  commands        String?                      // CLI commands to run
+  errorCode       String?                      // error code this procedure fixes
+  tags            String?                      // comma-separated tags
+
+  systemId String
+  system   System @relation(fields: [systemId], references: [id])
+  jobId    String?
+  job      Job?   @relation(fields: [jobId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CreatedProcedures", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   User?  @relation("UpdatedProcedures", fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ──
+  incidents Incident[]
+
   @@index([systemId])
+  @@index([jobId])
   @@index([errorCode])
   @@index([title])
-  @@index([jobId])
+  @@index([createdById])
+  @@index([updatedById])
 }
 
-model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  actionType String
-  entityType String
-  entityId   String
-  details    String?
-  ipAddress  String?
-  userAgent  String?
-  result     String   @default("SUCCESS")
-  timestamp  DateTime @default(now())
+// ═══════════════════════════════════════════════════════════════
+// PLANNING
+// ═══════════════════════════════════════════════════════════════
 
-  @@index([userId])
-  @@index([actionType])
-  @@index([entityType])
-  @@index([timestamp])
-  @@index([entityId])
-}
-
-enum PlanningPeriod {
-  monthly
-  quarterly
-  annual
-}
-
-enum PlanningStatus {
-  pending
-  running
-  done
-}
-
-enum InstanceStatus {
-  active
-  archived
-}
-
+/// Planning cycle instance (e.g. "March 2026 Monthly Planning")
 model PlanningInstance {
   id          String         @id @default(uuid())
   name        String
@@ -364,139 +452,258 @@ model PlanningInstance {
   startDate   DateTime
   endDate     DateTime
   status      InstanceStatus @default(active)
+
   createdById String
-  createdBy   User           @relation("CreatedInstances", fields: [createdById], references: [id])
-  jobs        PlanningJob[]
+  createdBy   User @relation("CreatedInstances", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // ── Relations ──
+  jobs PlanningJob[]
 
   @@index([period, status])
   @@index([createdById])
 }
 
+/// Individual task within a planning instance — either a BATCH job or MANUAL_ACTION
 model PlanningJob {
-  id            String           @id @default(uuid())
-  instanceId    String
-  instance      PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  systemId      String
-  system        System           @relation(fields: [systemId], references: [id])
-  jobId         String
-  job           Job              @relation(fields: [jobId], references: [id])
-  scheduledTime DateTime
-  dependencies  Json             @default("[]") // Array of PlanningJob IDs
-  status        PlanningStatus   @default(pending)
-  positionX     Float?
-  positionY     Float?
+  id             String          @id @default(uuid())
+  instanceId     String
+  instance       PlanningInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  systemId       String?
+  system         System?         @relation(fields: [systemId], references: [id])
+  jobId          String?
+  job            Job?            @relation(fields: [jobId], references: [id])
+  customTaskName String?                       // free-text name for MANUAL_ACTION
+  scheduledTime  DateTime
+  dependencies   Json            @default("[]") // array of PlanningJob IDs
+  status         PlanningStatus  @default(pending)
+  taskType       TaskType        @default(BATCH)
+  supportContact String?                       // e.g. "Radouane", "Réseaux et télécoms"
+  notes          String?                       // operator confirmation note
+
+  // Visual layout (canvas position)
+  positionX Float?
+  positionY Float?
+
+  // BATCH tracking
+  launchedAt   DateTime?
+  launchedById String?
+  launchedBy   User?    @relation("LaunchedPlanningJobs", fields: [launchedById], references: [id])
+
+  // Completion tracking
   completedAt   DateTime?
   completedById String?
-  completedBy   User?            @relation("CompletedPlanningJobs", fields: [completedById], references: [id])
+  completedBy   User?    @relation("CompletedPlanningJobs", fields: [completedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([instanceId, jobId])
   @@index([instanceId])
   @@index([systemId])
-  @@index([status])
   @@index([jobId])
+  @@index([status])
+  @@index([taskType])
+  @@index([launchedById])
+  @@index([completedById])
 }
 
-// ── Phase 2: Escalation Rules ──
+// ═══════════════════════════════════════════════════════════════
+// AUTOMATION — Escalation, Auto-Assignment, Webhooks
+// ═══════════════════════════════════════════════════════════════
+
+/// Escalation rule — auto-escalates an incident to a team after N minutes of SLA breach
 model EscalationRule {
-  id          String   @id @default(uuid())
-  name        String
-  systemId    String?
-  system      System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
-  severity    String?  // null = applies to all severities
-  level       Int      @default(1) // escalation tier
-  teamId      String
-  team        Team     @relation("EscalationTeam", fields: [teamId], references: [id])
-  delayMinutes Int     // minutes after SLA breach before this level triggers
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  systemId     String?
+  system       System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
+  severity     String?                        // null = applies to all severities
+  level        Int      @default(1)           // escalation tier (1, 2, 3...)
+  teamId       String
+  team         Team     @relation("EscalationTeam", fields: [teamId], references: [id])
+  delayMinutes Int                            // minutes after breach before trigger
+  isActive     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([systemId, severity, level])
   @@index([systemId, severity])
+  @@index([teamId])
 }
 
-// ── Phase 2: Auto-Assignment Rules ──
+/// Auto-assignment rule — automatically assigns new incidents to a team
 model AutoAssignmentRule {
-  id        String   @id @default(uuid())
-  name      String
-  systemId  String?
-  system    System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
-  severity  String?  // null = wildcard
-  teamId    String
-  team      Team     @relation("AutoAssignTeam", fields: [teamId], references: [id])
-  priority  Int      @default(0) // higher wins
-  isActive  Boolean  @default(true)
+  id       String   @id @default(uuid())
+  name     String
+  systemId String?
+  system   System?  @relation(fields: [systemId], references: [id], onDelete: SetNull)
+  severity String?                            // null = wildcard (all severities)
+  teamId   String
+  team     Team     @relation("AutoAssignTeam", fields: [teamId], references: [id])
+  priority Int      @default(0)               // higher number wins when multiple match
+  isActive Boolean  @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([systemId, severity])
+  @@index([teamId])
 }
 
-// ── Phase 2: Webhooks ──
+/// Webhook endpoint — receives HTTP callbacks on incident events
 model Webhook {
-  id         String   @id @default(uuid())
-  name       String
-  url        String
-  secret     String   // HMAC-SHA256 signing secret
-  events     String   // comma-separated: incident.created,incident.resolved,...
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id       String  @id @default(uuid())
+  name     String
+  url      String
+  secret   String                             // HMAC-SHA256 signing secret
+  events   String                             // comma-separated: incident.created,incident.resolved,...
+  isActive Boolean @default(true)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ──
   deliveries WebhookDelivery[]
 }
 
+/// Individual webhook delivery attempt with status tracking
 model WebhookDelivery {
-  id            String   @id @default(uuid())
-  webhookId     String
-  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
-  event         String
-  payload       String   @db.Text
-  statusCode    Int?
-  response      String?  @db.Text
-  deliveredAt   DateTime?
-  attemptCount  Int      @default(0)
-  success       Boolean  @default(false)
-  error         String?
-  createdAt     DateTime @default(now())
+  id           String    @id @default(uuid())
+  webhookId    String
+  webhook      Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event        String
+  payload      String    @db.Text
+  statusCode   Int?
+  response     String?   @db.Text
+  deliveredAt  DateTime?
+  attemptCount Int       @default(0)
+  success      Boolean   @default(false)
+  error        String?
+
+  createdAt DateTime @default(now())
 
   @@index([webhookId])
   @@index([event])
+  @@index([createdAt])
 }
 
-// ── Phase 2: Refresh Tokens ──
-model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime @default(now())
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATIONS & AUDIT
+// ═══════════════════════════════════════════════════════════════
 
-  @@index([userId])
-  @@index([token])
-  @@index([expiresAt])
-}
-
-// ── In-App Notifications ──
+/// In-app notification bell — unread/read per user
 model Notification {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type       String   // 'incident_created' | 'status_changed' | 'note_added' | 'file_uploaded'
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String                            // incident_created, status_changed, note_added, file_uploaded
   title      String
   message    String
-  incidentId String?
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  incidentId String?                           // optional link to incident
+  isRead     Boolean @default(false)
+
+  createdAt DateTime @default(now())
 
   @@index([userId, isRead])
   @@index([createdAt])
+  @@index([incidentId])
+}
+
+/// Immutable audit trail — every significant user action is logged
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  actionType String                           // LOGIN, CREATE, UPDATE, DELETE, EXPORT, VIEW
+  entityType String                           // USER, INCIDENT, PROCEDURE, TEAM, SYSTEM, etc.
+  entityId   String
+  details    String?                           // JSON with change details
+  ipAddress  String?
+  userAgent  String?
+  result     String   @default("SUCCESS")
+
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([actionType])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([timestamp])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OPERATIONS — Maintenance, Health Monitoring
+// ═══════════════════════════════════════════════════════════════
+
+/// Scheduled maintenance window for a system
+model MaintenanceWindow {
+  id          String   @id @default(uuid())
+  systemId    String
+  system      System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  scheduledAt DateTime
+  endsAt      DateTime
+  status      String   @default("scheduled")  // scheduled | active | completed | cancelled
+
+  createdById String
+  createdBy   User     @relation("MaintenanceCreatedBy", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([systemId, scheduledAt])
+  @@index([status])
+  @@index([scheduledAt, endsAt])
+  @@index([createdById])
+}
+
+/// Periodic health score snapshot for a system — computed by analytics worker
+model SystemHealthSnapshot {
+  id               String   @id @default(uuid())
+  systemId         String
+  system           System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  score            Int                         // 0-100 composite health score
+  incidentCount30d Int      @default(0)
+  avgMttrMinutes   Float    @default(0)        // Mean Time To Resolve
+  slaBreachRate    Float    @default(0)        // 0.0 - 1.0
+  resolutionRate   Float    @default(0)        // 0.0 - 1.0
+  openIncidents    Int      @default(0)
+
+  computedAt DateTime @default(now())
+
+  @@index([systemId, computedAt])
+  @@index([computedAt])
+  @@index([score])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+
+/// Key-value configuration store for runtime settings
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Customizable email template for notifications
+model EmailTemplate {
+  id        String  @id @default(uuid())
+  name      String  @unique                   // e.g. INCIDENT_CREATED, INCIDENT_UPDATED
+  subject   String
+  body      String  @db.Text
+  variables String?                            // comma-separated available variables
+  enabled   Boolean @default(true)
+  cc        String?                            // comma-separated CC emails
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

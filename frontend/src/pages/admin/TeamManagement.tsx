@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
-import { EditTeamModal } from '../../components/EditTeamModal';
+import { EditTeamModal } from '../../components/admin/EditTeamModal';
 import { Team, User, TeamMember } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { teamService, userService } from '../../services/admin.service';
@@ -81,16 +81,14 @@ export const TeamManagement = () => {
     };
 
     const handleDeleteTeam = async (teamId: string, teamName: string) => {
-        if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
+        if (!confirm(`Supprimer l'équipe "${teamName}" ?`)) return;
         try {
             await teamService.delete(teamId);
             await fetchTeams();
-            alert('Team deleted successfully!');
-            await fetchTeams();
-            alert('Team deleted successfully!');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            console.error(error);
+            alert('Équipe supprimée avec succès !');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            alert(e.response?.data?.message || 'Échec de la suppression.');
         }
     };
 
@@ -370,3 +368,4 @@ export const TeamManagement = () => {
         </div>
     );
 };
+

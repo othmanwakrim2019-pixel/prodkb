@@ -1,6 +1,6 @@
 import { incidentService } from '../src/modules/incidents/incident.service';
 import { prisma } from '../src/common/utils/prisma';
-import { IncidentStatus, Severity, Environment } from '../src/types/enums';
+import { IncidentStatus, Severity, Environment } from '../src/types';
 
 // Mock prisma
 jest.mock('../src/common/utils/prisma', () => ({

@@ -11,6 +11,7 @@ import { Request, Response, NextFunction } from 'express';
 import client from 'prom-client';
 import { redis } from '../utils/redis';
 import { logger } from '../utils/logger';
+import { prisma } from '../utils/prisma';
 
 // ── Default metrics (Node.js process metrics: CPU, memory, GC, event loop) ──
 client.collectDefaultMetrics({ prefix: 'prodkb_' });
@@ -66,10 +67,40 @@ export const activeUsers = new client.Gauge({
     help: 'Number of active users based on recent API activity',
 });
 
+// ── Business-level metrics (queried from DB) ──
+
+export const activeIncidentsBySeverity = new client.Gauge({
+    name: 'prodkb_active_incidents_total',
+    help: 'Number of active (non-resolved/closed) incidents by severity',
+    labelNames: ['severity'],
+});
+
+export const slaBreaches24h = new client.Gauge({
+    name: 'prodkb_sla_breaches_24h',
+    help: 'Number of SLA breaches in the last 24 hours',
+});
+
+export const openPlanningJobs = new client.Gauge({
+    name: 'prodkb_open_planning_jobs',
+    help: 'Number of planning jobs in pending status',
+});
+
+export const avgMttr7d = new client.Gauge({
+    name: 'prodkb_avg_mttr_minutes_7d',
+    help: 'Average MTTR in minutes for incidents resolved in the last 7 days',
+});
+
+export const unacknowledgedIncidents = new client.Gauge({
+    name: 'prodkb_unacknowledged_incidents',
+    help: 'Number of open incidents that have not been acknowledged',
+});
+
 let metricsInterval: NodeJS.Timeout | null = null;
 
 export const startMetricsInterval = () => {
     if (metricsInterval) return;
+
+    // Active users from Redis — every 15 seconds
     metricsInterval = setInterval(async () => {
         try {
             let cursor = '0';
@@ -83,7 +114,64 @@ export const startMetricsInterval = () => {
         } catch (error) {
             logger.error('Failed to update active users metric', { error: (error as Error).message });
         }
-    }, 15000); // every 15 seconds
+    }, 15000);
+
+    // Business metrics from DB — every 60 seconds
+    const refreshBusinessMetrics = async () => {
+        try {
+            // Active incidents by severity
+            const incidentCounts = await prisma.incident.groupBy({
+                by: ['severity'],
+                where: { status: { notIn: ['resolved', 'closed'] } },
+                _count: { id: true },
+            });
+            activeIncidentsBySeverity.reset();
+            incidentCounts.forEach((row) => {
+                activeIncidentsBySeverity.set({ severity: row.severity }, row._count.id);
+            });
+
+            // SLA breaches in last 24h
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const breachCount = await prisma.incident.count({
+                where: { slaBreached: true, createdAt: { gte: yesterday } },
+            });
+            slaBreaches24h.set(breachCount);
+
+            // Open planning jobs
+            const pendingJobs = await prisma.planningJob.count({
+                where: { status: 'pending' },
+            });
+            openPlanningJobs.set(pendingJobs);
+
+            // Average MTTR for last 7 days
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const mttrResult = await prisma.incident.aggregate({
+                where: {
+                    status: 'resolved',
+                    resolvedAt: { gte: sevenDaysAgo },
+                    timeToResolve: { not: null },
+                },
+                _avg: { timeToResolve: true },
+            });
+            avgMttr7d.set(mttrResult._avg.timeToResolve ?? 0);
+
+            // Unacknowledged incidents
+            const unackCount = await prisma.incident.count({
+                where: {
+                    status: { notIn: ['resolved', 'closed'] },
+                    acknowledgedAt: null,
+                },
+            });
+            unacknowledgedIncidents.set(unackCount);
+        } catch (error) {
+            logger.error('Failed to update business metrics', { error: (error as Error).message });
+        }
+    };
+
+    // Run once immediately, then every 60s
+    refreshBusinessMetrics();
+    setInterval(refreshBusinessMetrics, 60000);
 };
 
 export const stopMetricsInterval = () => {

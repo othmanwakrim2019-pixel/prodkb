@@ -23,6 +23,20 @@ axios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: unknown) => void }[] = [];
+
+const processQueue = (error: unknown) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve();
+        }
+    });
+    failedQueue = [];
+};
+
 // Response interceptor to handle errors and unwrap data
 axios.interceptors.response.use(
     (response) => {
@@ -35,7 +49,9 @@ axios.interceptors.response.use(
         }
         return response;
     },
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config;
+
         // Strip sensitive data from error before logging/throwing
         if (error.config) {
             const sanitizedConfig = { ...error.config };
@@ -46,7 +62,61 @@ axios.interceptors.response.use(
             error.config = sanitizedConfig;
         }
 
-        // Handle 401 Unauthorized - redirect to login (but not if already there)
+        // Prevent infinite loops if the refresh endpoint itself returns 401
+        if (originalRequest?.url?.includes('/auth/v1/refresh')) {
+            // Already failed refresh, clean up queue
+            processQueue(error);
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
+        }
+
+        // Handle 401 Unauthorized via transparent refresh token
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+            // If the original request was to the login endpoint, do NOT try to refresh
+            if (originalRequest.url?.includes('/auth/v1/login') || originalRequest.url?.includes('/auth/login')) {
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                // If already refreshing, pause this request and queue it
+                try {
+                    await new Promise((resolve, reject) => {
+                        failedQueue.push({ resolve, reject });
+                    });
+                    // Retry original request once the token has been refreshed
+                    return axios(originalRequest);
+                } catch (err) {
+                    return Promise.reject(err);
+                }
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                // Call refresh token endpoint (cookies sent automatically)
+                await axios.post('/auth/v1/refresh');
+
+                // Success: resolve queued requests
+                processQueue(null);
+
+                // Retry the original request that failed
+                return axios(originalRequest);
+            } catch (refreshError) {
+                // Refresh failed (token expired or missing) - reject everything & redirect
+                processQueue(refreshError);
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        // Handle hard 401s (no retry flag or exhausted retries) by redirecting
         if (error.response?.status === 401) {
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login';
