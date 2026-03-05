@@ -1,14 +1,24 @@
 /**
  * SLA Enforcement Service Tests
- * Tests the core breach-detection and escalation logic without needing BullMQ or Redis.
+ * Tests breach-detection and escalation logic without real BullMQ or Redis connections.
  */
-import { SLAEnforcementService } from '../src/modules/sla/sla-enforcement.service';
-import { prisma } from '../src/common/utils/prisma';
-import { IncidentStatus } from '../src/constants';
-import { slaQueue } from '../src/modules/sla/sla.queue';
-import { redis } from '../src/common/utils/redis';
 
-// Mock all external dependencies
+// ── Mocks — hoisted before imports so no real connections are ever created ──
+
+jest.mock('../src/modules/sla/sla.queue', () => ({
+    slaQueue: {
+        add: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
+jest.mock('../src/common/utils/redis', () => ({
+    redis: {
+        quit: jest.fn().mockResolvedValue(undefined),
+        disconnect: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
 jest.mock('../src/common/utils/prisma', () => ({
     prisma: {
         incident: {
@@ -53,6 +63,12 @@ jest.mock('../src/common/utils/logger', () => ({
     },
 }));
 
+// ── Imports (after mocks) ──
+import { SLAEnforcementService } from '../src/modules/sla/sla-enforcement.service';
+import { prisma } from '../src/common/utils/prisma';
+import { IncidentStatus } from '../src/constants';
+
+// ── Tests ──
 describe('SLAEnforcementService', () => {
     let service: SLAEnforcementService;
 
@@ -61,14 +77,8 @@ describe('SLAEnforcementService', () => {
         service = new SLAEnforcementService();
     });
 
-    afterAll(async () => {
-        await slaQueue.close();
-        await redis.quit();
-    });
-
     describe('check()', () => {
         it('should call detectNewBreaches and escalateBreachedIncidents', async () => {
-            // Mock both internal methods
             const detectSpy = jest.spyOn(service as any, 'detectNewBreaches').mockResolvedValue(undefined);
             const escalateSpy = jest.spyOn(service as any, 'escalateBreachedIncidents').mockResolvedValue(undefined);
 
