@@ -25,7 +25,7 @@ jest.mock('../src/common/utils/prisma', () => ({
     },
 }));
 
-jest.mock('../src/common/services/emailService', () => ({
+jest.mock('../src/common/services/email.service', () => ({
     emailService: {
         sendEmail: jest.fn().mockResolvedValue(undefined),
         isConfigured: jest.fn().mockReturnValue(false),

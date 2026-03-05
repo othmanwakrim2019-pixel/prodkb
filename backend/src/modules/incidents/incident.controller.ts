@@ -6,7 +6,7 @@ import { incidentAnalyticsService } from './services/incident-analytics.service'
 import { incidentFileService } from './services/incident-file.service';
 import { incidentSuggestionService } from './services/suggestion.service';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../types';
-import { fileUploadService } from '../../common/services/fileUploadService';
+import { fileUploadService } from '../../common/services/file-upload.service';
 import { createIncidentSchema, updateIncidentSchema, addIncidentLogSchema } from './incident.schema';
 import { AppError, NotFoundError, ValidationError, ForbiddenError } from '../../common/errors/app.error';
 import { sanitizeObject } from '../../common/utils/sanitize';

@@ -14,7 +14,7 @@
 
 import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
-import { emailService } from '../../common/services/emailService';
+import { emailService } from '../../common/services/email.service';
 import { IncidentStatus } from '../../constants';
 import { escalationService } from '../escalation/escalation.service';
 import { webhookService } from '../webhooks/webhook.service';

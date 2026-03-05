@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from '../../src/server';
+import { app } from '../../src/app';
 import { userService } from '../../src/modules/users/user.service';
 import { authService } from '../../src/modules/auth/auth.service';
 import { prisma } from '../../src/common/utils/prisma';

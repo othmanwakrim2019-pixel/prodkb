@@ -5,7 +5,7 @@
  */
 
 import { Queue } from 'bullmq';
-import { parseRedisUrl } from '../../common/utils/redis-url';
+import { parseRedisUrl } from '../../common/utils/redis';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 export const WEBHOOK_QUEUE_NAME = 'webhook-delivery';

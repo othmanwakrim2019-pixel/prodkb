@@ -12,7 +12,7 @@ import { teamRoutes } from './teams/team.routes';
 import { systemRoutes } from './systems/system.routes';
 import { procedureRoutes } from './procedures/procedure.routes';
 import { roleRoutes } from './roles/role.routes';
-import { slaRoutes } from './slas/sla.routes';
+import { slaRoutes } from './sla/sla.routes';
 import { configRoutes } from './config/config.routes';
 import { emailTemplateRoutes } from './email-templates/email-template.routes';
 import { auditRoutes } from './audit/audit.routes';

@@ -1,24 +1,25 @@
 /**
- * Seed only email templates — safe to run without resetting other data.
- * Usage: npx ts-node prisma/seed-templates.ts
+ * 05 — Seed Email Templates
+ * Creates the default email templates for incident notifications.
+ * Uses upsert — safe to run multiple times.
  */
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma, logSeed } from '../helpers/seed.utils';
 
-async function main() {
-    console.log('🔄 Re-seeding email templates...');
+const AVAILABLE_VARS = '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.environment}}, {{incident.createdAt}}, {{incident.createdBy.name}}, {{incident.createdBy.email}}, {{incident.assignedTeam.name}}, {{incident.system.name}}, {{incident.job.code}}, {{incident.job.name}}, {{incident.sla.name}}, {{incident.resolvedBy.name}}, {{incident.resolvedAt}}';
 
-    // Delete existing templates
-    await prisma.emailTemplate.deleteMany();
+interface TemplateData {
+    name: string;
+    subject: string;
+    body: string;
+    variables: string;
+}
 
-    const availableVars = '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.environment}}, {{incident.createdAt}}, {{incident.createdBy.name}}, {{incident.createdBy.email}}, {{incident.assignedTeam.name}}, {{incident.system.name}}, {{incident.job.code}}, {{incident.job.name}}, {{incident.sla.name}}, {{incident.resolvedBy.name}}, {{incident.resolvedAt}}';
-
-    const templates = [
-        {
-            name: 'incident_created',
-            subject: '[{{incident.severity}}] New Incident: {{incident.title}} - {{incident.system.name}}',
-            body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+const TEMPLATES: TemplateData[] = [
+    {
+        name: 'incident_created',
+        subject: '[{{incident.severity}}] New Incident: {{incident.title}} - {{incident.system.name}}',
+        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#d32f2f;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">🚨 New Incident Created</h2>
 </div>
@@ -41,12 +42,12 @@ async function main() {
   ProdKB — Incident Management System
 </div>
 </div>`,
-            variables: availableVars
-        },
-        {
-            name: 'incident_updated',
-            subject: '[Update] Incident: {{incident.title}} — Status: {{incident.status}}',
-            body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        variables: AVAILABLE_VARS,
+    },
+    {
+        name: 'incident_updated',
+        subject: '[Update] Incident: {{incident.title}} — Status: {{incident.status}}',
+        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#1976d2;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">📝 Incident Updated</h2>
 </div>
@@ -64,12 +65,12 @@ async function main() {
   ProdKB — Incident Management System
 </div>
 </div>`,
-            variables: availableVars
-        },
-        {
-            name: 'incident_resolved',
-            subject: '[Resolved] Incident: {{incident.title}}',
-            body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        variables: AVAILABLE_VARS,
+    },
+    {
+        name: 'incident_resolved',
+        subject: '[Resolved] Incident: {{incident.title}}',
+        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#2e7d32;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">✅ Incident Resolved</h2>
 </div>
@@ -87,24 +88,30 @@ async function main() {
   ProdKB — Incident Management System
 </div>
 </div>`,
-            variables: availableVars
-        },
-        {
-            name: 'user_welcome',
-            subject: 'Welcome to ProdKB, {{name}}!',
-            body: '<h2>Welcome, {{name}}!</h2><p>Your account has been created successfully. You can now login to the ProdKB portal.</p>',
-            variables: '{{name}}, {{email}}'
+        variables: AVAILABLE_VARS,
+    },
+    {
+        name: 'user_welcome',
+        subject: 'Welcome to ProdKB, {{name}}!',
+        body: '<h2>Welcome, {{name}}!</h2><p>Your account has been created successfully. You can now login to the ProdKB portal.</p>',
+        variables: '{{name}}, {{email}}',
+    },
+];
+
+export async function seedEmailTemplates(): Promise<void> {
+    console.log('\n📧 Seeding email templates...');
+
+    for (const t of TEMPLATES) {
+        const existing = await prisma.emailTemplate.findUnique({ where: { name: t.name } });
+        if (existing) {
+            await prisma.emailTemplate.update({
+                where: { name: t.name },
+                data: { subject: t.subject, body: t.body, variables: t.variables },
+            });
+            logSeed('Template', t.name, false);
+        } else {
+            await prisma.emailTemplate.create({ data: t });
+            logSeed('Template', t.name, true);
         }
-    ];
-
-    for (const t of templates) {
-        await prisma.emailTemplate.create({ data: t });
     }
-
-    console.log(`✅ Seeded ${templates.length} email templates successfully!`);
-    console.log('Templates:', templates.map(t => t.name).join(', '));
 }
-
-main()
-    .catch(console.error)
-    .finally(() => prisma.$disconnect());

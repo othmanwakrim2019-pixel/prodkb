@@ -40,11 +40,12 @@ function createLimiter(opts: { windowMs: number; max: number; message: string | 
         skipSuccessfulRequests: opts.skipSuccessfulRequests,
         // Combine the validated IP key with User-Agent so each device is treated
         // separately even on shared NAT networks.
-        // validate: { xForwardedForHeader: false } suppresses the IPv6 subnet warning
-        // while we keep the exact IP via trust proxy set in server.ts.
-        validate: { xForwardedForHeader: false },
+        // Disable keyGeneratorIpFallback validation — we handle IP ourselves.
+        validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
         keyGenerator: (req) => {
-            const ip = req.ip || req.socket.remoteAddress || 'unknown';
+            // Strip port from IP if present (e.g. "[::1]:12345" → "::1")
+            let ip = req.ip || req.socket.remoteAddress || 'unknown';
+            ip = ip.replace(/^\[/, '').replace(/\]:\d+$/, '').replace(/:\d+$/, '');
             const ua = req.headers['user-agent'] || 'unknown-ua';
             return `${ip}::${ua.slice(0, 80)}`;
         },

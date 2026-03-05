@@ -22,6 +22,7 @@ router.post('/:incidentId/postmortem', authenticate, checkPermission('INCIDENT_E
     try {
         const { summary, rootCause, timeline, impact, lessonsLearned, preventiveActions, status } = req.body;
         const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ success: false, error: 'Not authenticated' });
 
         const pm = await prisma.postMortem.upsert({
             where: { incidentId: req.params.incidentId },

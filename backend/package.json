@@ -1,26 +1,48 @@
 {
-  "name": "backend",
+  "name": "prodkb-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "ProdKB — Incident Management Backend",
+  "main": "dist/src/server.js",
   "scripts": {
+    "── Development ──": "",
+    "dev": "tsx watch src/server.ts",
+    "build": "npx prisma generate && tsc && cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true",
+    "start": "chmod +x ./start.sh && ./start.sh",
+    "── Testing ──": "",
     "test": "jest --forceExit --coverage",
     "test:changed": "jest --onlyChanged",
     "test:watch": "jest --watch",
-    "dev": "ts-node src/server.ts",
-    "build": "npx prisma generate && tsc && cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true",
-    "start": "chmod +x ./start.sh && ./start.sh",
+    "── Database ──": "",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:validate": "prisma validate",
+    "prisma:studio": "prisma studio",
+    "seed": "tsx prisma/seeds/index.ts",
+    "seed:demo": "tsx prisma/seeds/index.ts --demo",
+    "── Workers ──": "",
     "worker:sla": "tsx src/workers/sla.worker.ts",
-    "sla:worker": "tsx src/workers/sla.worker.ts"
+    "worker:webhook": "tsx src/workers/webhook.worker.ts",
+    "worker:digest": "tsx src/workers/digest.worker.ts",
+    "worker:cleanup": "tsx src/workers/cleanup.worker.ts",
+    "── Code Quality ──": "",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seeds/index.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "incident-management",
+    "prodkb",
+    "operations"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@faker-js/faker": "^9.9.0",
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@aws-sdk/client-s3": "^3.994.0",
     "@aws-sdk/s3-request-presigner": "^3.994.0",
@@ -47,7 +69,6 @@
     "multer": "^2.0.2",
     "nodemailer": "^8.0.0",
     "papaparse": "^5.5.3",
-    "prisma": "^6.19.0",
     "prom-client": "^15.1.3",
     "rate-limit-redis": "^4.3.1",
     "sanitize-html": "^2.17.1",
@@ -58,6 +79,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -77,6 +99,7 @@
     "@types/yamljs": "^0.2.34",
     "jest": "^30.2.0",
     "pg": "^8.18.0",
+    "prisma": "^6.19.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",

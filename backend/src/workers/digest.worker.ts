@@ -15,8 +15,8 @@ import 'dotenv/config';
 import { Worker, Queue, Job } from 'bullmq';
 import { prisma } from '../common/utils/prisma';
 import { logger } from '../common/utils/logger';
-import { emailService } from '../common/services/emailService';
-import { parseRedisUrl } from '../common/utils/redis-url';
+import { emailService } from '../common/services/email.service';
+import { parseRedisUrl } from '../common/utils/redis';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const QUEUE_NAME = 'daily-digest';
@@ -26,69 +26,69 @@ const connection = parseRedisUrl(REDIS_URL);
 const digestQueue = new Queue(QUEUE_NAME, { connection: parseRedisUrl(REDIS_URL) });
 
 (async () => {
-    await digestQueue.upsertJobScheduler(
-        'daily-digest-08h',
-        { pattern: '0 8 * * *' },  // Every day at 08:00 UTC
-        { name: 'daily-digest' },
-    );
-    logger.info('Daily Digest scheduled job registered (08:00 UTC)');
+  await digestQueue.upsertJobScheduler(
+    'daily-digest-08h',
+    { pattern: '0 8 * * *' },  // Every day at 08:00 UTC
+    { name: 'daily-digest' },
+  );
+  logger.info('Daily Digest scheduled job registered (08:00 UTC)');
 })();
 
 // ── Worker logic ──
 const worker = new Worker(
-    QUEUE_NAME,
-    async (_job: Job) => {
-        logger.info('Daily Digest job started');
+  QUEUE_NAME,
+  async (_job: Job) => {
+    logger.info('Daily Digest job started');
 
-        const now = new Date();
-        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-        // Get all teams with email enabled
-        const teams = await prisma.team.findMany({
-            where: { isActive: true, sendEmail: true },
+    // Get all teams with email enabled
+    const teams = await prisma.team.findMany({
+      where: { isActive: true, sendEmail: true },
+    });
+
+    for (const team of teams) {
+      try {
+        // Incidents created in the last 24h for this team
+        const newIncidents = await prisma.incident.findMany({
+          where: {
+            assignedTeamId: team.id,
+            createdAt: { gte: yesterday },
+          },
+          include: { system: true, job: true },
+          orderBy: { createdAt: 'desc' },
         });
 
-        for (const team of teams) {
-            try {
-                // Incidents created in the last 24h for this team
-                const newIncidents = await prisma.incident.findMany({
-                    where: {
-                        assignedTeamId: team.id,
-                        createdAt: { gte: yesterday },
-                    },
-                    include: { system: true, job: true },
-                    orderBy: { createdAt: 'desc' },
-                });
+        // Still-open incidents for this team
+        const openIncidents = await prisma.incident.findMany({
+          where: {
+            assignedTeamId: team.id,
+            status: { notIn: ['resolved', 'closed'] },
+          },
+          include: { system: true, job: true },
+          orderBy: { severity: 'asc' },
+        });
 
-                // Still-open incidents for this team
-                const openIncidents = await prisma.incident.findMany({
-                    where: {
-                        assignedTeamId: team.id,
-                        status: { notIn: ['resolved', 'closed'] },
-                    },
-                    include: { system: true, job: true },
-                    orderBy: { severity: 'asc' },
-                });
+        // SLA breaches in last 24h
+        const breachedCount = await prisma.incident.count({
+          where: {
+            assignedTeamId: team.id,
+            slaBreached: true,
+            createdAt: { gte: yesterday },
+          },
+        });
 
-                // SLA breaches in last 24h
-                const breachedCount = await prisma.incident.count({
-                    where: {
-                        assignedTeamId: team.id,
-                        slaBreached: true,
-                        createdAt: { gte: yesterday },
-                    },
-                });
+        // Skip if nothing to report
+        if (newIncidents.length === 0 && openIncidents.length === 0) {
+          logger.debug(`No incidents for team ${team.name}, skipping digest`);
+          continue;
+        }
 
-                // Skip if nothing to report
-                if (newIncidents.length === 0 && openIncidents.length === 0) {
-                    logger.debug(`No incidents for team ${team.name}, skipping digest`);
-                    continue;
-                }
+        const subject = `[ProdKB] Digest Quotidien — ${team.name} — ${now.toLocaleDateString('fr-FR')}`;
 
-                const subject = `[ProdKB] Digest Quotidien — ${team.name} — ${now.toLocaleDateString('fr-FR')}`;
-
-                const incidentRow = (inc: any) => `
+        const incidentRow = (inc: any) => `
                     <tr>
                         <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;">
                             <a href="${appUrl}/incidents/${inc.id}" style="color:#3b82f6;text-decoration:none;">#${inc.id.substring(0, 8)}</a>
@@ -99,7 +99,7 @@ const worker = new Worker(
                         <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;">${inc.status}</td>
                     </tr>`;
 
-                const html = `
+        const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -159,45 +159,45 @@ const worker = new Worker(
 </body>
 </html>`;
 
-                await emailService.sendRawEmail(team.emailDistribution, subject, html);
-                logger.info(`Digest sent to team ${team.name}`, {
-                    newCount: newIncidents.length,
-                    openCount: openIncidents.length,
-                    breachedCount,
-                });
-            } catch (error) {
-                logger.error(`Failed to send digest for team ${team.name}`, {
-                    error: error instanceof Error ? error.message : 'Unknown',
-                });
-            }
-        }
+        await emailService.sendRawEmail(team.emailDistribution, subject, html);
+        logger.info(`Digest sent to team ${team.name}`, {
+          newCount: newIncidents.length,
+          openCount: openIncidents.length,
+          breachedCount,
+        });
+      } catch (error) {
+        logger.error(`Failed to send digest for team ${team.name}`, {
+          error: error instanceof Error ? error.message : 'Unknown',
+        });
+      }
+    }
 
-        logger.info('Daily Digest job completed');
-    },
-    {
-        connection: parseRedisUrl(REDIS_URL),
-        concurrency: 1,
-    },
+    logger.info('Daily Digest job completed');
+  },
+  {
+    connection: parseRedisUrl(REDIS_URL),
+    concurrency: 1,
+  },
 );
 
 worker.on('completed', (job) => {
-    logger.debug('Digest job completed', { jobId: job?.id });
+  logger.debug('Digest job completed', { jobId: job?.id });
 });
 
 worker.on('failed', (job, err) => {
-    logger.error('Digest job failed', {
-        jobId: job?.id,
-        error: err.message,
-    });
+  logger.error('Digest job failed', {
+    jobId: job?.id,
+    error: err.message,
+  });
 });
 
 // ── Graceful shutdown ──
 const shutdown = async (signal: string) => {
-    logger.info(`Digest worker received ${signal}. Shutting down...`);
-    await worker.close();
-    await digestQueue.close();
-    await prisma.$disconnect();
-    process.exit(0);
+  logger.info(`Digest worker received ${signal}. Shutting down...`);
+  await worker.close();
+  await digestQueue.close();
+  await prisma.$disconnect();
+  process.exit(0);
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
