@@ -148,9 +148,18 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
 export const checkPermission = (requiredPermission: string) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
-        if (!req.user || !req.user.permissions.includes(requiredPermission)) {
+        if (!req.user) {
+            next(new UnauthorizedError('Authentication required'));
+            return;
+        }
+        // ADMIN role always has full access — no permission check needed
+        if (req.user.role === 'ADMIN') {
+            next();
+            return;
+        }
+        if (!req.user.permissions.includes(requiredPermission)) {
             logger.warn('Permission denied', {
-                userId: req.user?.id,
+                userId: req.user.id,
                 requiredPermission,
                 path: req.path
             });

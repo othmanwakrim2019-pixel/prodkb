@@ -9,17 +9,17 @@ import { prisma, logSeed } from '../helpers/seed.utils';
 const AVAILABLE_VARS = '{{incident.id}}, {{incident.title}}, {{incident.severity}}, {{incident.status}}, {{incident.description}}, {{incident.environment}}, {{incident.createdAt}}, {{incident.createdBy.name}}, {{incident.createdBy.email}}, {{incident.assignedTeam.name}}, {{incident.system.name}}, {{incident.job.code}}, {{incident.job.name}}, {{incident.sla.name}}, {{incident.resolvedBy.name}}, {{incident.resolvedAt}}';
 
 interface TemplateData {
-    name: string;
-    subject: string;
-    body: string;
-    variables: string;
+  name: string;
+  subject: string;
+  body: string;
+  variables: string;
 }
 
 const TEMPLATES: TemplateData[] = [
-    {
-        name: 'incident_created',
-        subject: '[{{incident.severity}}] New Incident: {{incident.title}} - {{incident.system.name}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+  {
+    name: 'incident_created',
+    subject: '[{{incident.severity}}] New Incident: {{incident.title}} - {{incident.system.name}}',
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#d32f2f;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">🚨 New Incident Created</h2>
 </div>
@@ -42,12 +42,12 @@ const TEMPLATES: TemplateData[] = [
   ProdKB — Incident Management System
 </div>
 </div>`,
-        variables: AVAILABLE_VARS,
-    },
-    {
-        name: 'incident_updated',
-        subject: '[Update] Incident: {{incident.title}} — Status: {{incident.status}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+    variables: AVAILABLE_VARS,
+  },
+  {
+    name: 'incident_updated',
+    subject: '[Update] Incident: {{incident.title}} — Status: {{incident.status}}',
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#1976d2;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">📝 Incident Updated</h2>
 </div>
@@ -65,12 +65,12 @@ const TEMPLATES: TemplateData[] = [
   ProdKB — Incident Management System
 </div>
 </div>`,
-        variables: AVAILABLE_VARS,
-    },
-    {
-        name: 'incident_resolved',
-        subject: '[Resolved] Incident: {{incident.title}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+    variables: AVAILABLE_VARS,
+  },
+  {
+    name: 'incident_resolved',
+    subject: '[Resolved] Incident: {{incident.title}}',
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
 <div style="background:#2e7d32;color:#fff;padding:20px;border-radius:8px 8px 0 0">
   <h2 style="margin:0">✅ Incident Resolved</h2>
 </div>
@@ -88,30 +88,30 @@ const TEMPLATES: TemplateData[] = [
   ProdKB — Incident Management System
 </div>
 </div>`,
-        variables: AVAILABLE_VARS,
-    },
-    {
-        name: 'user_welcome',
-        subject: 'Welcome to ProdKB, {{name}}!',
-        body: '<h2>Welcome, {{name}}!</h2><p>Your account has been created successfully. You can now login to the ProdKB portal.</p>',
-        variables: '{{name}}, {{email}}',
-    },
+    variables: AVAILABLE_VARS,
+  },
+  {
+    name: 'user_welcome',
+    subject: 'Welcome to ProdKB, {{name}}!',
+    body: '<h2>Welcome, {{name}}!</h2><p>Your account has been created successfully. You can now login to the ProdKB portal.</p>',
+    variables: '{{name}}, {{email}}',
+  },
 ];
 
 export async function seedEmailTemplates(): Promise<void> {
-    console.log('\n📧 Seeding email templates...');
+  console.log('\nSeeding email templates...');
 
-    for (const t of TEMPLATES) {
-        const existing = await prisma.emailTemplate.findUnique({ where: { name: t.name } });
-        if (existing) {
-            await prisma.emailTemplate.update({
-                where: { name: t.name },
-                data: { subject: t.subject, body: t.body, variables: t.variables },
-            });
-            logSeed('Template', t.name, false);
-        } else {
-            await prisma.emailTemplate.create({ data: t });
-            logSeed('Template', t.name, true);
-        }
+  for (const t of TEMPLATES) {
+    const existing = await prisma.emailTemplate.findUnique({ where: { name: t.name } });
+    if (existing) {
+      await prisma.emailTemplate.update({
+        where: { name: t.name },
+        data: { subject: t.subject, body: t.body, variables: t.variables },
+      });
+      logSeed('Template', t.name, false);
+    } else {
+      await prisma.emailTemplate.create({ data: t });
+      logSeed('Template', t.name, true);
     }
+  }
 }

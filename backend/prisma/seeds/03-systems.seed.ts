@@ -20,7 +20,7 @@ const SYSTEMS = [
 ];
 
 export async function seedSystems(): Promise<void> {
-    console.log('\n🖥️  Seeding systems...');
+    console.log('\nSeeding systems...');
 
     for (const sys of SYSTEMS) {
         const result = await prisma.system.upsert({

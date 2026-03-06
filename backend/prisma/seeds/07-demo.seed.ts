@@ -27,7 +27,7 @@ export async function seedDemo(): Promise<void> {
         );
     }
 
-    console.log('\n🎲 Seeding demo data (development only)...');
+    console.log('\nSeeding demo data (development only)...');
     const hashedPassword = await getHashedPassword();
 
     // ── Load prerequisite data ──
@@ -404,7 +404,7 @@ export async function seedDemo(): Promise<void> {
     }
     logSeed('Audit', '80 audit log entries', true);
 
-    console.log('\n📊 Demo data summary:');
+    console.log('\nDemo data summary:');
     console.log('   • 50 random users + 20 teams');
     console.log('   • 50 jobs, 55 procedures');
     console.log('   • 120 incidents with logs');

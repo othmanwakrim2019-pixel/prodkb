@@ -15,9 +15,9 @@ router.put('/:id', checkPermission('SYSTEM_MANAGE'), SystemController.updateSyst
 router.delete('/:id', checkPermission('SYSTEM_MANAGE'), SystemController.deleteSystem);
 
 // Jobs
-router.get('/jobs', SystemController.getJobs);
-router.post('/jobs', checkPermission('SYSTEM_MANAGE'), SystemController.createJob);
-router.put('/jobs/:id', checkPermission('SYSTEM_MANAGE'), SystemController.updateJob);
-router.delete('/jobs/:id', checkPermission('SYSTEM_MANAGE'), SystemController.deleteJob);
+router.get('/jobs', checkPermission('JOB_VIEW'), SystemController.getJobs);
+router.post('/jobs', checkPermission('JOB_MANAGE'), SystemController.createJob);
+router.put('/jobs/:id', checkPermission('JOB_MANAGE'), SystemController.updateJob);
+router.delete('/jobs/:id', checkPermission('JOB_MANAGE'), SystemController.deleteJob);
 
 export const systemRoutes = router;

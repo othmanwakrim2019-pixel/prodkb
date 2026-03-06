@@ -1,7 +1,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { AuthController, ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, COOKIE_OPTIONS } from './auth.controller';
-import { authenticate, authorize, invalidateAuthCache, AuthRequest } from '../../common/middleware/auth.middleware';
+import { authenticate, checkPermission, invalidateAuthCache, AuthRequest } from '../../common/middleware/auth.middleware';
 import { refreshTokenService } from './refresh-token.service';
 import { createResponse } from '../../common/types/api.response';
 import { generateCsrfToken, setCsrfCookie, clearCsrfCookie } from '../../common/middleware/csrf.middleware';
@@ -10,7 +10,7 @@ import { clearFailedAttempts } from '../../common/services/lockout.service';
 const router = Router();
 
 router.post('/login', AuthController.login);
-router.post('/register', authenticate, authorize(['ADMIN']), AuthController.register);
+router.post('/register', authenticate, checkPermission('USER_MANAGE'), AuthController.register);
 router.get('/me', authenticate, AuthController.getMe);
 
 // ── Refresh Token ──
@@ -72,7 +72,7 @@ router.post('/logout', authenticate, async (req: AuthRequest, res: Response, nex
 // ── Admin: Unlock a locked account ──
 // Clears the failed login attempt counter in Redis so the user can try again immediately.
 // Only accessible by authenticated ADMIN users.
-router.post('/unlock-account', authenticate, authorize(['ADMIN']), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/unlock-account', authenticate, checkPermission('USER_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email } = req.body;
         if (!email || typeof email !== 'string') {

@@ -21,10 +21,10 @@ import { seedDemo } from './07-demo.seed';
 const includeDemo = process.argv.includes('--demo');
 
 async function main(): Promise<void> {
-    console.log('═══════════════════════════════════════');
-    console.log('  ProdKB — Database Seed Runner');
+    console.log('---------------------------------------');
+    console.log('  ProdKB -- Database Seed Runner');
     console.log(`  Mode: ${includeDemo ? 'FULL (core + demo)' : 'CORE ONLY'}`);
-    console.log('═══════════════════════════════════════');
+    console.log('---------------------------------------');
 
     // Core seeds — always run (safe for production)
     await seedRoles();
@@ -41,9 +41,9 @@ async function main(): Promise<void> {
         console.log('\n Tip: Run with --demo to include demo data (50 users, 120 incidents, etc.)');
     }
 
-    console.log('\n═══════════════════════════════════════');
+    console.log('\n---------------------------------------');
     console.log('  Seed complete!');
-    console.log('═══════════════════════════════════════');
+    console.log('---------------------------------------');
     console.log('\n  Login: admin@prodkb.com / password123\n');
 }
 

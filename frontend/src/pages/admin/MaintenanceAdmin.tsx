@@ -36,10 +36,11 @@ export default function MaintenanceAdmin() {
     const [showForm, setShowForm] = useState(false);
     const [editItem, setEditItem] = useState<MaintenanceWindow | null>(null);
     const [form, setForm] = useState({ systemId: '', title: '', description: '', scheduledAt: '', endsAt: '' });
-    const { user, hasPermission } = useAuth();
+    const { user } = useAuth();
 
-    // role is a plain string, e.g. 'ADMIN' — not an object
-    const isAdmin = user?.role === 'ADMIN' || hasPermission('MAINTENANCE_MANAGE') || hasPermission('SYSTEM_ADMIN');
+    // The page is already protected by PermissionRoute(MAINTENANCE_MANAGE) in App.tsx.
+    // Admin role gets additional UI controls (e.g. delete without confirmation).
+    const isAdmin = user?.role === 'ADMIN';
 
     const [loadError, setLoadError] = useState<string | null>(null);
 

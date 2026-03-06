@@ -47,6 +47,8 @@ const PERMISSIONS: Array<{ code: string; description: string }> = [
     // Configuration & Email
     { code: 'CONFIG_MANAGE', description: 'Manage SMTP and system configuration' },
     { code: 'EMAIL_TEMPLATE_MANAGE', description: 'Edit email notification templates' },
+    // Maintenance Windows
+    { code: 'MAINTENANCE_MANAGE', description: 'Create, edit, and delete maintenance windows' },
     // Audit
     { code: 'AUDIT_VIEW', description: 'View audit logs' },
 ];
@@ -94,7 +96,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
 ];
 
 export async function seedRoles(): Promise<void> {
-    console.log('\n📦 Seeding permissions and roles...');
+    console.log('\nSeeding permissions and roles...');
 
     // Upsert all permissions and collect their IDs
     const permIdMap = new Map<string, string>();

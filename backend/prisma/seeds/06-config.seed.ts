@@ -16,7 +16,7 @@ const CONFIG_ENTRIES: Array<{ key: string; value: string }> = [
 ];
 
 export async function seedConfig(): Promise<void> {
-    console.log('\n⚙️  Seeding default configuration...');
+    console.log('\nSeeding default configuration...');
 
     for (const entry of CONFIG_ENTRIES) {
         const existing = await prisma.systemConfig.findUnique({ where: { key: entry.key } });
