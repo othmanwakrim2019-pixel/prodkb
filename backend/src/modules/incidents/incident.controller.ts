@@ -70,7 +70,6 @@ export class IncidentController {
 
     static async getIncidents(req: Request, res: Response, next: NextFunction) {
         try {
-            // Pagination is now handled by middleware, but we need to pass it
             const pagination = req.pagination || { page: 1, limit: 50, sortBy: 'createdAt', sortOrder: 'desc' };
 
             const filters: FindAllFilters = {
@@ -82,13 +81,19 @@ export class IncidentController {
                 endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
             };
 
-            // Role-based visibility
             const user = (req as AuthRequest).user;
-            const canViewAll = ([UserRole.ADMIN, UserRole.OPERATOR, UserRole.EXPERT] as readonly string[]).includes(user?.role ?? '');
 
-            if (user && !canViewAll) {
+            // Scope-based visibility:
+            // - ADMIN always sees all incidents
+            // - incidentScope=ALL: user sees all incidents (can still filter by teamId)
+            // - incidentScope=TEAM_ONLY: user sees only incidents assigned to one of their teams
+            const isAdmin = user?.role === UserRole.ADMIN;
+            const scopeIsTeamOnly = !isAdmin && user?.incidentScope === 'TEAM_ONLY';
+
+            if (user && scopeIsTeamOnly) {
                 if (user.teamIds && user.teamIds.length > 0) {
                     if (req.query.teamId) {
+                        // Must ensure requested teamId is one the user belongs to
                         if (!user.teamIds.includes(req.query.teamId as string)) {
                             filters.teamId = 'NONE';
                         } else {
@@ -101,6 +106,7 @@ export class IncidentController {
                     filters.teamId = 'NONE';
                 }
             } else {
+                // ALL scope or ADMIN: optional filter by teamId from query
                 if (req.query.teamId) filters.teamId = req.query.teamId as string;
             }
 
@@ -125,10 +131,12 @@ export class IncidentController {
             const authReq = req as AuthRequest;
             const incident = await incidentCrudService.findById(req.params.id);
 
-            // IDOR protection: non-ADMIN users can only view incidents assigned to their team
-            if (authReq.user?.role !== UserRole.ADMIN) {
-                const userTeamIds = authReq.user?.teamIds || [];
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isAdmin = authReq.user?.role === UserRole.ADMIN;
+            const scopeIsTeamOnly = !isAdmin && authReq.user?.incidentScope === 'TEAM_ONLY';
+
+            // IDOR protection for TEAM_ONLY scope: user can only view incidents assigned to their team
+            if (authReq.user && scopeIsTeamOnly) {
+                const userTeamIds = authReq.user.teamIds || [];
                 const incidentTeamId = incident.assignedTeamId;
                 if (incidentTeamId && !userTeamIds.includes(incidentTeamId)) {
                     throw new ForbiddenError('You do not have access to this incident');
