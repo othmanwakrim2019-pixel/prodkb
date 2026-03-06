@@ -12,7 +12,7 @@ const DEFAULT_USERS = [
 ];
 
 export async function seedUsers(): Promise<void> {
-    console.log('\n👤 Seeding default users...');
+    console.log('\nSeeding default users...');
 
     const hashedPassword = await getHashedPassword();
 
@@ -38,5 +38,5 @@ export async function seedUsers(): Promise<void> {
         logSeed('User', `${userDef.name} (${userDef.email})`, created);
     }
 
-    console.log('  ℹ️  Default password: password123');
+    console.log('  Default password: password123');
 }

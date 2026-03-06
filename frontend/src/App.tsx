@@ -85,32 +85,40 @@ function App() {
                                                     <ErrorBoundary><CreateProcedure /></ErrorBoundary>
                                                 </Suspense>
                                             } />
+                                        </Route>
+                                        <Route element={<PermissionRoute permission="PROCEDURE_EDIT" />}>
                                             <Route path="/procedures/:id/edit" element={
                                                 <Suspense fallback={<PageLoader />}>
                                                     <ErrorBoundary><CreateProcedure /></ErrorBoundary>
                                                 </Suspense>
                                             } />
                                         </Route>
-                                        <Route path="/search" element={
-                                            <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><Search /></ErrorBoundary>
-                                            </Suspense>
-                                        } />
+                                        <Route element={<PermissionRoute permission="SEARCH_VIEW" />}>
+                                            <Route path="/search" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><Search /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
                                         <Route path="/admin" element={
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><Admin /></ErrorBoundary>
                                             </Suspense>
                                         } />
-                                        <Route path="/planning" element={
-                                            <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><Planning /></ErrorBoundary>
-                                            </Suspense>
-                                        } />
-                                        <Route path="/admin/maintenance" element={
-                                            <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><MaintenanceAdmin /></ErrorBoundary>
-                                            </Suspense>
-                                        } />
+                                        <Route element={<PermissionRoute permission="PLANNING_VIEW" />}>
+                                            <Route path="/planning" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><Planning /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
+                                        <Route element={<PermissionRoute permission="MAINTENANCE_MANAGE" />}>
+                                            <Route path="/admin/maintenance" element={
+                                                <Suspense fallback={<PageLoader />}>
+                                                    <ErrorBoundary><MaintenanceAdmin /></ErrorBoundary>
+                                                </Suspense>
+                                            } />
+                                        </Route>
                                         <Route path="/status" element={
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><StatusPage /></ErrorBoundary>

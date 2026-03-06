@@ -14,7 +14,7 @@ const SLAS = [
 ];
 
 export async function seedSLAs(): Promise<void> {
-    console.log('\n⏱️  Seeding SLA definitions...');
+    console.log('\nSeeding SLA definitions...');
 
     for (const sla of SLAS) {
         const result = await prisma.sLA.upsert({
