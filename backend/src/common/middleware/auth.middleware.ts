@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
         role: string;
         permissions: string[];
         teamIds: string[];
+        incidentScope: string;
     };
 }
 
@@ -26,6 +27,7 @@ interface CachedAuth {
     role: string;
     permissions: string[];
     teamIds: string[];
+    incidentScope: string;
 }
 
 /**
@@ -85,6 +87,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
                     role: parsed.role,
                     permissions: parsed.permissions,
                     teamIds: parsed.teamIds,
+                    incidentScope: parsed.incidentScope ?? 'ALL',
                 };
                 next();
                 return;
@@ -115,10 +118,11 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         const roleName = user.role?.name || 'VIEWER';
         const permissions = user.role?.permissions.map(p => p.code) || [];
         const teamIds = user.teamMemberships.map((t: { teamId: string }) => t.teamId);
+        const incidentScope: string = (user.role as { incidentScope?: string })?.incidentScope ?? 'ALL';
 
         // ── Store in Redis cache ──
         try {
-            const cachePayload: CachedAuth = { role: roleName, permissions, teamIds };
+            const cachePayload: CachedAuth = { role: roleName, permissions, teamIds, incidentScope };
             await redis.set(
                 `${AUTH_CACHE_PREFIX}${userId}`,
                 JSON.stringify(cachePayload),
@@ -137,7 +141,8 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             id: userId,
             role: roleName,
             permissions: permissions,
-            teamIds: teamIds
+            teamIds: teamIds,
+            incidentScope,
         };
 
         next();

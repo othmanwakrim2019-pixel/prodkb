@@ -19,11 +19,13 @@ export class RoleService {
         });
     }
 
-    async createRole(data: { name: string; description?: string; permissionIds: string[] }) {
+    async createRole(data: { name: string; description?: string; permissionIds: string[]; incidentScope?: string }) {
         return prisma.role.create({
             data: {
                 name: data.name,
                 description: data.description,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                incidentScope: (data.incidentScope ?? 'ALL') as any,
                 permissions: {
                     connect: data.permissionIds.map((id: string) => ({ id }))
                 }
@@ -32,7 +34,7 @@ export class RoleService {
         });
     }
 
-    async updateRole(id: string, data: { name?: string; description?: string | null; permissionIds: string[] }) {
+    async updateRole(id: string, data: { name?: string; description?: string | null; permissionIds: string[]; incidentScope?: string }) {
         const currentRole = await prisma.role.findUnique({ where: { id } });
 
         if (!currentRole) throw new NotFoundError('Role not found');
@@ -45,8 +47,10 @@ export class RoleService {
             data: {
                 name: data.name,
                 description: data.description,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ...(data.incidentScope ? { incidentScope: data.incidentScope as any } : {}),
                 permissions: {
-                    set: [], // Clear distinct
+                    set: [],
                     connect: data.permissionIds.map((pid: string) => ({ id: pid }))
                 }
             },

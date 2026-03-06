@@ -97,17 +97,26 @@ model Role {
   name        String   @unique
   description String?
 
+  // Controls which incidents members of this role can see.
+  // ALL = see every incident; TEAM_ONLY = see only incidents assigned to their team
+  incidentScope IncidentScope @default(ALL)
+
   updatedById String?
   updatedBy   User?    @relation("UpdatedRoles", fields: [updatedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ── Relations ──
+  // Relations
   users       User[]
   permissions Permission[]
 
   @@index([updatedById])
+}
+
+enum IncidentScope {
+  ALL
+  TEAM_ONLY
 }
 
 /// Granular permission code (INCIDENT_CREATE, USER_MANAGE, etc.) linked to Roles
