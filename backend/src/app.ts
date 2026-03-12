@@ -26,7 +26,7 @@ import { generateSwaggerDocs } from './config/swagger';
 
 // Middleware
 import { authenticate, authorize } from './common/middleware/auth.middleware';
-import { apiLimiter, authLimiter } from './common/middleware/rate-limiter.middleware';
+import { apiLimiter } from './common/middleware/rate-limiter.middleware';
 import { errorHandler } from './common/middleware/error.middleware';
 import { notFoundHandler } from './common/middleware/not-found.middleware';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -129,9 +129,9 @@ createBullBoard({
 app.use('/admin/queues', authenticate, authorize(['ADMIN']), bullBoardAdapter.getRouter());
 
 // ── Routes ──
-app.use('/status-data', statusRoutes);                          // Public status page
-app.use('/auth/v1', authLimiter, authRoutes);                   // Auth (versioned)
-app.use('/auth', authLimiter, authRoutes);                      // Auth (backward compat)
+app.use('/api/status-data', statusRoutes);                          // Public status page
+app.use('/auth/v1', apiLimiter, authRoutes);                    // Auth (versioned)
+app.use('/auth', apiLimiter, authRoutes);                       // Auth (backward compat)
 app.use('/api/v1/events', apiLimiter, eventRoutes);             // SSE events (no CSRF)
 app.use('/api/v1', apiLimiter, csrfProtection, v1Routes);       // API v1
 

@@ -125,9 +125,9 @@ export class FileUploadService {
      * Catches spoofed Content-Type headers — e.g., executable uploaded as image/png.
      */
     async validateMagicBytes(buffer: Buffer, claimedMimeType: string): Promise<FileValidationResult> {
-        // file-type v16 is CommonJS compatible
-        const FileType = await import('file-type');
-        const detected = await FileType.fromBuffer(buffer);
+        // file-type v16 – dynamic import in CJS wraps exports under .default
+        const fileType = await import('file-type');
+        const detected = await fileType.default.fromBuffer(buffer);
 
         // Text files don't have magic bytes — skip check for text types
         const textTypes = ['text/plain', 'text/csv', 'text/html', 'text/x-log', 'application/json', 'application/xml'];

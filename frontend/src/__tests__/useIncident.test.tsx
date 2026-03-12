@@ -16,12 +16,12 @@ const mockIncidentService = vi.hoisted(() => ({
     downloadFile: vi.fn(),
 }));
 
-vi.mock('../services/incident.service', () => ({
+vi.mock('../features/incidents/api/incident.service', () => ({
     incidentService: mockIncidentService,
 }));
 
 // Import AFTER vi.mock
-import { useIncident } from '../hooks/useIncident';
+import { useIncident } from '../features/incidents/hooks/useIncident';
 
 const mockIncident = {
     id: 'inc-1',

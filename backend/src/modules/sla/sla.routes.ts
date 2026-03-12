@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import { SlaController } from './sla.controller';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 
 const router = Router();
 
@@ -12,8 +12,8 @@ router.get('/', SlaController.listSLAs);
 router.get('/:id', SlaController.getSLA);
 
 // Manage requires permission
-router.post('/', checkPermission('SLA_MANAGE'), SlaController.createSLA);
-router.put('/:id', checkPermission('SLA_MANAGE'), SlaController.updateSLA);
-router.delete('/:id', checkPermission('SLA_MANAGE'), SlaController.deleteSLA);
+router.post('/', requirePermission('SLA_MANAGE'), SlaController.createSLA);
+router.put('/:id', requirePermission('SLA_MANAGE'), SlaController.updateSLA);
+router.delete('/:id', requirePermission('SLA_MANAGE'), SlaController.deleteSLA);
 
 export const slaRoutes = router;

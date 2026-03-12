@@ -1,7 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { userService } from './user.service';
-import { AuthRequest } from '../../common/middleware/auth.middleware';
+import { AuthRequest, invalidateAuthCache } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { generateAuditDiff, logAudit } from '../audit/audit.service';
 import { updateUserSchema, changePasswordSchema } from './user.schema';
@@ -17,10 +17,20 @@ export class UserController {
         }
     }
 
+    static async getUserPermissions(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userWithPerms = await userService.findByIdWithPermissions(req.params.id);
+            res.json(createResponse(true, userWithPerms.permissions));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async deleteUser(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             await userService.delete(id);
+            await invalidateAuthCache(id);
 
             // Audit
             await logAudit({
@@ -62,6 +72,7 @@ export class UserController {
                 });
             }
 
+            await invalidateAuthCache(id);
             res.json(createResponse(true, updatedUser, 'User updated successfully'));
         } catch (error) {
             next(error);

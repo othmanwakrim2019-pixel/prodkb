@@ -13,6 +13,7 @@ const PERMISSIONS: Array<{ code: string; description: string }> = [
     { code: 'SEARCH_VIEW', description: 'Use global search functionality' },
     // Incidents
     { code: 'INCIDENT_VIEW', description: 'View incidents list and details' },
+    { code: 'VIEW_ALL_INCIDENTS', description: 'View all incidents across all teams' },
     { code: 'INCIDENT_CREATE', description: 'Create new incidents' },
     { code: 'INCIDENT_EDIT', description: 'Edit incidents, update status, add logs' },
     { code: 'INCIDENT_DELETE', description: 'Delete incidents' },

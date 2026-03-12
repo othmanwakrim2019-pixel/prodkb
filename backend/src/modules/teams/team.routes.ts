@@ -1,21 +1,21 @@
 
 import { Router } from 'express';
 import { TeamController } from './team.controller';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 
 const router = Router();
 
 router.use(authenticate);
 
 // Team routes - Admin only for create/update/delete
-router.post('/', checkPermission('TEAM_MANAGE'), TeamController.createTeam);
+router.post('/', requirePermission('TEAM_MANAGE'), TeamController.createTeam);
 router.get('/', TeamController.listTeams); // All authenticated users can list
 router.get('/:id', TeamController.getTeam);
-router.put('/:id', checkPermission('TEAM_MANAGE'), TeamController.updateTeam);
-router.delete('/:id', checkPermission('TEAM_DELETE'), TeamController.deleteTeam);
+router.put('/:id', requirePermission('TEAM_MANAGE'), TeamController.updateTeam);
+router.delete('/:id', requirePermission('TEAM_DELETE'), TeamController.deleteTeam);
 
 // Team member management
-router.post('/:id/members', checkPermission('TEAM_MANAGE'), TeamController.addMember);
-router.delete('/:id/members/:userId', checkPermission('TEAM_MANAGE'), TeamController.removeMember);
+router.post('/:id/members', requirePermission('TEAM_MANAGE'), TeamController.addMember);
+router.delete('/:id/members/:userId', requirePermission('TEAM_MANAGE'), TeamController.removeMember);
 
 export const teamRoutes = router;

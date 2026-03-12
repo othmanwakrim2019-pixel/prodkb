@@ -58,6 +58,39 @@ export class RoleService {
         });
     }
 
+    async replaceRolePermissions(id: string, permissionIds: string[]) {
+        return prisma.$transaction(async (tx) => {
+            const currentRole = await tx.role.findUnique({
+                where: { id },
+                include: { permissions: true }
+            });
+
+            if (!currentRole) throw new NotFoundError('Role not found');
+            if (currentRole.name === 'ADMIN') {
+                throw new ForbiddenError('Cannot modify ADMIN role');
+            }
+
+            await tx.role.update({
+                where: { id },
+                data: {
+                    permissions: {
+                        set: [],
+                    },
+                },
+            });
+
+            return tx.role.update({
+                where: { id },
+                data: {
+                    permissions: {
+                        connect: permissionIds.map((permissionId) => ({ id: permissionId })),
+                    },
+                },
+                include: { permissions: true },
+            });
+        });
+    }
+
     async deleteRole(id: string) {
         const role = await prisma.role.findUnique({ where: { id }, include: { _count: { select: { users: true } } } });
 

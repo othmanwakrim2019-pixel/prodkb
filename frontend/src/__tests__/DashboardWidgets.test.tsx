@@ -1,6 +1,6 @@
 import { render, screen, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { AnimatedNumber, KPICard, PeriodPill } from '../components/dashboard/DashboardWidgets';
+import { AnimatedNumber, KPICard, PeriodPill } from '../features/dashboard/components/DashboardWidgets';
 
 describe('AnimatedNumber', () => {
     beforeEach(() => {

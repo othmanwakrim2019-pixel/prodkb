@@ -19,12 +19,46 @@ import { prisma } from '../../common/utils/prisma';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { logger } from '../../common/utils/logger';
+import { canAccessIncidentTeam } from '../incidents/services/incident-visibility.service';
+import { loadAuthUser } from '../../common/auth/auth-context.service';
 
 /** Map: incidentId → Set of { socketId, userId, userName } */
 const rooms = new Map<string, Map<string, { userId: string; userName: string }>>();
 
 function getRoomParticipants(incidentId: string) {
     return Array.from(rooms.get(incidentId)?.values() || []);
+}
+
+async function canAccessIncident(socket: Socket, incidentId: string): Promise<boolean> {
+    const incident = await prisma.incident.findUnique({
+        where: { id: incidentId },
+        select: { assignedTeamId: true },
+    });
+
+    if (!incident) {
+        socket.emit('warroom:error', { message: 'Incident not found' });
+        return false;
+    }
+
+    const allowed = canAccessIncidentTeam(
+        {
+            role: socket.data.userRole as string | undefined,
+            permissions: (socket.data.userPermissions as string[] | undefined) || [],
+            teamIds: (socket.data.userTeamIds as string[] | undefined) || [],
+        },
+        incident.assignedTeamId,
+    );
+
+    if (!allowed) {
+        socket.emit('warroom:error', { message: 'Forbidden' });
+        logger.warn('WarRoom access denied', {
+            socketId: socket.id,
+            userId: socket.data.userId,
+            incidentId,
+        });
+    }
+
+    return allowed;
 }
 
 export function registerWarRoomGateway(io: SocketIOServer) {
@@ -46,14 +80,16 @@ export function registerWarRoomGateway(io: SocketIOServer) {
             const payload = jwt.verify(token, env.JWT_SECRET) as { userId: string; email: string; role: string };
             if (!payload.userId) return next(new Error('Invalid token payload'));
 
-            // Fetch user name from DB for display in messages
-            const user = await prisma.user.findUnique({
-                where: { id: payload.userId },
-                select: { id: true, name: true },
-            });
+            const user = await loadAuthUser(payload.userId);
             if (!user) return next(new Error('User not found'));
 
-            Object.assign(socket.data, { userId: user.id, userName: user.name || 'Unknown' });
+            Object.assign(socket.data, {
+                userId: user.id,
+                userName: user.name,
+                userRole: user.role,
+                userPermissions: user.permissions,
+                userTeamIds: user.teamIds,
+            });
             next();
         } catch {
             next(new Error('Invalid token'));
@@ -67,6 +103,10 @@ export function registerWarRoomGateway(io: SocketIOServer) {
         logger.info(`WarRoom: user ${userName} connected`, { socketId: socket.id });
 
         socket.on('warroom:join', async ({ incidentId }: { incidentId: string }) => {
+            if (!await canAccessIncident(socket, incidentId)) {
+                return;
+            }
+
             socket.join(incidentId);
 
             // Track participant
@@ -91,6 +131,9 @@ export function registerWarRoomGateway(io: SocketIOServer) {
 
         socket.on('warroom:message', async ({ incidentId, content }: { incidentId: string; content: string }) => {
             if (!content?.trim()) return;
+            if (!await canAccessIncident(socket, incidentId)) {
+                return;
+            }
 
             const message = await warRoomService.saveMessage(incidentId, userId, content.trim());
             warRoom.to(incidentId).emit('warroom:message', message);

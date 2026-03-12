@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from '../utils/axios';
-import { useIdleTimeout } from '../hooks/useIdleTimeout';
+import { authService } from '../features/auth/api/auth.service';
+import { useIdleTimeout } from '../features/auth/hooks/useIdleTimeout';
 
 interface User {
     id: string;
@@ -13,7 +13,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (user: User) => void;
+    login: (user?: User) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -43,9 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initAuth = async () => {
             try {
-                // httpOnly cookie is sent automatically by the browser
-                const response = await axios.get('/auth/v1/me');
-                setUser(response.data);
+                const currentUser = await authService.getMe();
+                setUser(currentUser);
             } catch {
                 setUser(null);
             } finally {
@@ -56,16 +55,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initAuth();
     }, []);
 
-    const login = (newUser: User) => {
-        // Token is now stored in httpOnly cookie by the backend
-        // We only need to store the user info in React state
-        setUser(newUser);
+    const login = async (nextUser?: User) => {
+        setIsLoading(true);
+        try {
+            if (nextUser) {
+                setUser(nextUser);
+                return;
+            }
+
+            const currentUser = await authService.getMe();
+            setUser(currentUser);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const logout = async () => {
         try {
-            // Call backend to clear cookies and revoke refresh token
-            await axios.post('/auth/v1/logout');
+            await authService.logout();
         } catch (error) {
             console.error('Logout API call failed', error);
         }
@@ -79,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isViewer = () => user?.role === 'VIEWER';
 
     const hasPermission = (permission: string) => {
-        return !!user && user.permissions.includes(permission);
+        return !!user && (user.role === 'ADMIN' || user.permissions.includes(permission));
     };
 
     const canCreate = () => hasPermission('INCIDENT_CREATE');

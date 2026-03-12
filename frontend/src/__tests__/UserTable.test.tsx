@@ -4,7 +4,7 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
-import { UserTable } from '../components/admin/UserTable';
+import { UserTable } from '../features/admin/components/UserTable';
 import type { User } from '../types';
 
 const mockUsers: User[] = [

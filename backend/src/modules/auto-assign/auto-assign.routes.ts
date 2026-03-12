@@ -2,19 +2,19 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { autoAssignService } from './auto-assign.service';
 import { createAutoAssignRuleSchema, updateAutoAssignRuleSchema } from './auto-assign.schema';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 
 const router = Router();
 
-router.get('/', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', authenticate, requirePermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const rules = await autoAssignService.findAll();
         res.json(createResponse(true, rules));
     } catch (error) { next(error); }
 });
 
-router.post('/', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', authenticate, requirePermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = createAutoAssignRuleSchema.parse(req.body);
         const rule = await autoAssignService.create(data);
@@ -22,7 +22,7 @@ router.post('/', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (req
     } catch (error) { next(error); }
 });
 
-router.put('/:id', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', authenticate, requirePermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = updateAutoAssignRuleSchema.parse(req.body);
         const rule = await autoAssignService.update(req.params.id, data);
@@ -30,7 +30,7 @@ router.put('/:id', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (r
     } catch (error) { next(error); }
 });
 
-router.delete('/:id', authenticate, checkPermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', authenticate, requirePermission('AUTO_ASSIGN_MANAGE'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         await autoAssignService.delete(req.params.id);
         res.json(createResponse(true, null, 'Auto-assignment rule deleted'));

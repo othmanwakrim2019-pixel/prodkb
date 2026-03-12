@@ -33,7 +33,7 @@ vi.mock('../utils/axios', () => ({
 }));
 
 // Prevents real 25min/30min timers that SessionTimeoutWarning creates
-vi.mock('../hooks/useIdleTimeout', () => ({
+vi.mock('../features/auth/hooks/useIdleTimeout', () => ({
     useIdleTimeout: mockUseIdleTimeout,
 }));
 

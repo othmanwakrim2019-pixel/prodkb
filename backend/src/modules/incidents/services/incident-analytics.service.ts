@@ -1,6 +1,7 @@
 import { prisma } from '../../../common/utils/prisma';
 import { IncidentStatus } from '../../../constants';
 import { IncidentStats } from './incident-shared';
+import { hasGlobalIncidentAccess } from './incident-visibility.service';
 
 export interface StatsFilters {
     startDate?: Date;
@@ -9,44 +10,49 @@ export interface StatsFilters {
     teamId?: string;
     userId?: string;
     userRole?: string;
+    userPermissions?: string[];
     userTeamIds?: string[];
 }
 
 export class IncidentAnalyticsService {
     async getStats(filters: StatsFilters): Promise<IncidentStats> {
-        const { startDate, endDate, systemId, teamId, userRole, userTeamIds } = filters;
+        const { startDate, endDate, systemId, teamId, userRole, userPermissions, userTeamIds } = filters;
         const now = new Date();
         const start = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         const end = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-        const isAdmin = userRole === 'ADMIN';
+        const hasGlobalAccess = hasGlobalIncidentAccess({ role: userRole, permissions: userPermissions });
         const scopeFilter: Record<string, unknown> = {};
-        if (!isAdmin && userTeamIds && userTeamIds.length > 0) {
+        if (!hasGlobalAccess && userTeamIds && userTeamIds.length > 0) {
             scopeFilter.assignedTeamId = { in: userTeamIds };
-        } else if (!isAdmin) {
+        } else if (!hasGlobalAccess) {
             scopeFilter.assignedTeamId = { in: [] };
         }
+
+        const scopedTeamId = !hasGlobalAccess && teamId
+            ? (userTeamIds || []).includes(teamId) ? teamId : '__NO_TEAM_ACCESS__'
+            : teamId;
 
         const where: Record<string, unknown> = {
             createdAt: { gte: start, lte: end },
             ...scopeFilter,
         };
         if (systemId) where.systemId = systemId;
-        if (teamId) where.assignedTeamId = teamId;
+        if (scopedTeamId) where.assignedTeamId = scopedTeamId;
 
         const activeWhere: Record<string, unknown> = {
             ...scopeFilter,
             status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] },
         };
         if (systemId) activeWhere.systemId = systemId;
-        if (teamId) activeWhere.assignedTeamId = teamId;
+        if (scopedTeamId) activeWhere.assignedTeamId = scopedTeamId;
 
         const resolvedWhere: Record<string, unknown> = {
             ...scopeFilter,
             resolvedAt: { gte: start, lte: end },
         };
         if (systemId) resolvedWhere.systemId = systemId;
-        if (teamId) resolvedWhere.assignedTeamId = teamId;
+        if (scopedTeamId) resolvedWhere.assignedTeamId = scopedTeamId;
 
         const closedWhere: Record<string, unknown> = {
             ...scopeFilter,
@@ -54,7 +60,7 @@ export class IncidentAnalyticsService {
             createdAt: { gte: start, lte: end },
         };
         if (systemId) closedWhere.systemId = systemId;
-        if (teamId) closedWhere.assignedTeamId = teamId;
+        if (scopedTeamId) closedWhere.assignedTeamId = scopedTeamId;
 
         const [created, resolved, active, closed] = await Promise.all([
             prisma.incident.count({ where }),
