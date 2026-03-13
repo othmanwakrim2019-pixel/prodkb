@@ -33,7 +33,9 @@ const mockLogin = vi.fn().mockResolvedValue({
         user: { id: '1', name: 'Test User', email: 'test@example.com', role: 'VIEWER', permissions: [] }
     }
 });
+// Rejects by default (simulates no active session on page load — used by AuthContext init)
 const mockGet = vi.fn().mockRejectedValue(new Error('No session'));
+
 
 vi.mock('../utils/axios', () => ({
     default: {
@@ -114,6 +116,16 @@ describe('Login Component', () => {
 
         renderLogin();
 
+        // Wait for the initial mount's initAuth() to call getMe() and consume the default rejection
+        await waitFor(() => {
+            expect(mockGet).toHaveBeenCalledTimes(1);
+        });
+
+        // Now queue the resolve for the second getMe() call which happens inside AuthContext.login()
+        mockGet.mockResolvedValueOnce({
+            data: { data: { id: '1', name: 'Test User', email: 'admin@prodkb.com', role: 'ADMIN', permissions: [] } }
+        });
+
         fireEvent.change(screen.getByPlaceholderText(/enter your email/i), { target: { value: 'admin@prodkb.com' } });
         fireEvent.change(screen.getByPlaceholderText(/enter your password/i), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
@@ -123,3 +135,4 @@ describe('Login Component', () => {
         });
     });
 });
+

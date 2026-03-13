@@ -5,7 +5,19 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { UserTable } from '../features/admin/components/UserTable';
+import { ToastProvider } from '../components/ui/Toast';
+import { ConfirmProvider } from '../components/ui/ConfirmDialog';
 import type { User } from '../types';
+
+// Wrap with required context providers
+const renderWithProviders = (ui: React.ReactElement) =>
+    render(
+        <ToastProvider>
+            <ConfirmProvider>
+                {ui}
+            </ConfirmProvider>
+        </ToastProvider>
+    );
 
 const mockUsers: User[] = [
     {
@@ -36,7 +48,7 @@ describe('UserTable', () => {
     };
 
     it('renders all users when no search term', () => {
-        render(<UserTable {...defaultProps} />);
+        renderWithProviders(<UserTable {...defaultProps} />);
 
         expect(screen.getByText('Alice Admin')).toBeInTheDocument();
         expect(screen.getByText('Bob Viewer')).toBeInTheDocument();
@@ -45,42 +57,42 @@ describe('UserTable', () => {
     });
 
     it('filters users by name', () => {
-        render(<UserTable {...defaultProps} searchTerm="alice" />);
+        renderWithProviders(<UserTable {...defaultProps} searchTerm="alice" />);
 
         expect(screen.getByText('Alice Admin')).toBeInTheDocument();
         expect(screen.queryByText('Bob Viewer')).not.toBeInTheDocument();
     });
 
     it('filters users by email', () => {
-        render(<UserTable {...defaultProps} searchTerm="bob@" />);
+        renderWithProviders(<UserTable {...defaultProps} searchTerm="bob@" />);
 
         expect(screen.queryByText('Alice Admin')).not.toBeInTheDocument();
         expect(screen.getByText('Bob Viewer')).toBeInTheDocument();
     });
 
     it('displays active/inactive status badges', () => {
-        render(<UserTable {...defaultProps} />);
+        renderWithProviders(<UserTable {...defaultProps} />);
 
         expect(screen.getByText('✓ Active')).toBeInTheDocument();
         expect(screen.getByText('✗ Inactive')).toBeInTheDocument();
     });
 
     it('displays role badges', () => {
-        render(<UserTable {...defaultProps} />);
+        renderWithProviders(<UserTable {...defaultProps} />);
 
         expect(screen.getByText('ADMIN')).toBeInTheDocument();
         expect(screen.getByText('VIEWER')).toBeInTheDocument();
     });
 
     it('displays team memberships', () => {
-        render(<UserTable {...defaultProps} />);
+        renderWithProviders(<UserTable {...defaultProps} />);
 
         expect(screen.getByText('Platform (Lead)')).toBeInTheDocument();
     });
 
     it('calls onEdit when edit button is clicked', () => {
         const onEdit = vi.fn();
-        render(<UserTable {...defaultProps} onEdit={onEdit} />);
+        renderWithProviders(<UserTable {...defaultProps} onEdit={onEdit} />);
 
         const editButtons = screen.getAllByTitle('Edit user');
         fireEvent.click(editButtons[0]);
@@ -91,7 +103,7 @@ describe('UserTable', () => {
 
     it('calls onDelete when delete button is clicked', () => {
         const onDelete = vi.fn();
-        render(<UserTable {...defaultProps} onDelete={onDelete} />);
+        renderWithProviders(<UserTable {...defaultProps} onDelete={onDelete} />);
 
         const deleteButtons = screen.getAllByTitle('Delete user');
         fireEvent.click(deleteButtons[1]);
@@ -101,14 +113,14 @@ describe('UserTable', () => {
     });
 
     it('hides action column when canManageUsers is false', () => {
-        render(<UserTable {...defaultProps} canManageUsers={false} />);
+        renderWithProviders(<UserTable {...defaultProps} canManageUsers={false} />);
 
         expect(screen.queryByTitle('Edit user')).not.toBeInTheDocument();
         expect(screen.queryByTitle('Delete user')).not.toBeInTheDocument();
     });
 
     it('shows empty table when no users match search', () => {
-        render(<UserTable {...defaultProps} searchTerm="zzz-no-match" />);
+        renderWithProviders(<UserTable {...defaultProps} searchTerm="zzz-no-match" />);
 
         expect(screen.queryByText('Alice Admin')).not.toBeInTheDocument();
         expect(screen.queryByText('Bob Viewer')).not.toBeInTheDocument();
