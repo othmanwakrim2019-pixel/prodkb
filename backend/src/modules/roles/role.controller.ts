@@ -1,7 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { roleService } from './role.service';
-import { AuthRequest } from '../../common/middleware/auth.middleware';
+import { AuthRequest, clearAuthCache } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
 import { createRoleSchema, updateRoleSchema } from './role.schema';
@@ -21,6 +21,18 @@ export class RoleController {
         try {
             const perms = await roleService.findAllPermissions();
             res.json(createResponse(true, perms));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getRoleById(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const role = await roleService.findRoleById(req.params.id);
+            if (!role) {
+                return res.status(404).json(createResponse(false, null, 'Role not found'));
+            }
+            res.json(createResponse(true, role));
         } catch (error) {
             next(error);
         }
@@ -66,7 +78,40 @@ export class RoleController {
                 });
             }
 
+            await clearAuthCache();
             res.json(createResponse(true, updated, 'Role updated successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async updateRolePermissions(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const permissionIds = req.body;
+
+            if (!Array.isArray(permissionIds)) {
+                return res.status(400).json(createResponse(false, null, 'Expected an array of permission IDs'));
+            }
+
+            const existing = await roleService.findRoleById(id);
+            if (!existing) {
+                return res.status(404).json(createResponse(false, null, 'Role not found'));
+            }
+
+            const updated = await roleService.replaceRolePermissions(id, permissionIds);
+
+            await logAudit({
+                userId: req.user?.id || 'unknown',
+                actionType: 'UPDATE',
+                entityType: 'ROLE',
+                entityId: id,
+                details: 'Permissions atomically replaced',
+                req
+            });
+
+            await clearAuthCache();
+            res.json(createResponse(true, updated, 'Role permissions updated atomically'));
         } catch (error) {
             next(error);
         }

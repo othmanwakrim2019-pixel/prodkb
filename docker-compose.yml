@@ -56,7 +56,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 5432 || exit 1"]
+      test: [ "CMD-SHELL", "nc -z 127.0.0.1 5432 || exit 1" ]
       interval: 15s
       timeout: 10s
       retries: 10

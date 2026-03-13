@@ -1,12 +1,12 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { analyticsService } from './analytics.service';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 
 const router = Router();
 
-router.get('/mttr', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/mttr', authenticate, requirePermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getMTTRTrends(days);
@@ -14,7 +14,7 @@ router.get('/mttr', authenticate, checkPermission('ANALYTICS_VIEW'), async (req:
     } catch (error) { next(error); }
 });
 
-router.get('/sla-compliance', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/sla-compliance', authenticate, requirePermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getSLACompliance(days);
@@ -22,7 +22,7 @@ router.get('/sla-compliance', authenticate, checkPermission('ANALYTICS_VIEW'), a
     } catch (error) { next(error); }
 });
 
-router.get('/team-performance', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/team-performance', authenticate, requirePermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getTeamPerformance(days);
@@ -30,7 +30,7 @@ router.get('/team-performance', authenticate, checkPermission('ANALYTICS_VIEW'),
     } catch (error) { next(error); }
 });
 
-router.get('/severity', authenticate, checkPermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
+router.get('/severity', authenticate, requirePermission('ANALYTICS_VIEW'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const days = parseInt(req.query.days as string) || 30;
         const data = await analyticsService.getSeverityDistribution(days);

@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import { IncidentController } from './incident.controller';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 import { uploadLimiter } from '../../common/middleware/rate-limiter.middleware';
 import { paginationMiddleware } from '../../common/middleware/pagination.middleware';
 import multer from 'multer';
@@ -42,25 +42,25 @@ const upload = multer({
 });
 
 // Stats & Search (Must come before :id)
-router.get('/stats', authenticate, checkPermission('DASHBOARD_VIEW'), IncidentController.getStats);
-router.get('/search', authenticate, checkPermission('SEARCH_VIEW'), IncidentController.searchSimilar);
-router.get('/suggest-procedures', authenticate, checkPermission('INCIDENT_VIEW'), IncidentController.suggestProcedures);
+router.get('/stats', authenticate, requirePermission('DASHBOARD_VIEW'), IncidentController.getStats);
+router.get('/search', authenticate, requirePermission('SEARCH_VIEW'), IncidentController.searchSimilar);
+router.get('/suggest-procedures', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.suggestProcedures);
 
 // CRUD
-router.get('/', authenticate, checkPermission('INCIDENT_VIEW'), paginationMiddleware, IncidentController.getIncidents);
-router.post('/', authenticate, checkPermission('INCIDENT_CREATE'), IncidentController.createIncident);
-router.get('/:id', authenticate, checkPermission('INCIDENT_VIEW'), IncidentController.getIncidentById);
-router.put('/:id', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.updateIncident);
-router.delete('/:id', authenticate, checkPermission('INCIDENT_DELETE'), IncidentController.deleteIncident);
+router.get('/', authenticate, requirePermission('INCIDENT_VIEW'), paginationMiddleware, IncidentController.getIncidents);
+router.post('/', authenticate, requirePermission('INCIDENT_CREATE'), IncidentController.createIncident);
+router.get('/:id', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.getIncidentById);
+router.put('/:id', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.updateIncident);
+router.delete('/:id', authenticate, requirePermission('INCIDENT_DELETE'), IncidentController.deleteIncident);
 
 // Sub-resources
-router.put('/:id/status', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.updateIncidentStatus);
-router.post('/:id/acknowledge', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.acknowledgeIncident);
-router.post('/:id/logs', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.addIncidentLog);
-router.post('/:id/upload', authenticate, checkPermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentController.uploadIncidentFile);
-router.get('/:id/files/:filename', authenticate, IncidentController.downloadFile);
-router.get('/:id/files/:filename/preview', authenticate, IncidentController.previewFile);
-router.delete('/:id/files/:filename', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.deleteFile);
-router.post('/:id/link-procedure/:procedureId', authenticate, checkPermission('INCIDENT_EDIT'), IncidentController.linkProcedure);
+router.put('/:id/status', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.updateIncidentStatus);
+router.post('/:id/acknowledge', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.acknowledgeIncident);
+router.post('/:id/logs', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.addIncidentLog);
+router.post('/:id/upload', authenticate, requirePermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentController.uploadIncidentFile);
+router.get('/:id/files/:filename', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.downloadFile);
+router.get('/:id/files/:filename/preview', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.previewFile);
+router.delete('/:id/files/:filename', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.deleteFile);
+router.post('/:id/link-procedure/:procedureId', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.linkProcedure);
 
 export const incidentRoutes = router;

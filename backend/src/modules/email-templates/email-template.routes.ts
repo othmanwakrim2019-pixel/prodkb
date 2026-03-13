@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import { EmailTemplateController } from './email-template.controller';
-import { authenticate, checkPermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
 
 const router = Router();
 
@@ -12,9 +12,9 @@ router.use(authenticate);
 // Looking at legacy: router.use('/email-templates', emailTemplateRoutes); which might have had middleware inside.
 // Assuming SYSTEM_MANAGE is safe for editing.
 
-router.get('/', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getAllTemplates);
-router.post('/preview', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.previewTemplate);
-router.get('/:id', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getTemplate);
-router.put('/:id', checkPermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.updateTemplate);
+router.get('/', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getAllTemplates);
+router.post('/preview', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.previewTemplate);
+router.get('/:id', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getTemplate);
+router.put('/:id', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.updateTemplate);
 
 export const emailTemplateRoutes = router;

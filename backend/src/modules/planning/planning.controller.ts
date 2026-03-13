@@ -1,6 +1,7 @@
 
 import { Response, NextFunction } from 'express';
-import { planningInstanceService, planningJobService } from './planning.service';
+import { planningInstanceService } from './application/planning-instance.service';
+import { planningJobService } from './application/planning-job.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit } from '../audit/audit.service';

@@ -15,6 +15,7 @@ import { logAudit, generateAuditDiff } from '../audit/audit.service';
 import { logger } from '../../common/utils/logger';
 import { UserRole, UserRoleType } from '../../constants';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
+import { canAccessIncidentTeam, getScopedIncidentTeamIds, hasGlobalIncidentAccess } from './services/incident-visibility.service';
 
 export class IncidentController {
     static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
@@ -26,6 +27,7 @@ export class IncidentController {
                 teamId: req.query.teamId as string,
                 userId: req.user?.id,
                 userRole: req.user?.role,
+                userPermissions: req.user?.permissions || [],
                 userTeamIds: req.user?.teamIds || [],
             };
 
@@ -82,32 +84,20 @@ export class IncidentController {
             };
 
             const user = (req as AuthRequest).user;
+            const scopedTeamIds = getScopedIncidentTeamIds(user);
 
-            // Scope-based visibility:
-            // - ADMIN always sees all incidents
-            // - incidentScope=ALL: user sees all incidents (can still filter by teamId)
-            // - incidentScope=TEAM_ONLY: user sees only incidents assigned to one of their teams
-            const isAdmin = user?.role === UserRole.ADMIN;
-            const scopeIsTeamOnly = !isAdmin && user?.incidentScope === 'TEAM_ONLY';
-
-            if (user && scopeIsTeamOnly) {
-                if (user.teamIds && user.teamIds.length > 0) {
-                    if (req.query.teamId) {
-                        // Must ensure requested teamId is one the user belongs to
-                        if (!user.teamIds.includes(req.query.teamId as string)) {
-                            filters.teamId = 'NONE';
-                        } else {
-                            filters.teamId = req.query.teamId as string;
-                        }
-                    } else {
-                        filters.teamId = user.teamIds;
-                    }
-                } else {
+            if (scopedTeamIds) {
+                if (scopedTeamIds.length === 0) {
                     filters.teamId = 'NONE';
+                } else if (req.query.teamId) {
+                    filters.teamId = scopedTeamIds.includes(req.query.teamId as string)
+                        ? req.query.teamId as string
+                        : 'NONE';
+                } else {
+                    filters.teamId = scopedTeamIds;
                 }
-            } else {
-                // ALL scope or ADMIN: optional filter by teamId from query
-                if (req.query.teamId) filters.teamId = req.query.teamId as string;
+            } else if (req.query.teamId) {
+                filters.teamId = req.query.teamId as string;
             }
 
             const result = await incidentCrudService.findAll(filters, pagination);
@@ -131,16 +121,8 @@ export class IncidentController {
             const authReq = req as AuthRequest;
             const incident = await incidentCrudService.findById(req.params.id);
 
-            const isAdmin = authReq.user?.role === UserRole.ADMIN;
-            const scopeIsTeamOnly = !isAdmin && authReq.user?.incidentScope === 'TEAM_ONLY';
-
-            // IDOR protection for TEAM_ONLY scope: user can only view incidents assigned to their team
-            if (authReq.user && scopeIsTeamOnly) {
-                const userTeamIds = authReq.user.teamIds || [];
-                const incidentTeamId = incident.assignedTeamId;
-                if (incidentTeamId && !userTeamIds.includes(incidentTeamId)) {
-                    throw new ForbiddenError('You do not have access to this incident');
-                }
+            if (!canAccessIncidentTeam(authReq.user, incident.assignedTeamId)) {
+                throw new ForbiddenError('You do not have access to this incident');
             }
 
             res.json(createResponse(true, incident));
@@ -268,6 +250,11 @@ export class IncidentController {
             if (!userId) throw new ValidationError('User not authenticated');
 
             const { id, filename } = req.params;
+            const incident = await incidentCrudService.findById(id);
+
+            if (!canAccessIncidentTeam(req.user, incident.assignedTeamId)) {
+                throw new ForbiddenError('You do not have access to this incident');
+            }
 
             // ── Path traversal protection ──
             if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
@@ -306,6 +293,11 @@ export class IncidentController {
             if (!userId) throw new ValidationError('User not authenticated');
 
             const { id, filename } = req.params;
+            const incident = await incidentCrudService.findById(id);
+
+            if (!canAccessIncidentTeam(req.user, incident.assignedTeamId)) {
+                throw new ForbiddenError('You do not have access to this incident');
+            }
 
             if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
                 throw new ValidationError('Invalid filename: path traversal characters are not allowed');
@@ -358,6 +350,13 @@ export class IncidentController {
 
     static async linkProcedure(req: Request, res: Response, next: NextFunction) {
         try {
+            const authReq = req as AuthRequest;
+            const existingIncident = await incidentCrudService.findById(req.params.id);
+
+            if (!hasGlobalIncidentAccess(authReq.user) && !canAccessIncidentTeam(authReq.user, existingIncident.assignedTeamId)) {
+                throw new ForbiddenError('You do not have access to this incident');
+            }
+
             const incident = await incidentCrudService.linkProcedure(req.params.id, req.params.procedureId);
             res.json(createResponse(true, incident));
         } catch (error) {
