@@ -1,112 +1,96 @@
-# ProdKB - Production Knowledge Base
+# ProdKB — Production Knowledge Base & Incident Management
 
-ProdKB is a comprehensive incident management and knowledge base system designed for IT operations teams. It streamlines the process of tracking production incidents and linking them to standard operating procedures (SOPs) for faster resolution.
+An internal platform for logging production incidents, managing Standard Operating Procedures (SOPs), enforcing SLAs, and coordinating automated escalations.
 
-## Project Overview
+## Tech Stack
 
-In complex IT environments, keeping track of incidents and the specific procedures to resolve them is critical. ProdKB allows teams to:
-- **Track Incidents**: Log and monitor production incidents across different environments (PROD, PREPROD, etc.).
-- **Manage Knowledge**: Create and maintain a library of Procedures (SOPs) with detailed resolution steps, commands, and know-how.
-- **Link Context**: Associate incidents and procedures with specific **Systems** and **Jobs** to enable quick lookup during emergencies.
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18, Vite, TypeScript, TailwindCSS, React Hook Form, Zod |
+| **Backend** | Node.js 20, Express 5, TypeScript, Prisma ORM, BullMQ |
+| **Database** | PostgreSQL 16 (via PgBouncer connection pooler) |
+| **Cache / Queues** | Redis 7 |
+| **Object Storage** | MinIO (S3-compatible) |
+| **Observability** | Prometheus, Grafana, Loki, Promtail |
 
-## Core Features
+## Requirements
 
-### 1. Incident Management
-- **Dashboard**: View incidents by status (Open, In Progress, Resolved).
-- **Tracking**: Record severity, environment, impact, and detection source.
-- **Timeline**: Track when an incident started, ended, and was resolved.
-- **Logs & Attachments**: Attach raw logs, error messages, or screenshots to an incident for audit trails.
-- **Resolution**: Assign identifying users who resolved the issue and link to the relevant Procedure used.
+- [Docker](https://docs.docker.com/engine/install/) & Docker Compose v2
+- Node.js 20+ (for local development only)
 
-### 2. Knowledge Base (Procedures)
-- **SOP Repository**: Store detailed guides including Root Cause, Resolution Steps, Workarounds, and key Commands.
-- **Contextual**: Procedures are linked to specific Systems and Jobs.
-- **Searchable**: Find procedures by error codes, tags, system, or job code.
+## Quick Start (Docker — recommended)
 
-### 3. System Registry
-- **Systems**: Manage the portfolio of applications/systems supported by the team.
-- **Jobs**: Catalog specific batch jobs or processes within those systems.
+```bash
+# 1. Clone
+git clone <repository-url>
+cd prodkb
 
-### 4. User Roles
-- **Admin**: Full access to manage Users, Systems, and Jobs.
-- **Expert**: Can create and edit Procedures and manage Incidents.
-- **Operator**: Primary users who log Incidents and search for Procedures.
+# 2. Configure environment
+cp .env.example .env
+# Edit .env — at minimum set JWT_SECRET to a random 64-char string
 
-## Technology Stack
+# 3. Start the full stack
+docker compose up -d
 
-### Frontend
-- **Framework**: React (Vite)
-- **Styling**: TailwindCSS
-- **State/Routing**: React Router, React Hook Form
-- **Networking**: Axios
+# 4. Run database migrations
+docker compose exec backend npx prisma migrate deploy
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: SQLite
-- **ORM**: Prisma
+# 5. Open the app
+open http://localhost:8080
+```
 
-- **Validation**: Zod
-- **Authentication**: JWT & Bcrypt
+Default seed credentials: `admin@prodkb.com` / `password123` — **change immediately in production**.
 
-## Data Model
+> See [README_DOCKER.md](README_DOCKER.md) for full Docker reference including backup VM setup.
 
-The core entities in the system are:
-- **User**: The actors in the system.
-- **System**: The software products being monitored.
-- **Job**: Specific processes within a System.
-- **Incident**: An operational event requiring attention.
-- **Procedure**: The documentation on how to solve a class of Incidents.
+## Local Development (without Docker)
 
-## Getting Started
+Requires PostgreSQL 16 and Redis 7 running locally.
 
-### Prerequisites
-- Node.js (v18+)
-- npm
+```bash
+# Backend
+cd backend
+cp .env.example .env      # fill in DATABASE_URL, REDIS_URL, JWT_SECRET
+npm install
+npx prisma migrate dev
+npm run dev               # http://localhost:3000
 
-### Installation
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev               # http://localhost:5173
+```
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd prodkb
-   ```
+## Running Tests
 
-2. **Setup Backend**:
-   ```bash
-   cd backend
-   npm install
-   
-   # Setup Environment Variables
-   cp .env.example .env
-   
-   # Initialize Database
-   npx prisma migrate dev
-   npx prisma db seed # (Optional: seeds initial data)
-   
-   # Start Server
-   npm run dev
-   ```
+```bash
+# Backend (Jest)
+cd backend
+npm test
 
-3. **Setup Frontend**:
-   ```bash
-   cd frontend
-   npm install
-   
-   # Start Dev Server
-   npm run dev
-   ```
+# Frontend (Vitest)
+cd frontend
+npm test
+```
 
-The application should now be running (by default, Frontend on `http://localhost:5173` and Backend on `http://localhost:3000`).
+## Key URLs (Docker stack)
 
-## Workflow Example
+| URL | Description |
+|---|---|
+| `http://localhost:8080` | Frontend |
+| `http://localhost:3000` | Backend API |
+| `http://localhost:3000/health` | Health check |
+| `http://localhost:3000/api-docs` | Swagger UI |
+| `http://localhost:3000/admin/queues` | Bull Board (ADMIN only) |
 
-1. **Setup**: An **Admin** defines the 'Billing System' and its 'Nightly-Invoice-Job'.
-2. **Detection**: An **Operator** notices the job failed. They log a new **Incident** in ProdKB, selecting the System and Job.
-3. **Investigation**: The Operator searches for existing Procedures for this Job.
-4. **Resolution**:
-   - *Scenario A*: A relevant Procedure is found. The Operator follows the steps, resolves the incident, updates the status to 'Resolved', and links the Procedure.
-   - *Scenario B*: No Procedure exists. An **Expert** investigates, fixes the issue, and creates a new **Procedure** documenting the fix for future reference.
+## Documentation
+
+- [README_DOCKER.md](README_DOCKER.md) — Docker Compose reference & backup VM
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Branch strategy, PR process, code standards
+- [SECURITY.md](SECURITY.md) — Security measures & vulnerability reporting
+- [docs/runbook.md](docs/runbook.md) — Deployment, rollback, incident playbooks
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architecture contract & design rules
+- `http://localhost:3000/api-docs` — Interactive API reference (Swagger)
 
 ## License
 

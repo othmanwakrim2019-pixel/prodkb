@@ -1,10 +1,7 @@
-import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
+import { notificationRepository } from './repositories/notification.repository';
 
 export class NotificationService {
-    /**
-     * Create notifications for all members of a team
-     */
     async createForTeam(
         teamId: string,
         type: string,
@@ -13,25 +10,22 @@ export class NotificationService {
         incidentId?: string
     ): Promise<void> {
         try {
-            const members = await prisma.teamMember.findMany({
-                where: { teamId },
-                select: { userId: true },
-            });
+            const members = await notificationRepository.findTeamMemberIds(teamId);
 
             if (members.length === 0) {
                 logger.warn('No team members found for notification', { teamId });
                 return;
             }
 
-            await prisma.notification.createMany({
-                data: members.map(m => ({
-                    userId: m.userId,
+            await notificationRepository.createNotifications(
+                members.map((member) => ({
+                    userId: member.userId,
                     type,
                     title,
                     message,
                     incidentId: incidentId || null,
-                })),
-            });
+                }))
+            );
 
             logger.info('Notifications created', { teamId, type, count: members.length });
         } catch (error) {
@@ -39,47 +33,20 @@ export class NotificationService {
         }
     }
 
-    /**
-     * Get notifications for the current user
-     */
     async getForUser(userId: string, unreadOnly = false, limit = 50) {
-        const where: Record<string, unknown> = { userId };
-        if (unreadOnly) where.isRead = false;
-
-        return prisma.notification.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-        });
+        return notificationRepository.findUserNotifications(userId, unreadOnly, limit);
     }
 
-    /**
-     * Get unread count for a user
-     */
     async getUnreadCount(userId: string): Promise<number> {
-        return prisma.notification.count({
-            where: { userId, isRead: false },
-        });
+        return notificationRepository.countUnreadNotifications(userId);
     }
 
-    /**
-     * Mark a single notification as read
-     */
     async markAsRead(id: string, userId: string) {
-        return prisma.notification.updateMany({
-            where: { id, userId },
-            data: { isRead: true },
-        });
+        return notificationRepository.markNotificationRead(id, userId);
     }
 
-    /**
-     * Mark all notifications as read for a user
-     */
     async markAllRead(userId: string) {
-        return prisma.notification.updateMany({
-            where: { userId, isRead: false },
-            data: { isRead: true },
-        });
+        return notificationRepository.markAllNotificationsRead(userId);
     }
 }
 

@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   verbose: true,
   forceExit: true,
+  globalTeardown: '<rootDir>/tests/global-teardown.ts',
   roots: ['<rootDir>/tests'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest',

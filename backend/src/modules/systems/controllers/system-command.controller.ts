@@ -1,36 +1,11 @@
+import type { NextFunction, Response } from 'express';
+import type { AuthRequest } from '../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../common/types/api.response';
+import { logAudit, generateAuditDiff } from '../../audit/audit.service';
+import { createJobSchema, createSystemSchema, updateJobSchema, updateSystemSchema } from '../system.schema';
+import { systemService } from '../system.service';
 
-import { Request, Response, NextFunction } from 'express';
-import { systemService } from './system.service';
-import { healthScoreService } from './health-score.service';
-import { AuthRequest } from '../../common/middleware/auth.middleware';
-import { createResponse } from '../../common/types/api.response';
-import { logAudit, generateAuditDiff } from '../audit/audit.service';
-import { createSystemSchema, updateSystemSchema, createJobSchema, updateJobSchema } from './system.schema';
-
-
-export class SystemController {
-    // --- Health Leaderboard ---
-
-    static async getHealthLeaderboard(_req: Request, res: Response, next: NextFunction) {
-        try {
-            const leaderboard = await healthScoreService.getLeaderboard();
-            res.json(createResponse(true, leaderboard));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // --- Systems ---
-
-    static async getSystems(req: Request, res: Response, next: NextFunction) {
-        try {
-            const systems = await systemService.findAllSystems();
-            res.json(createResponse(true, systems));
-        } catch (error) {
-            next(error);
-        }
-    }
-
+export class SystemCommandController {
     static async createSystem(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const data = createSystemSchema.parse(req.body);
@@ -42,7 +17,7 @@ export class SystemController {
                 entityType: 'SYSTEM',
                 entityId: system.id,
                 details: JSON.stringify(data),
-                req
+                req,
             });
 
             res.status(201).json(createResponse(true, system, 'System created successfully'));
@@ -55,8 +30,6 @@ export class SystemController {
         try {
             const { id } = req.params;
             const data = updateSystemSchema.parse(req.body);
-
-            // Get existing for audit
             const existing = await systemService.findSystemById(id);
             const updated = await systemService.updateSystem(id, data);
 
@@ -68,7 +41,7 @@ export class SystemController {
                     entityType: 'SYSTEM',
                     entityId: id,
                     details: changes,
-                    req
+                    req,
                 });
             }
 
@@ -89,21 +62,10 @@ export class SystemController {
                 entityType: 'SYSTEM',
                 entityId: id,
                 details: JSON.stringify({ systemName: system.name }),
-                req
+                req,
             });
 
             res.json(createResponse(true, null, 'System deleted successfully'));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // --- Jobs ---
-
-    static async getJobs(req: Request, res: Response, next: NextFunction) {
-        try {
-            const jobs = await systemService.findAllJobs();
-            res.json(createResponse(true, jobs));
         } catch (error) {
             next(error);
         }
@@ -120,7 +82,7 @@ export class SystemController {
                 entityType: 'JOB',
                 entityId: job.id,
                 details: JSON.stringify(data),
-                req
+                req,
             });
 
             res.status(201).json(createResponse(true, job, 'Job created successfully'));
@@ -133,7 +95,6 @@ export class SystemController {
         try {
             const { id } = req.params;
             const data = updateJobSchema.parse(req.body);
-
             const existing = await systemService.findJobById(id);
             const updated = await systemService.updateJob(id, data);
 
@@ -145,7 +106,7 @@ export class SystemController {
                     entityType: 'JOB',
                     entityId: id,
                     details: changes,
-                    req
+                    req,
                 });
             }
 
@@ -166,7 +127,7 @@ export class SystemController {
                 entityType: 'JOB',
                 entityId: id,
                 details: JSON.stringify({ jobName: job.name, jobCode: job.code }),
-                req
+                req,
             });
 
             res.json(createResponse(true, null, 'Job deleted successfully'));

@@ -16,7 +16,13 @@ import { EscalationManagementPage as EscalationManagement } from './EscalationMa
 import { AutoAssignManagementPage as AutoAssignManagement } from './AutoAssignManagementPage';
 import { WebhookManagementPage as WebhookManagement } from './WebhookManagementPage';
 import { useTranslation } from 'react-i18next';
-import { ADMIN_TAB_ORDER, ADMIN_TAB_PERMISSIONS, APP_PATHS } from '../../../app/route-meta';
+import {
+    ADMIN_TAB_PERMISSIONS,
+    APP_PATHS,
+    getAdminTabPath,
+    getFirstAccessibleAdminTab,
+    getFirstAccessiblePath,
+} from '../../../app/route-meta';
 
 export const AdminPage = () => {
     const { user, hasPermission, isLoading } = useAuth();
@@ -25,14 +31,15 @@ export const AdminPage = () => {
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || '');
     const { t } = useTranslation();
 
-    const firstAllowedTab = ADMIN_TAB_ORDER.find((tab) => hasPermission(ADMIN_TAB_PERMISSIONS[tab]));
+    const firstAllowedTab = getFirstAccessibleAdminTab(hasPermission);
+    const firstAccessiblePath = getFirstAccessiblePath(hasPermission);
 
     // Sync with URL
     useEffect(() => {
         const tab = searchParams.get('tab');
         if (!tab) {
             if (firstAllowedTab) {
-                navigate(`${APP_PATHS.admin}?tab=${firstAllowedTab}`, { replace: true });
+                navigate(getAdminTabPath(firstAllowedTab), { replace: true });
             }
             return;
         }
@@ -69,6 +76,14 @@ export const AdminPage = () => {
     }
 
     if (!activeTab || !ADMIN_TAB_PERMISSIONS[activeTab] || !hasPermission(ADMIN_TAB_PERMISSIONS[activeTab])) {
+        if (firstAllowedTab) {
+            return <Navigate to={getAdminTabPath(firstAllowedTab)} replace />;
+        }
+
+        if (firstAccessiblePath && firstAccessiblePath !== APP_PATHS.admin) {
+            return <Navigate to={firstAccessiblePath} replace />;
+        }
+
         return <Navigate to={APP_PATHS.forbidden} replace />;
     }
 

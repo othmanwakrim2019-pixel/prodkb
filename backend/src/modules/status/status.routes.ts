@@ -1,16 +1,8 @@
-import { Router, Request, Response } from 'express';
-import { statusService } from './status.service';
+import { Router } from 'express';
+import { StatusController } from './status.controller';
 
 const router = Router();
 
-// Public route — no auth required
-router.get('/', async (req: Request, res: Response) => {
-    try {
-        const data = await statusService.getPublicStatus();
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to load status data' });
-    }
-});
+router.get('/', StatusController.getPublicStatus);
 
 export const statusRoutes = router;

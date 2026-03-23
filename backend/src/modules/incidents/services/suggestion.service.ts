@@ -10,8 +10,8 @@
  * @module modules/incidents/suggestion.service
  */
 
-import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export interface ProcedureSuggestion {
     procedureId: string;
@@ -50,19 +50,7 @@ class IncidentSuggestionService {
             if (severity) where.severity = severity;
 
             // Get all matching incidents with their linked procedure
-            const incidents = await prisma.incident.findMany({
-                where,
-                select: {
-                    linkedProcedureId: true,
-                    timeToResolve: true,
-                    linkedProcedure: {
-                        select: { id: true, title: true },
-                    },
-                    system: {
-                        select: { name: true },
-                    },
-                },
-            });
+            const incidents = await incidentRepository.findIncidentSuggestions(where);
 
             if (incidents.length === 0) {
                 // Fallback: if no exact match, try just systemId (no job/severity filter)

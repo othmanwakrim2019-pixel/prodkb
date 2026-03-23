@@ -1,6 +1,6 @@
-import { prisma } from '../../common/utils/prisma';
 import { IncidentStatus } from '../../constants';
 import { maintenanceService } from '../maintenance/maintenance.service';
+import { statusRepository } from './status.repository';
 
 export interface SystemStatus {
     systemId: string;
@@ -37,52 +37,25 @@ class StatusService {
         // Sync maintenance statuses first
         await maintenanceService.syncStatuses();
 
-        const systems = await prisma.system.findMany({ orderBy: { name: 'asc' } });
+        const systems = await statusRepository.findSystemsOrdered();
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
         const systemStatuses: SystemStatus[] = await Promise.all(
             systems.map(async (system) => {
                 // Check active maintenance
-                const activeMaintenance = await prisma.maintenanceWindow.findFirst({
-                    where: {
-                        systemId: system.id,
-                        scheduledAt: { lte: now },
-                        endsAt: { gt: now },
-                        status: { in: ['scheduled', 'active'] },
-                    },
-                    select: { title: true, scheduledAt: true, endsAt: true },
-                });
+                const activeMaintenance = await statusRepository.findActiveMaintenance(system.id, now);
 
-                // Open incidents by severity
-                const openIncidents = await prisma.incident.findMany({
-                    where: {
-                        systemId: system.id,
-                        status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS] },
-                    },
-                    select: { severity: true },
-                });
+                const openIncidents = await statusRepository.findOpenIncidentSeverities(system.id);
 
                 const criticalCount = openIncidents.filter(i => i.severity === 'Critical').length;
                 const highCount = openIncidents.filter(i => i.severity === 'High').length;
 
                 // Recent resolved incidents (last 5)
-                const recentIncidents = await prisma.incident.findMany({
-                    where: { systemId: system.id, createdAt: { gte: thirtyDaysAgo } },
-                    select: { id: true, title: true, severity: true, status: true, resolvedAt: true, createdAt: true },
-                    orderBy: { createdAt: 'desc' },
-                    take: 5,
-                });
+                const recentIncidents = await statusRepository.findRecentIncidents(system.id, thirtyDaysAgo);
 
-                // Uptime: % of time with no critical/high open incidents (30d)
-                const totalIncidents30d = await prisma.incident.count({ where: { systemId: system.id, createdAt: { gte: thirtyDaysAgo } } });
-                const resolvedCount = await prisma.incident.count({
-                    where: {
-                        systemId: system.id,
-                        status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
-                        createdAt: { gte: thirtyDaysAgo },
-                    },
-                });
+                const totalIncidents30d = await statusRepository.countIncidentsSince(system.id, thirtyDaysAgo);
+                const resolvedCount = await statusRepository.countResolvedIncidentsSince(system.id, thirtyDaysAgo);
                 const uptime30d = totalIncidents30d === 0 ? 100
                     : Math.round((resolvedCount / totalIncidents30d) * 100 * 10) / 10;
 
@@ -107,15 +80,10 @@ class StatusService {
         );
 
         // Upcoming maintenances (active now or starting in next 7 days)
-        const upcomingMaintenances = await prisma.maintenanceWindow.findMany({
-            where: {
-                endsAt: { gt: now }, // not yet ended
-                scheduledAt: { lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) }, // starts within 7 days
-                status: { in: ['scheduled', 'active'] },
-            },
-            include: { system: { select: { name: true } } },
-            orderBy: { scheduledAt: 'asc' },
-        });
+        const upcomingMaintenances = await statusRepository.findUpcomingMaintenances(
+            now,
+            new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        );
 
         // Overall status
         const statuses = systemStatuses.map(s => s.status);

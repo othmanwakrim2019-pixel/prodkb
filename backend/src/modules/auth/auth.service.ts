@@ -1,21 +1,17 @@
-
 import bcrypt from 'bcryptjs';
-import { prisma } from '../../common/utils/prisma';
 import { logger } from '../../common/utils/logger';
-import { AuthenticationError, ConflictError, ValidationError, NotFoundError } from '../../common/errors/app.error';
+import { AuthenticationError, ConflictError, ValidationError } from '../../common/errors/app.error';
 import { JwtService } from '../../common/utils/jwt.utils';
 import { refreshTokenService } from './refresh-token.service';
 import { isAccountLocked, recordFailedAttempt, clearFailedAttempts } from '../../common/services/lockout.service';
 import type { CreateUserDTO, IUserPublic } from '../../types';
+import { authRepository } from './repositories/auth.repository';
 
 export class AuthService {
     private readonly SALT_ROUNDS = 10;
 
-    /**
-     * Register a new user
-     */
     async register(data: CreateUserDTO): Promise<IUserPublic> {
-        const existing = await prisma.user.findUnique({ where: { email: data.email } });
+        const existing = await authRepository.findUserByEmail(data.email);
         if (existing) {
             throw new ConflictError('Email already registered');
         }
@@ -28,70 +24,37 @@ export class AuthService {
 
         let roleId: string | null = null;
         if (data.role) {
-            const role = await prisma.role.findUnique({ where: { name: data.role } });
+            const role = await authRepository.findRoleByName(data.role);
             if (role) roleId = role.id;
         }
 
-        // Validate team if provided
         if (data.teamId) {
-            const team = await prisma.team.findUnique({ where: { id: data.teamId } });
+            const team = await authRepository.findTeamById(data.teamId);
             if (!team) throw new ValidationError('Invalid team ID');
         }
 
-        const result = await prisma.$transaction(async (tx) => {
-            const user = await tx.user.create({
-                data: {
-                    name: data.name,
-                    email: data.email,
-                    password: hashedPassword,
-                    roleId,
-                    isActive: data.isActive !== undefined ? data.isActive : true,
-                },
-                include: {
-                    role: { select: { id: true, name: true } },
-                },
-            });
-
-            if (data.teamId) {
-                await tx.teamMember.create({
-                    data: {
-                        userId: user.id,
-                        teamId: data.teamId,
-                        role: data.teamRole || 'MEMBER',
-                    },
-                });
-            }
-
-            return user;
+        const result = await authRepository.createUserWithOptionalTeam({
+            name: data.name,
+            email: data.email,
+            password: hashedPassword,
+            roleId,
+            isActive: data.isActive !== undefined ? data.isActive : true,
+            teamId: data.teamId,
+            teamRole: data.teamRole,
         });
 
         logger.info('User registered', { userId: result.id, email: result.email });
-
         return this.toPublicUser(result);
     }
 
-    /**
-     * Login user
-     */
     async login(email: string, password: string) {
-        // ── Account lockout check ──
         const lockoutRemaining = await isAccountLocked(email);
         if (lockoutRemaining > 0) {
             const minutes = Math.ceil(lockoutRemaining / 60);
             throw new AuthenticationError(`Account is temporarily locked. Try again in ${minutes} minute(s).`);
         }
 
-        const user = await prisma.user.findUnique({
-            where: { email },
-            include: {
-                role: {
-                    include: {
-                        permissions: { select: { code: true } },
-                    },
-                },
-            },
-        });
-
+        const user = await authRepository.findUserForLogin(email);
         if (!user) {
             await recordFailedAttempt(email);
             throw new AuthenticationError('Invalid email or password');
@@ -110,19 +73,15 @@ export class AuthService {
             throw new AuthenticationError('Account is inactive');
         }
 
-        // ── Successful login — clear lockout counter ──
         await clearFailedAttempts(email);
 
-        // Generate JWT using JwtService
         const token = JwtService.sign({
             userId: user.id,
             email: user.email,
-            role: user.role?.name || 'OPERATOR', // Fallback role
+            role: user.role?.name || 'OPERATOR',
         });
 
-        const permissions = user.role?.permissions?.map(p => p.code) || [];
-
-        // Generate refresh token for token rotation
+        const permissions = user.role?.permissions?.map((permission) => permission.code) || [];
         const refreshToken = await refreshTokenService.generate(user.id);
 
         return {

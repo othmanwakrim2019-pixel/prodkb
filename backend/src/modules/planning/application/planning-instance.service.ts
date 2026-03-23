@@ -1,32 +1,15 @@
-import { PlanningPeriod, PlanningStatus, TaskType, InstanceStatus, type PlanningJob } from '@prisma/client';
-import { prisma } from '../../../common/utils/prisma';
+import { PlanningPeriod, PlanningStatus, InstanceStatus, type PlanningJob } from '@prisma/client';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../../common/errors/app.error';
+import { planningRepository } from '../repositories/planning.repository';
 
 export class PlanningInstanceService {
     async findAll(filters?: { period?: PlanningPeriod; status?: InstanceStatus }) {
-        const where: Record<string, unknown> = {};
-        if (filters?.period) where.period = filters.period;
-        if (filters?.status) where.status = filters.status;
-
-        return prisma.planningInstance.findMany({
-            where,
-            include: {
-                createdBy: { select: { id: true, name: true, email: true } },
-                _count: { select: { jobs: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+        return planningRepository.findInstances(filters);
     }
 
     async findById(id: string) {
-        const instance = await prisma.planningInstance.findUnique({
-            where: { id },
-            include: {
-                createdBy: { select: { id: true, name: true, email: true } },
-                _count: { select: { jobs: true } },
-            },
-        });
+        const instance = await planningRepository.findInstanceById(id);
         if (!instance) throw new NotFoundError('Planning instance not found');
         return instance;
     }
@@ -39,42 +22,21 @@ export class PlanningInstanceService {
         endDate: Date;
         createdById: string;
     }) {
-        return prisma.planningInstance.create({
-            data: {
-                name: data.name,
-                description: data.description,
-                period: data.period,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                createdById: data.createdById,
-            },
-            include: {
-                createdBy: { select: { id: true, name: true, email: true } },
-            },
-        });
+        return planningRepository.createInstance(data);
     }
 
     async archive(id: string) {
         await this.findById(id);
-        return prisma.planningInstance.update({
-            where: { id },
-            data: { status: InstanceStatus.archived },
-        });
+        return planningRepository.updateInstanceStatus(id, InstanceStatus.archived);
     }
 
     async reactivate(id: string) {
         await this.findById(id);
-        return prisma.planningInstance.update({
-            where: { id },
-            data: { status: InstanceStatus.active },
-        });
+        return planningRepository.updateInstanceStatus(id, InstanceStatus.active);
     }
 
     async cloneForNextMonth(instanceId: string, createdById: string) {
-        const source = await prisma.planningInstance.findUnique({
-            where: { id: instanceId },
-            include: { jobs: true },
-        });
+        const source = await planningRepository.findInstanceWithJobs(instanceId);
         if (!source) throw new NotFoundError('Planning instance not found');
 
         const advanceMonth = (date: Date) => {
@@ -83,72 +45,62 @@ export class PlanningInstanceService {
             return next;
         };
 
-        const newInstance = await prisma.planningInstance.create({
-            data: {
-                name: source.name.replace(/\d{4}$/, '') + new Date(advanceMonth(source.startDate)).getFullYear()
-                    || `${source.name} (Clone)`,
-                description: source.description ?? undefined,
-                period: source.period,
-                startDate: advanceMonth(source.startDate),
-                endDate: advanceMonth(source.endDate),
-                createdById,
-                status: InstanceStatus.active,
-            },
+        const newInstance = await planningRepository.createInstance({
+            name: source.name.replace(/\d{4}$/, '') + new Date(advanceMonth(source.startDate)).getFullYear()
+                || `${source.name} (Clone)`,
+            description: source.description ?? undefined,
+            period: source.period,
+            startDate: advanceMonth(source.startDate),
+            endDate: advanceMonth(source.endDate),
+            createdById,
+            status: InstanceStatus.active,
         });
 
         const idMap = new Map<string, string>();
         const createdJobs: PlanningJob[] = [];
 
         for (const job of source.jobs) {
-            const newJob = await prisma.planningJob.create({
-                data: {
-                    instanceId: newInstance.id,
-                    systemId: job.systemId ?? undefined,
-                    jobId: job.jobId ?? undefined,
-                    customTaskName: job.customTaskName ?? undefined,
-                    scheduledTime: advanceMonth(job.scheduledTime),
-                    dependencies: [],
-                    status: PlanningStatus.pending,
-                    taskType: job.taskType,
-                    supportContact: job.supportContact ?? undefined,
-                    notes: undefined,
-                    positionX: job.positionX ?? undefined,
-                    positionY: job.positionY ?? undefined,
-                },
+            const newJob = await planningRepository.createJob({
+                instanceId: newInstance.id,
+                systemId: job.systemId ?? undefined,
+                jobId: job.jobId ?? undefined,
+                customTaskName: job.customTaskName ?? undefined,
+                scheduledTime: advanceMonth(job.scheduledTime),
+                dependencies: [],
+                status: PlanningStatus.pending,
+                taskType: job.taskType,
+                supportContact: job.supportContact ?? undefined,
+                notes: undefined,
+                positionX: job.positionX ?? undefined,
+                positionY: job.positionY ?? undefined,
             });
+
             idMap.set(job.id, newJob.id);
-            createdJobs.push(newJob);
+            createdJobs.push(newJob as PlanningJob);
         }
 
-        for (let index = 0; index < source.jobs.length; index++) {
-            const oldJob = source.jobs[index];
-            const newJobId = idMap.get(oldJob.id)!;
+        for (const oldJob of source.jobs) {
+            const newJobId = idMap.get(oldJob.id);
+            if (!newJobId) continue;
+
             const oldDeps = oldJob.dependencies as string[];
             const newDeps = oldDeps.map((depId) => idMap.get(depId) || depId);
 
             if (newDeps.length > 0) {
-                await prisma.planningJob.update({
-                    where: { id: newJobId },
-                    data: { dependencies: newDeps },
-                });
+                await planningRepository.updateJobDependencies(newJobId, newDeps);
             }
         }
 
         logger.info(`Cloned planning instance ${instanceId} -> ${newInstance.id} with ${createdJobs.length} jobs`);
 
-        return prisma.planningInstance.findUnique({
-            where: { id: newInstance.id },
-            include: {
-                createdBy: { select: { id: true, name: true, email: true } },
-                _count: { select: { jobs: true } },
-            },
-        });
+        return planningRepository.findInstanceById(newInstance.id);
     }
 
     async delete(id: string) {
-        const instance = await prisma.planningInstance.findUnique({ where: { id } });
+        const instance = await planningRepository.findInstanceRecord(id);
         if (!instance) throw new NotFoundError('Planning instance not found');
-        await prisma.planningInstance.delete({ where: { id } });
+
+        await planningRepository.deleteInstance(id);
         logger.info(`Deleted planning instance ${id}`);
         return instance;
     }
@@ -192,6 +144,7 @@ export class PlanningInstanceService {
             const timePart = timeStr?.trim() || '08:00';
             const parts = dateStr.trim().split('/');
             let date: Date;
+
             if (parts.length === 3) {
                 const [p1, p2, p3] = parts.map(Number);
                 const year = p3 < 100 ? 2000 + p3 : p3;
@@ -201,6 +154,7 @@ export class PlanningInstanceService {
             } else {
                 date = new Date(dateStr);
             }
+
             const [hh, mm] = timePart.split(':').map(Number);
             date.setHours(hh || 8, mm || 0, 0, 0);
             return date;
@@ -236,6 +190,7 @@ export class PlanningInstanceService {
                     skipped.push(`Row ref="${ref}": MANUAL task with empty task_name - skipped`);
                     continue;
                 }
+
                 resolvedJobs.push({ ref, taskType, scheduledTime, customTaskName: taskName, supportContact, rawDepsRefs });
                 continue;
             }
@@ -249,24 +204,26 @@ export class PlanningInstanceService {
 
             let systemId = systemCache.get(systemName);
             if (!systemId) {
-                const system = await prisma.system.findFirst({ where: { name: { equals: systemName, mode: 'insensitive' } } });
+                const system = await planningRepository.findSystemByNameInsensitive(systemName);
                 if (!system) {
                     warnings.push(`Row ref="${ref}": System "${systemName}" not found in DB - skipped`);
                     skipped.push(ref);
                     continue;
                 }
+
                 systemCache.set(systemName, system.id);
                 systemId = system.id;
             }
 
             let jobId = jobCache.get(jobCode);
             if (!jobId) {
-                const job = await prisma.job.findFirst({ where: { code: { equals: jobCode, mode: 'insensitive' }, systemId } });
+                const job = await planningRepository.findJobByCodeAndSystem(jobCode, systemId);
                 if (!job) {
                     warnings.push(`Row ref="${ref}": Job code "${jobCode}" not found for system "${systemName}" - skipped`);
                     skipped.push(ref);
                     continue;
                 }
+
                 jobCache.set(jobCode, job.id);
                 jobId = job.id;
             }
@@ -314,47 +271,21 @@ export class PlanningInstanceService {
         const endDate = new Date(Math.max(...dates.map((date) => date.getTime())));
         endDate.setHours(23, 59, 59, 999);
 
-        const result = await prisma.$transaction(async (tx) => {
-            const instance = await tx.planningInstance.create({
-                data: {
-                    name: instanceName,
-                    period,
-                    startDate,
-                    endDate,
-                    createdById,
-                    status: InstanceStatus.active,
-                },
-            });
-
-            const createdJobIds: string[] = [];
-            for (const job of resolvedJobs) {
-                const created = await tx.planningJob.create({
-                    data: {
-                        instanceId: instance.id,
-                        taskType: job.taskType === 'BATCH' ? TaskType.BATCH : TaskType.MANUAL_ACTION,
-                        scheduledTime: job.scheduledTime,
-                        systemId: job.systemId ?? undefined,
-                        jobId: job.jobId ?? undefined,
-                        customTaskName: job.customTaskName ?? undefined,
-                        supportContact: job.supportContact ?? undefined,
-                        status: PlanningStatus.pending,
-                        dependencies: [],
-                    },
-                });
-                createdJobIds.push(created.id);
-            }
-
-            for (let index = 0; index < resolvedJobs.length; index++) {
-                const depIndexes = resolvedDeps.get(index) || [];
-                if (depIndexes.length > 0) {
-                    await tx.planningJob.update({
-                        where: { id: createdJobIds[index] },
-                        data: { dependencies: depIndexes.map((depIndex) => createdJobIds[depIndex]) },
-                    });
-                }
-            }
-
-            return instance;
+        const result = await planningRepository.createImportedInstanceWithJobs({
+            instanceName,
+            period,
+            startDate,
+            endDate,
+            createdById,
+            jobs: resolvedJobs.map((job) => ({
+                taskType: job.taskType,
+                scheduledTime: job.scheduledTime,
+                customTaskName: job.customTaskName,
+                systemId: job.systemId,
+                jobId: job.jobId,
+                supportContact: job.supportContact,
+            })),
+            resolvedDeps,
         });
 
         logger.info(`Imported planning instance "${instanceName}" with ${resolvedJobs.length} jobs`);

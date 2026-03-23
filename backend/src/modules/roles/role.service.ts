@@ -1,99 +1,41 @@
-
-import { prisma } from '../../common/utils/prisma';
 import { NotFoundError, ForbiddenError, ValidationError } from '../../common/errors/app.error';
+import { roleRepository } from './repositories/role.repository';
 
 export class RoleService {
     async findAllRoles() {
-        return prisma.role.findMany({
-            include: {
-                permissions: true,
-                _count: { select: { users: true } }
-            },
-            orderBy: { name: 'asc' }
-        });
+        return roleRepository.findRoles();
     }
 
     async findAllPermissions() {
-        return prisma.permission.findMany({
-            orderBy: { code: 'asc' }
-        });
+        return roleRepository.findPermissions();
     }
 
     async createRole(data: { name: string; description?: string; permissionIds: string[]; incidentScope?: string }) {
-        return prisma.role.create({
-            data: {
-                name: data.name,
-                description: data.description,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                incidentScope: (data.incidentScope ?? 'ALL') as any,
-                permissions: {
-                    connect: data.permissionIds.map((id: string) => ({ id }))
-                }
-            },
-            include: { permissions: true }
-        });
+        return roleRepository.createRole(data);
     }
 
     async updateRole(id: string, data: { name?: string; description?: string | null; permissionIds: string[]; incidentScope?: string }) {
-        const currentRole = await prisma.role.findUnique({ where: { id } });
-
+        const currentRole = await roleRepository.findRoleById(id);
         if (!currentRole) throw new NotFoundError('Role not found');
         if (currentRole.name === 'ADMIN') {
             throw new ForbiddenError('Cannot modify ADMIN role');
         }
 
-        return prisma.role.update({
-            where: { id },
-            data: {
-                name: data.name,
-                description: data.description,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ...(data.incidentScope ? { incidentScope: data.incidentScope as any } : {}),
-                permissions: {
-                    set: [],
-                    connect: data.permissionIds.map((pid: string) => ({ id: pid }))
-                }
-            },
-            include: { permissions: true }
-        });
+        return roleRepository.updateRole(id, data);
     }
 
     async replaceRolePermissions(id: string, permissionIds: string[]) {
-        return prisma.$transaction(async (tx) => {
-            const currentRole = await tx.role.findUnique({
-                where: { id },
-                include: { permissions: true }
-            });
+        const currentRole = await roleRepository.findRoleById(id);
+        if (!currentRole) throw new NotFoundError('Role not found');
+        if (currentRole.name === 'ADMIN') {
+            throw new ForbiddenError('Cannot modify ADMIN role');
+        }
 
-            if (!currentRole) throw new NotFoundError('Role not found');
-            if (currentRole.name === 'ADMIN') {
-                throw new ForbiddenError('Cannot modify ADMIN role');
-            }
-
-            await tx.role.update({
-                where: { id },
-                data: {
-                    permissions: {
-                        set: [],
-                    },
-                },
-            });
-
-            return tx.role.update({
-                where: { id },
-                data: {
-                    permissions: {
-                        connect: permissionIds.map((permissionId) => ({ id: permissionId })),
-                    },
-                },
-                include: { permissions: true },
-            });
-        });
+        return roleRepository.replaceRolePermissions(id, permissionIds);
     }
 
     async deleteRole(id: string) {
-        const role = await prisma.role.findUnique({ where: { id }, include: { _count: { select: { users: true } } } });
-
+        const role = await roleRepository.findRoleWithUsage(id);
         if (!role) throw new NotFoundError('Role not found');
         if (role.name === 'ADMIN') {
             throw new ForbiddenError('Cannot delete ADMIN role');
@@ -102,13 +44,12 @@ export class RoleService {
             throw new ValidationError('Cannot delete role assigned to users');
         }
 
-        await prisma.role.delete({ where: { id } });
+        await roleRepository.deleteRole(id);
         return role;
     }
 
-    // Helper for audit
     async findRoleById(id: string) {
-        return prisma.role.findUnique({ where: { id }, include: { permissions: true } });
+        return roleRepository.findRoleById(id);
     }
 }
 

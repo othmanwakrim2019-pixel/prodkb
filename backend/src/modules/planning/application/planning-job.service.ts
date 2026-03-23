@@ -1,30 +1,16 @@
 import { PlanningStatus, TaskType, InstanceStatus, type PlanningJob } from '@prisma/client';
-import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../../common/errors/app.error';
 import { validatePlanningTransition } from './planning.rules';
+import { planningRepository } from '../repositories/planning.repository';
 
 export class PlanningJobService {
-    private includeRelations = {
-        system: { select: { id: true, name: true } },
-        job: { select: { id: true, name: true, code: true } },
-        completedBy: { select: { id: true, name: true } },
-        launchedBy: { select: { id: true, name: true } },
-    };
-
     async findByInstance(instanceId: string) {
-        return prisma.planningJob.findMany({
-            where: { instanceId },
-            include: this.includeRelations,
-            orderBy: { scheduledTime: 'asc' },
-        });
+        return planningRepository.findJobsByInstance(instanceId);
     }
 
     async findById(id: string) {
-        const job = await prisma.planningJob.findUnique({
-            where: { id },
-            include: this.includeRelations,
-        });
+        const job = await planningRepository.findJobById(id);
         if (!job) throw new NotFoundError('Planning job not found');
         return job;
     }
@@ -41,7 +27,7 @@ export class PlanningJobService {
         supportContact?: string;
         notes?: string;
     }) {
-        const instance = await prisma.planningInstance.findUnique({ where: { id: data.instanceId } });
+        const instance = await planningRepository.findInstanceRef(data.instanceId);
         if (!instance) throw new NotFoundError('Planning instance not found');
         if (instance.status === InstanceStatus.archived) {
             throw new ValidationError('Cannot add jobs to an archived planning instance');
@@ -51,21 +37,7 @@ export class PlanningJobService {
             await this.validateDependencies(data.dependencies, data.instanceId);
         }
 
-        return prisma.planningJob.create({
-            data: {
-                instanceId: data.instanceId,
-                systemId: data.systemId ?? undefined,
-                jobId: data.jobId ?? undefined,
-                customTaskName: data.customTaskName ?? undefined,
-                scheduledTime: data.scheduledTime,
-                dependencies: data.dependencies,
-                status: data.status || PlanningStatus.pending,
-                taskType: data.taskType || TaskType.BATCH,
-                supportContact: data.supportContact,
-                notes: data.notes,
-            },
-            include: this.includeRelations,
-        });
+        return planningRepository.createJob(data);
     }
 
     async update(id: string, data: {
@@ -82,48 +54,36 @@ export class PlanningJobService {
         if (data.dependencies && data.dependencies.length > 0) {
             await this.validateDependencies(data.dependencies, existing.instanceId, id);
 
-            const allJobs = await prisma.planningJob.findMany({
-                where: { instanceId: existing.instanceId },
-            });
+            const allJobs = await planningRepository.findJobsByInstanceRaw(existing.instanceId);
             if (this.detectCycle(id, data.dependencies, allJobs)) {
                 throw new ValidationError('Circular dependency detected');
             }
         }
 
-        return prisma.planningJob.update({
-            where: { id },
-            data: {
-                ...(data.systemId !== undefined && { systemId: data.systemId }),
-                ...(data.jobId !== undefined && { jobId: data.jobId }),
-                ...(data.scheduledTime !== undefined && { scheduledTime: data.scheduledTime }),
-                ...(data.dependencies !== undefined && { dependencies: data.dependencies }),
-                ...(data.taskType !== undefined && { taskType: data.taskType }),
-                ...(data.supportContact !== undefined && { supportContact: data.supportContact }),
-                ...(data.notes !== undefined && { notes: data.notes }),
-            },
-            include: this.includeRelations,
+        return planningRepository.updateJob(id, {
+            ...(data.systemId !== undefined && { systemId: data.systemId }),
+            ...(data.jobId !== undefined && { jobId: data.jobId }),
+            ...(data.scheduledTime !== undefined && { scheduledTime: data.scheduledTime }),
+            ...(data.dependencies !== undefined && { dependencies: data.dependencies }),
+            ...(data.taskType !== undefined && { taskType: data.taskType }),
+            ...(data.supportContact !== undefined && { supportContact: data.supportContact }),
+            ...(data.notes !== undefined && { notes: data.notes }),
         });
     }
 
     async delete(id: string) {
         const job = await this.findById(id);
 
-        const siblings = await prisma.planningJob.findMany({
-            where: { instanceId: job.instanceId },
-        });
-
+        const siblings = await planningRepository.findJobsByInstanceRaw(job.instanceId);
         const cleanupPromises = siblings
             .filter((sibling) => (sibling.dependencies as string[]).includes(id))
             .map((sibling) => {
                 const dependencies = (sibling.dependencies as string[]).filter((depId) => depId !== id);
-                return prisma.planningJob.update({
-                    where: { id: sibling.id },
-                    data: { dependencies },
-                });
+                return planningRepository.updateJobDependencies(sibling.id, dependencies);
             });
 
         await Promise.all(cleanupPromises);
-        await prisma.planningJob.delete({ where: { id } });
+        await planningRepository.deleteJob(id);
 
         logger.info(`Deleted planning job ${id}, cleaned ${cleanupPromises.length} dependency references`);
         return job;
@@ -137,26 +97,14 @@ export class PlanningJobService {
             const dependencies = job.dependencies as string[];
 
             if (dependencies.length > 0) {
-                const depJobs = await prisma.planningJob.findMany({
-                    where: { id: { in: dependencies } },
-                    select: { id: true, status: true },
-                });
+                const depJobs = await planningRepository.findJobStatusesByIds(dependencies);
                 const notDone = depJobs.filter((depJob) => depJob.status !== PlanningStatus.done);
                 if (notDone.length > 0) {
                     throw new ValidationError(`Cannot start this task: ${notDone.length} dependency(ies) are not yet completed.`);
                 }
             }
 
-            const earlierBlocking = await prisma.planningJob.findMany({
-                where: {
-                    instanceId: job.instanceId,
-                    scheduledTime: { lt: job.scheduledTime },
-                    status: { in: [PlanningStatus.pending, PlanningStatus.running] },
-                    id: { not: id },
-                },
-                select: { id: true, scheduledTime: true },
-                take: 1,
-            });
+            const earlierBlocking = await planningRepository.findEarlierBlockingJobs(job.instanceId, job.scheduledTime, id);
             if (earlierBlocking.length > 0) {
                 const blockedDate = new Date(earlierBlocking[0].scheduledTime).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
                 throw new ValidationError(`Cannot start this task: there are earlier-scheduled tasks (${blockedDate}) that have not been completed yet.`);
@@ -184,11 +132,7 @@ export class PlanningJobService {
             updateData.launchedById = null;
         }
 
-        const updated = await prisma.planningJob.update({
-            where: { id },
-            data: updateData,
-            include: this.includeRelations,
-        });
+        const updated = await planningRepository.updateJob(id, updateData);
 
         if (newStatus === PlanningStatus.done) {
             await this.cascadeActivation(id, job.instanceId);
@@ -202,28 +146,15 @@ export class PlanningJobService {
     }
 
     async updatePosition(id: string, positionX: number, positionY: number) {
-        return prisma.planningJob.update({
-            where: { id },
-            data: { positionX, positionY },
-        });
+        return planningRepository.updateJob(id, { positionX, positionY });
     }
 
     async updatePositions(positions: Array<{ id: string; positionX: number; positionY: number }>) {
-        await Promise.all(
-            positions.map((position) =>
-                prisma.planningJob.update({
-                    where: { id: position.id },
-                    data: { positionX: position.positionX, positionY: position.positionY },
-                })
-            )
-        );
+        await planningRepository.updateJobPositions(positions);
     }
 
     private async cascadeActivation(completedJobId: string, instanceId: string) {
-        const allJobs = await prisma.planningJob.findMany({
-            where: { instanceId },
-        });
-
+        const allJobs = await planningRepository.findJobsByInstanceRaw(instanceId);
         const autoStarted: string[] = [];
         const unblocked: string[] = [];
 
@@ -241,19 +172,13 @@ export class PlanningJobService {
             if (!allDepsDone) continue;
 
             if (candidate.taskType === TaskType.BATCH) {
-                await prisma.planningJob.update({
-                    where: { id: candidate.id },
-                    data: {
-                        status: PlanningStatus.running,
-                        launchedAt: new Date(),
-                    },
+                await planningRepository.updateJob(candidate.id, {
+                    status: PlanningStatus.running,
+                    launchedAt: new Date(),
                 });
                 autoStarted.push(candidate.id);
             } else {
-                await prisma.planningJob.update({
-                    where: { id: candidate.id },
-                    data: { status: PlanningStatus.pending },
-                });
+                await planningRepository.updateJob(candidate.id, { status: PlanningStatus.pending });
                 unblocked.push(candidate.id);
             }
         }
@@ -271,11 +196,7 @@ export class PlanningJobService {
             throw new ValidationError('A job cannot depend on itself');
         }
 
-        const existing = await prisma.planningJob.findMany({
-            where: { id: { in: depIds }, instanceId },
-            select: { id: true },
-        });
-
+        const existing = await planningRepository.findJobsByIdsInInstance(depIds, instanceId);
         const foundIds = new Set(existing.map((job) => job.id));
         const missing = depIds.filter((id) => !foundIds.has(id));
         if (missing.length > 0) {

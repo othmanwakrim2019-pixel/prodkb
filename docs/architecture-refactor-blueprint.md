@@ -1,3 +1,6 @@
+> [!WARNING]
+> **DEPRECATED — Historical planning document.** This blueprint was written before the refactor began. Phase 1 and 2 work described here is complete. For current guidance, see [ARCHITECTURE.md](ARCHITECTURE.md) (contract rules) and [architecture-migration-roadmap.md](architecture-migration-roadmap.md) (ongoing milestones).
+
 # Architecture Refactor Blueprint
 
 ## Purpose

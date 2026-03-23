@@ -4,22 +4,6 @@ import { notificationService } from '../../notifications/notification.service';
 import { ValidationError } from '../../../common/errors/app.error';
 import { IncidentStatus } from '../../../constants';
 
-export const defaultInclude = {
-    system: true,
-    job: true,
-    createdBy: { select: { id: true, name: true, email: true } },
-    resolvedBy: { select: { id: true, name: true, email: true } },
-    assignedTeam: true,
-    sla: true,
-    linkedProcedure: { select: { id: true, title: true } },
-    logs: {
-        include: {
-            createdBy: { select: { id: true, name: true, email: true } }
-        }
-    },
-    updatedBy: { select: { id: true, name: true } },
-};
-
 export const ALLOWED_TRANSITIONS: Record<string, string[]> = {
     [IncidentStatus.OPEN]: [IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED],
     [IncidentStatus.ACKNOWLEDGED]: [IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED],

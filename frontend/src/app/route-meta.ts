@@ -123,6 +123,25 @@ export const ADMIN_TAB_PERMISSIONS = Object.fromEntries(
 
 export const ADMIN_TAB_ORDER = ADMIN_TAB_ITEMS.map((item) => item.tab);
 
+export const getAdminTabPath = (tab: string) => `${APP_PATHS.admin}?tab=${tab}`;
+
+export const getFirstAccessibleAdminTab = (hasPermission: (permission: string) => boolean) =>
+    ADMIN_TAB_ORDER.find((tab) => hasPermission(ADMIN_TAB_PERMISSIONS[tab])) || null;
+
+export const getFirstAccessiblePath = (hasPermission: (permission: string) => boolean) => {
+    const firstTopNav = TOP_NAV_ITEMS.find((item) => hasPermission(item.permission));
+    if (firstTopNav) {
+        return firstTopNav.path;
+    }
+
+    const firstAdminTab = getFirstAccessibleAdminTab(hasPermission);
+    if (firstAdminTab) {
+        return getAdminTabPath(firstAdminTab);
+    }
+
+    return null;
+};
+
 export const getPrimarySectionLabel = (pathname: string) => {
     if (pathname === APP_PATHS.home) return { labelKey: 'nav.dashboard', defaultLabel: 'Dashboard' };
     if (pathname.startsWith(APP_PATHS.incidents)) return { labelKey: 'nav.incidents', defaultLabel: 'Incidents' };

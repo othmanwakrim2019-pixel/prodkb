@@ -1,12 +1,12 @@
-import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError, ConflictError } from '../../../common/errors/app.error';
 import { IncidentStatus } from '../../../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams } from '../../../types';
 import { autoAssignService } from '../../auto-assign/auto-assign.service';
 import { webhookService } from '../../webhooks/webhook.service';
-import { defaultInclude, validateStatusTransition, sendNotification } from './incident-shared';
+import { validateStatusTransition, sendNotification } from './incident-shared';
 import { eventPublisher } from '../../events/event.publisher';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export interface FindAllFilters {
     status?: string;
@@ -21,9 +21,6 @@ export interface FindAllFilters {
 
 export class IncidentCrudService {
     async findAll(filters: FindAllFilters = {}, pagination: PaginationParams = {}): Promise<PaginatedResult<IIncident>> {
-        const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
-        const skip = (page - 1) * limit;
-
         const where: Record<string, unknown> = {};
 
         if (filters.status) where.status = filters.status;
@@ -55,31 +52,15 @@ export class IncidentCrudService {
             ];
         }
 
-        const [data, total] = await Promise.all([
-            prisma.incident.findMany({
-                where,
-                include: defaultInclude,
-                skip,
-                take: limit,
-                orderBy: { [sortBy]: sortOrder },
-            }),
-            prisma.incident.count({ where }),
-        ]);
-
+        const result = await incidentRepository.findIncidents(where, pagination);
         return {
-            data: data as unknown as IIncident[],
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
+            ...result,
+            data: result.data as unknown as IIncident[],
         };
     }
 
     async findById(id: string): Promise<IIncident> {
-        const incident = await prisma.incident.findUnique({
-            where: { id },
-            include: defaultInclude,
-        });
+        const incident = await incidentRepository.findIncidentById(id);
         if (!incident) throw new NotFoundError('Incident not found');
         return incident as unknown as IIncident;
     }
@@ -90,43 +71,37 @@ export class IncidentCrudService {
     }
 
     async create(data: CreateIncidentDTO, userId: string): Promise<IIncident> {
-        const system = await prisma.system.findUnique({ where: { id: data.systemId } });
+        const system = await incidentRepository.findSystemById(data.systemId);
         if (!system) throw new ValidationError('Invalid system ID');
 
         if (data.jobId) {
-            const job = await prisma.job.findUnique({ where: { id: data.jobId } });
+            const job = await incidentRepository.findJobById(data.jobId);
             if (!job) throw new ValidationError('Invalid job ID');
         }
 
-        const incident = await prisma.$transaction(async (tx) => {
-            const newIncident = await tx.incident.create({
-                data: {
-                    title: data.title,
-                    description: data.description,
-                    environment: data.environment,
-                    severity: data.severity,
-                    status: IncidentStatus.OPEN,
-                    systemId: data.systemId,
-                    jobId: data.jobId || null,
-                    createdById: userId,
-                    assignedTeamId: data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null,
-                    slaId: data.slaId || null,
-                    impact: data.impact || null,
-                    detectionSource: data.detectionSource || null,
-                    startDatetime: data.startDatetime || new Date(),
-                    logs: data.logs ? {
-                        create: data.logs.map(log => ({
-                            logType: log.logType || 'note',
-                            rawLog: log.rawLog,
-                            errorMessage: log.errorMessage,
-                            errorCode: data.errorCode,
-                            createdBy: { connect: { id: userId } }
-                        })),
-                    } : undefined,
-                },
-                include: defaultInclude,
-            });
-            return newIncident;
+        const incident = await incidentRepository.createIncident({
+            title: data.title,
+            description: data.description,
+            environment: data.environment,
+            severity: data.severity,
+            status: IncidentStatus.OPEN,
+            systemId: data.systemId,
+            jobId: data.jobId || null,
+            createdById: userId,
+            assignedTeamId: data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null,
+            slaId: data.slaId || null,
+            impact: data.impact || null,
+            detectionSource: data.detectionSource || null,
+            startDatetime: data.startDatetime || new Date(),
+            logs: data.logs ? {
+                create: data.logs.map(log => ({
+                    logType: log.logType || 'note',
+                    rawLog: log.rawLog,
+                    errorMessage: log.errorMessage,
+                    errorCode: data.errorCode,
+                    createdBy: { connect: { id: userId } },
+                })),
+            } : undefined,
         });
 
         logger.info('Incident created', { incidentId: incident.id, userId, severity: data.severity });
@@ -188,13 +163,7 @@ export class IncidentCrudService {
         }
         updateData.version = (existing.version ?? 0) + 1;
 
-        const incident = await prisma.$transaction(async (tx) => {
-            return tx.incident.update({
-                where: { id, version: existing.version },
-                data: updateData,
-                include: defaultInclude,
-            });
-        });
+        const incident = await incidentRepository.updateIncidentWithVersion(id, existing.version, updateData);
 
         logger.info('Incident updated', { incidentId: id, userId, changes: Object.keys(data) });
 
@@ -224,7 +193,7 @@ export class IncidentCrudService {
 
     async delete(id: string, userId: string): Promise<void> {
         await this.findById(id);
-        await prisma.incident.delete({ where: { id } });
+        await incidentRepository.deleteIncident(id);
         logger.info('Incident deleted', { incidentId: id, userId });
         eventPublisher.emit({
             type: 'incident.deleted',
@@ -236,14 +205,10 @@ export class IncidentCrudService {
 
     async linkProcedure(incidentId: string, procedureId: string): Promise<IIncident> {
         await this.findById(incidentId);
-        const procedure = await prisma.procedure.findUnique({ where: { id: procedureId } });
+        const procedure = await incidentRepository.findProcedureById(procedureId);
         if (!procedure) throw new NotFoundError('Procedure not found');
 
-        const incident = await prisma.incident.update({
-            where: { id: incidentId },
-            data: { linkedProcedureId: procedureId },
-            include: defaultInclude,
-        });
+        const incident = await incidentRepository.updateIncident(incidentId, { linkedProcedureId: procedureId });
 
         return incident as unknown as IIncident;
     }

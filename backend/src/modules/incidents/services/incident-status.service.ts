@@ -1,11 +1,11 @@
-import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
 import { ValidationError } from '../../../common/errors/app.error';
 import { IncidentStatus } from '../../../constants';
 import type { IIncident } from '../../../types';
 import { webhookService } from '../../webhooks/webhook.service';
-import { defaultInclude, sendNotification } from './incident-shared';
+import { sendNotification } from './incident-shared';
 import { incidentCrudService } from './incident-crud.service';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export class IncidentStatusService {
     async acknowledge(id: string, userId: string): Promise<IIncident> {
@@ -22,25 +22,19 @@ export class IncidentStatusService {
         const now = new Date();
         const timeToAcknowledge = Math.round((now.getTime() - new Date(incident.createdAt).getTime()) / 60000);
 
-        const updated = await prisma.incident.update({
-            where: { id },
-            data: {
-                status: IncidentStatus.ACKNOWLEDGED,
-                acknowledgedAt: now,
-                timeToAcknowledge,
-                updatedById: userId,
-                version: (incident.version ?? 0) + 1,
-            },
-            include: defaultInclude,
+        const updated = await incidentRepository.updateIncident(id, {
+            status: IncidentStatus.ACKNOWLEDGED,
+            acknowledgedAt: now,
+            timeToAcknowledge,
+            updatedById: userId,
+            version: (incident.version ?? 0) + 1,
         });
 
-        await prisma.incidentLog.create({
-            data: {
-                incidentId: id,
-                logType: 'note',
-                rawLog: `Incident acknowledged. Time to acknowledge: ${timeToAcknowledge} minutes.`,
-                createdById: userId,
-            },
+        await incidentRepository.createIncidentLog({
+            incidentId: id,
+            logType: 'note',
+            rawLog: `Incident acknowledged. Time to acknowledge: ${timeToAcknowledge} minutes.`,
+            createdById: userId,
         });
 
         logger.info('Incident acknowledged', { incidentId: id, userId, timeToAcknowledge });

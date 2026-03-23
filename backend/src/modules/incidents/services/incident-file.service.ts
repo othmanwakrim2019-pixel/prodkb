@@ -1,10 +1,10 @@
-import { prisma } from '../../../common/utils/prisma';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../../common/errors/app.error';
 import { fileUploadService } from '../../../common/services/file-upload.service';
 import type { IIncidentLog } from '../../../types';
 import { incidentCrudService } from './incident-crud.service';
-import { defaultInclude, sendNoteNotification } from './incident-shared';
+import { sendNoteNotification } from './incident-shared';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export interface CreateLogData {
     logType: string;
@@ -25,20 +25,18 @@ export class IncidentFileService {
     async addLog(incidentId: string, data: CreateLogData, userId: string): Promise<IIncidentLog> {
         await incidentCrudService.findById(incidentId);
 
-        const log = await prisma.incidentLog.create({
-            data: {
-                incidentId,
-                createdById: userId,
-                logType: data.logType,
-                rawLog: data.rawLog,
-                errorCode: data.errorCode,
-                errorMessage: data.errorMessage,
-                metadata: data.metadata
-            }
+        const log = await incidentRepository.createIncidentLog({
+            incidentId,
+            createdById: userId,
+            logType: data.logType,
+            rawLog: data.rawLog,
+            errorCode: data.errorCode,
+            errorMessage: data.errorMessage,
+            metadata: data.metadata,
         });
 
         // Notify the assigned team about the new note
-        const incident = await prisma.incident.findUnique({ where: { id: incidentId }, include: defaultInclude });
+        const incident = await incidentRepository.findIncidentById(incidentId);
         if (incident) {
             sendNoteNotification(incident, 'note_added').catch(() => { });
         }
@@ -47,9 +45,7 @@ export class IncidentFileService {
     }
 
     async getFileLog(incidentId: string, fileName: string): Promise<IIncidentLog> {
-        const log = await prisma.incidentLog.findFirst({
-            where: { incidentId, fileName, logType: 'file' }
-        });
+        const log = await incidentRepository.findFileLog(incidentId, fileName);
         if (!log) throw new NotFoundError('File log not found');
         return log as unknown as IIncidentLog;
     }
@@ -57,20 +53,18 @@ export class IncidentFileService {
     async addFileLog(incidentId: string, fileData: FileLogData, userId: string): Promise<IIncidentLog> {
         await incidentCrudService.findById(incidentId);
 
-        const log = await prisma.incidentLog.create({
-            data: {
-                incidentId,
-                createdById: userId,
-                logType: 'file',
-                filePath: fileData.filePath,
-                fileName: fileData.fileName,
-                fileSize: fileData.fileSize,
-                mimeType: fileData.mimeType
-            }
+        const log = await incidentRepository.createIncidentLog({
+            incidentId,
+            createdById: userId,
+            logType: 'file',
+            filePath: fileData.filePath,
+            fileName: fileData.fileName,
+            fileSize: fileData.fileSize,
+            mimeType: fileData.mimeType,
         });
 
         // Notify the assigned team about the uploaded file
-        const incident = await prisma.incident.findUnique({ where: { id: incidentId }, include: defaultInclude });
+        const incident = await incidentRepository.findIncidentById(incidentId);
         if (incident) {
             sendNoteNotification(incident, 'file_uploaded').catch(() => { });
         }
@@ -79,9 +73,7 @@ export class IncidentFileService {
     }
 
     async deleteFileLog(incidentId: string, fileName: string, userId: string, userRole: string): Promise<void> {
-        const log = await prisma.incidentLog.findFirst({
-            where: { incidentId, fileName, logType: 'file' },
-        });
+        const log = await incidentRepository.findFileLog(incidentId, fileName);
 
         if (!log) throw new NotFoundError('File log not found');
 
@@ -97,7 +89,7 @@ export class IncidentFileService {
             }
         }
 
-        await prisma.incidentLog.delete({ where: { id: log.id } });
+        await incidentRepository.deleteIncidentLog(log.id);
         logger.info('File deleted', { incidentId, fileName, deletedBy: userId });
     }
 }

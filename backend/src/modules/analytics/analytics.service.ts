@@ -6,8 +6,7 @@
  * @module modules/analytics/analytics.service
  */
 
-import { prisma } from '../../common/utils/prisma';
-import { IncidentStatus } from '../../constants';
+import { analyticsRepository } from './analytics.repository';
 
 export interface MTTRDataPoint {
     date: string;
@@ -46,18 +45,7 @@ export class AnalyticsService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const resolvedIncidents = await prisma.incident.findMany({
-            where: {
-                resolvedAt: { gte: startDate },
-                timeToResolve: { not: null },
-                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
-            },
-            select: {
-                resolvedAt: true,
-                timeToResolve: true,
-            },
-            orderBy: { resolvedAt: 'asc' },
-        });
+        const resolvedIncidents = await analyticsRepository.findResolvedIncidentsForMttr(startDate);
 
         // Group by date
         const grouped = new Map<string, { total: number; count: number }>();
@@ -85,19 +73,8 @@ export class AnalyticsService {
         startDate.setDate(startDate.getDate() - days);
 
         const [total, breached] = await Promise.all([
-            prisma.incident.count({
-                where: {
-                    createdAt: { gte: startDate },
-                    slaId: { not: null },
-                },
-            }),
-            prisma.incident.count({
-                where: {
-                    createdAt: { gte: startDate },
-                    slaId: { not: null },
-                    slaBreached: true,
-                },
-            }),
+            analyticsRepository.countSlaTrackedIncidents(startDate),
+            analyticsRepository.countSlaBreachedIncidents(startDate),
         ]);
 
         const withinSLA = total - breached;
@@ -117,20 +94,7 @@ export class AnalyticsService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const teams = await prisma.team.findMany({
-            select: {
-                id: true,
-                name: true,
-                incidents: {
-                    where: { createdAt: { gte: startDate } },
-                    select: {
-                        timeToAcknowledge: true,
-                        timeToResolve: true,
-                        slaBreached: true,
-                    },
-                },
-            },
-        });
+        const teams = await analyticsRepository.findTeamsWithIncidentMetrics(startDate);
 
         return teams.map(team => {
             const incidents = team.incidents;
@@ -162,11 +126,7 @@ export class AnalyticsService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const counts = await prisma.incident.groupBy({
-            by: ['severity'],
-            where: { createdAt: { gte: startDate } },
-            _count: { severity: true },
-        });
+        const counts = await analyticsRepository.groupIncidentsBySeverity(startDate);
 
         const total = counts.reduce((sum, c) => sum + c._count.severity, 0);
 

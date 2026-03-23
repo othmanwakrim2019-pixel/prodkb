@@ -1,8 +1,6 @@
-
-import { prisma } from '../../common/utils/prisma';
 import { NotFoundError, ValidationError } from '../../common/errors/app.error';
+import { slaRepository, type SLAPaginationParams } from './repositories/sla.repository';
 
-// ── Typed DTOs (eliminates `any`) ──
 export interface CreateSLADTO {
     name: string;
     description?: string;
@@ -20,84 +18,28 @@ export interface UpdateSLADTO {
     isActive?: boolean;
 }
 
-export interface SLAPaginationParams {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-}
-
 export class SlaService {
     async findAllSLAs(pagination: SLAPaginationParams = {}) {
-        const { page = 1, limit = 100, sortBy = 'severity', sortOrder = 'asc' } = pagination;
-        const skip = (page - 1) * limit;
-
-        const [data, total] = await Promise.all([
-            prisma.sLA.findMany({
-                include: {
-                    _count: {
-                        select: {
-                            incidents: true,
-                        },
-                    },
-                },
-                orderBy: [
-                    { [sortBy]: sortOrder },
-                    { name: 'asc' },
-                ],
-                skip,
-                take: limit,
-            }),
-            prisma.sLA.count(),
-        ]);
-
-        return {
-            data,
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-        };
+        return slaRepository.findSLAs(pagination);
     }
 
     async findSLAById(id: string) {
-        const sla = await prisma.sLA.findUnique({
-            where: { id },
-            include: {
-                _count: {
-                    select: {
-                        incidents: true,
-                    },
-                },
-            },
-        });
-
+        const sla = await slaRepository.findSLAById(id);
         if (!sla) throw new NotFoundError('SLA not found');
         return sla;
     }
 
     async createSLA(data: CreateSLADTO) {
-        return prisma.sLA.create({
-            data,
-        });
+        return slaRepository.createSLA(data);
     }
 
     async updateSLA(id: string, data: UpdateSLADTO) {
         await this.findSLAById(id);
-
-        return prisma.sLA.update({
-            where: { id },
-            data,
-        });
+        return slaRepository.updateSLA(id, data);
     }
 
     async deleteSLA(id: string) {
-        const sla = await prisma.sLA.findUnique({
-            where: { id },
-            include: {
-                _count: { select: { incidents: true } }
-            }
-        });
+        const sla = await slaRepository.findSLAWithUsage(id);
         if (!sla) throw new NotFoundError('SLA not found');
 
         if (sla._count.incidents > 0) {
@@ -106,7 +48,7 @@ export class SlaService {
             );
         }
 
-        await prisma.sLA.delete({ where: { id } });
+        await slaRepository.deleteSLA(id);
         return sla;
     }
 }
