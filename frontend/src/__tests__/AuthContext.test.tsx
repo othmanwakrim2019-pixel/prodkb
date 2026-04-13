@@ -40,7 +40,7 @@ vi.mock('../features/auth/hooks/useIdleTimeout', () => ({
 // ── Wrapper ───────────────────────────────────────────────────────────────────
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>{children}</AuthProvider>
     </BrowserRouter>
 );
@@ -70,7 +70,9 @@ describe('AuthContext', () => {
         const { result } = renderHook(() => useAuth(), { wrapper });
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        act(() => { result.current.login(mockUser()); });
+        await act(async () => {
+            await result.current.login(mockUser());
+        });
 
         expect(result.current.isAuthenticated).toBe(true);
         expect(result.current.user?.name).toBe('Alice');
@@ -80,7 +82,9 @@ describe('AuthContext', () => {
         const { result } = renderHook(() => useAuth(), { wrapper });
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        act(() => { result.current.login(mockUser({ name: 'Bob' })); });
+        await act(async () => {
+            await result.current.login(mockUser({ name: 'Bob' }));
+        });
         expect(result.current.isAuthenticated).toBe(true);
 
         await act(async () => { await result.current.logout(); });
@@ -102,8 +106,8 @@ describe('Permission Helpers', () => {
         const { result } = renderHook(() => useAuth(), { wrapper });
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        act(() => {
-            result.current.login(mockUser({
+        await act(async () => {
+            await result.current.login(mockUser({
                 role: 'OPERATOR',
                 permissions: ['INCIDENT_CREATE', 'INCIDENT_EDIT'],
             }));
@@ -118,7 +122,9 @@ describe('Permission Helpers', () => {
         const { result } = renderHook(() => useAuth(), { wrapper });
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        act(() => { result.current.login(mockUser({ role: 'ADMIN' })); });
+        await act(async () => {
+            await result.current.login(mockUser({ role: 'ADMIN' }));
+        });
 
         expect(result.current.isAdmin()).toBe(true);
         expect(result.current.isExpert()).toBe(false);

@@ -15,7 +15,6 @@
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { warRoomService } from './warroom.service';
-import { prisma } from '../../common/utils/prisma';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { logger } from '../../common/utils/logger';
@@ -30,10 +29,7 @@ function getRoomParticipants(incidentId: string) {
 }
 
 async function canAccessIncident(socket: Socket, incidentId: string): Promise<boolean> {
-    const incident = await prisma.incident.findUnique({
-        where: { id: incidentId },
-        select: { assignedTeamId: true },
-    });
+    const incident = await warRoomService.findIncidentTeam(incidentId);
 
     if (!incident) {
         socket.emit('warroom:error', { message: 'Incident not found' });

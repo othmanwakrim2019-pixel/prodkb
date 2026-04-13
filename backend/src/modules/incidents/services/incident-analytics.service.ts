@@ -1,7 +1,7 @@
-import { prisma } from '../../../common/utils/prisma';
 import { IncidentStatus } from '../../../constants';
 import { IncidentStats } from './incident-shared';
 import { hasGlobalIncidentAccess } from './incident-visibility.service';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export interface StatsFilters {
     startDate?: Date;
@@ -63,43 +63,24 @@ export class IncidentAnalyticsService {
         if (scopedTeamId) closedWhere.assignedTeamId = scopedTeamId;
 
         const [created, resolved, active, closed] = await Promise.all([
-            prisma.incident.count({ where }),
-            prisma.incident.count({ where: resolvedWhere }),
-            prisma.incident.count({ where: activeWhere }),
-            prisma.incident.count({ where: closedWhere }),
+            incidentRepository.countIncidents(where),
+            incidentRepository.countIncidents(resolvedWhere),
+            incidentRepository.countIncidents(activeWhere),
+            incidentRepository.countIncidents(closedWhere),
         ]);
 
-        const avgResult = await prisma.incident.aggregate({
-            where: {
-                ...resolvedWhere,
-                status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
-                timeToResolve: { not: null },
-            },
-            _avg: { timeToResolve: true },
+        const avgResult = await incidentRepository.aggregateIncidentResolution({
+            ...resolvedWhere,
+            status: { in: [IncidentStatus.RESOLVED, IncidentStatus.CLOSED] },
+            timeToResolve: { not: null },
         });
         const avgResolutionTime = Math.round(avgResult._avg.timeToResolve || 0);
 
-        const statusCounts = await prisma.incident.groupBy({
-            by: ['status'],
-            where,
-            _count: { status: true }
-        });
+        const statusCounts = await incidentRepository.groupIncidentsByStatus(where);
         const statusBreakdown = statusCounts.map(s => ({ status: s.status, count: s._count.status }));
 
-        interface TrendRow { day: Date; count: bigint }
-        const createdByDay = await prisma.$queryRaw<TrendRow[]>`
-            SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*)::bigint AS count
-            FROM "Incident"
-            WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
-            GROUP BY day ORDER BY day
-        `;
-
-        const resolvedByDay = await prisma.$queryRaw<TrendRow[]>`
-            SELECT DATE_TRUNC('day', "resolvedAt") AS day, COUNT(*)::bigint AS count
-            FROM "Incident"
-            WHERE "resolvedAt" IS NOT NULL AND "resolvedAt" >= ${start} AND "resolvedAt" <= ${end}
-            GROUP BY day ORDER BY day
-        `;
+        const createdByDay = await incidentRepository.queryCreatedTrend(start, end);
+        const resolvedByDay = await incidentRepository.queryResolvedTrend(start, end);
 
         const trendMap = new Map<string, { created: number; resolved: number }>();
         const cursor = new Date(start);
@@ -120,17 +101,11 @@ export class IncidentAnalyticsService {
         }
         const trends = Array.from(trendMap.entries()).map(([date, data]) => ({ date, created: data.created, resolved: data.resolved }));
 
-        const topSystemsRaw = await prisma.incident.groupBy({
-            by: ['systemId'],
-            where,
-            _count: { id: true },
-            orderBy: { _count: { id: 'desc' } },
-            take: 5,
-        });
+        const topSystemsRaw = await incidentRepository.groupIncidentsBySystem(where);
 
         const systemIds = topSystemsRaw.map(s => s.systemId);
         const systemNames = systemIds.length > 0
-            ? await prisma.system.findMany({ where: { id: { in: systemIds } }, select: { id: true, name: true } })
+            ? await incidentRepository.findSystemsByIds(systemIds)
             : [];
         const nameMap = new Map(systemNames.map(s => [s.id, s.name]));
         const topSystems = topSystemsRaw.map(s => ({ systemId: s.systemId, name: nameMap.get(s.systemId) || 'Unknown', count: s._count.id }));
@@ -143,8 +118,8 @@ export class IncidentAnalyticsService {
         }
 
         const [myTeamQueue, myTeamBreaches] = await Promise.all([
-            prisma.incident.count({ where: { ...myTeamFilter, status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] } } }),
-            prisma.incident.count({ where: { ...myTeamFilter, slaBreached: true, status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] } } }),
+            incidentRepository.countIncidents({ ...myTeamFilter, status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] } }),
+            incidentRepository.countIncidents({ ...myTeamFilter, slaBreached: true, status: { in: [IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS] } }),
         ]);
 
         return {

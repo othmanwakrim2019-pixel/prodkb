@@ -1,28 +1,27 @@
-
-import { Router } from 'express';
-import { IncidentController } from './incident.controller';
-import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
-import { uploadLimiter } from '../../common/middleware/rate-limiter.middleware';
-import { paginationMiddleware } from '../../common/middleware/pagination.middleware';
-import multer from 'multer';
+import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
-import crypto from 'crypto';
+import { Router } from 'express';
+import multer from 'multer';
+import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
+import { paginationMiddleware } from '../../common/middleware/pagination.middleware';
+import { uploadLimiter } from '../../common/middleware/rate-limiter.middleware';
+import { IncidentCommandController } from './controllers/incident-command.controller';
+import { IncidentFileController } from './controllers/incident-file.controller';
+import { IncidentQueryController } from './controllers/incident-query.controller';
 
 const router = Router();
 
-// ── File upload security ──
 const ALLOWED_MIME_TYPES = [
     'text/plain', 'text/csv', 'text/html',
     'application/json', 'application/xml',
     'application/pdf',
     'image/png', 'image/jpeg', 'image/gif', 'image/webp',
     'application/zip', 'application/gzip',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
-// Use diskStorage instead of memoryStorage to prevent RAM exhaustion from large uploads
 const upload = multer({
     storage: multer.diskStorage({
         destination: os.tmpdir(),
@@ -31,7 +30,7 @@ const upload = multer({
             cb(null, `upload-${uniqueSuffix}${path.extname(file.originalname)}`);
         },
     }),
-    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max
+    limits: { fileSize: 25 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
             cb(null, true);
@@ -41,26 +40,23 @@ const upload = multer({
     },
 });
 
-// Stats & Search (Must come before :id)
-router.get('/stats', authenticate, requirePermission('DASHBOARD_VIEW'), IncidentController.getStats);
-router.get('/search', authenticate, requirePermission('SEARCH_VIEW'), IncidentController.searchSimilar);
-router.get('/suggest-procedures', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.suggestProcedures);
+router.get('/stats', authenticate, requirePermission('DASHBOARD_VIEW'), IncidentQueryController.getStats);
+router.get('/search', authenticate, requirePermission('SEARCH_VIEW'), IncidentQueryController.searchSimilar);
+router.get('/suggest-procedures', authenticate, requirePermission('INCIDENT_VIEW'), IncidentQueryController.suggestProcedures);
 
-// CRUD
-router.get('/', authenticate, requirePermission('INCIDENT_VIEW'), paginationMiddleware, IncidentController.getIncidents);
-router.post('/', authenticate, requirePermission('INCIDENT_CREATE'), IncidentController.createIncident);
-router.get('/:id', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.getIncidentById);
-router.put('/:id', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.updateIncident);
-router.delete('/:id', authenticate, requirePermission('INCIDENT_DELETE'), IncidentController.deleteIncident);
+router.get('/', authenticate, requirePermission('INCIDENT_VIEW'), paginationMiddleware, IncidentQueryController.getIncidents);
+router.post('/', authenticate, requirePermission('INCIDENT_CREATE'), IncidentCommandController.createIncident);
+router.get('/:id', authenticate, requirePermission('INCIDENT_VIEW'), IncidentQueryController.getIncidentById);
+router.put('/:id', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.updateIncident);
+router.delete('/:id', authenticate, requirePermission('INCIDENT_DELETE'), IncidentCommandController.deleteIncident);
 
-// Sub-resources
-router.put('/:id/status', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.updateIncidentStatus);
-router.post('/:id/acknowledge', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.acknowledgeIncident);
-router.post('/:id/logs', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.addIncidentLog);
-router.post('/:id/upload', authenticate, requirePermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentController.uploadIncidentFile);
-router.get('/:id/files/:filename', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.downloadFile);
-router.get('/:id/files/:filename/preview', authenticate, requirePermission('INCIDENT_VIEW'), IncidentController.previewFile);
-router.delete('/:id/files/:filename', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.deleteFile);
-router.post('/:id/link-procedure/:procedureId', authenticate, requirePermission('INCIDENT_EDIT'), IncidentController.linkProcedure);
+router.put('/:id/status', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.updateIncidentStatus);
+router.post('/:id/acknowledge', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.acknowledgeIncident);
+router.post('/:id/logs', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.addIncidentLog);
+router.post('/:id/upload', authenticate, requirePermission('INCIDENT_EDIT'), uploadLimiter, upload.single('file'), IncidentFileController.uploadIncidentFile);
+router.get('/:id/files/:filename', authenticate, requirePermission('INCIDENT_VIEW'), IncidentFileController.downloadFile);
+router.get('/:id/files/:filename/preview', authenticate, requirePermission('INCIDENT_VIEW'), IncidentFileController.previewFile);
+router.delete('/:id/files/:filename', authenticate, requirePermission('INCIDENT_EDIT'), IncidentFileController.deleteFile);
+router.post('/:id/link-procedure/:procedureId', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.linkProcedure);
 
 export const incidentRoutes = router;

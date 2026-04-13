@@ -1,23 +1,22 @@
-
 import { Router } from 'express';
-import { SystemController } from './system.controller';
 import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
+import { SystemCommandController } from './controllers/system-command.controller';
+import { SystemHealthController } from './controllers/system-health.controller';
+import { SystemQueryController } from './controllers/system-query.controller';
 
 const router = Router();
 
 router.use(authenticate);
 
-// Systems
-router.get('/health-leaderboard', SystemController.getHealthLeaderboard);
-router.get('/', SystemController.getSystems);
-router.post('/', requirePermission('SYSTEM_MANAGE'), SystemController.createSystem);
-router.put('/:id', requirePermission('SYSTEM_MANAGE'), SystemController.updateSystem);
-router.delete('/:id', requirePermission('SYSTEM_MANAGE'), SystemController.deleteSystem);
+router.get('/health-leaderboard', SystemHealthController.getHealthLeaderboard);
+router.get('/', SystemQueryController.getSystems);
+router.post('/', requirePermission('SYSTEM_MANAGE'), SystemCommandController.createSystem);
+router.put('/:id', requirePermission('SYSTEM_MANAGE'), SystemCommandController.updateSystem);
+router.delete('/:id', requirePermission('SYSTEM_MANAGE'), SystemCommandController.deleteSystem);
 
-// Jobs
-router.get('/jobs', requirePermission('JOB_VIEW'), SystemController.getJobs);
-router.post('/jobs', requirePermission('JOB_MANAGE'), SystemController.createJob);
-router.put('/jobs/:id', requirePermission('JOB_MANAGE'), SystemController.updateJob);
-router.delete('/jobs/:id', requirePermission('JOB_MANAGE'), SystemController.deleteJob);
+router.get('/jobs', requirePermission('JOB_VIEW'), SystemQueryController.getJobs);
+router.post('/jobs', requirePermission('JOB_MANAGE'), SystemCommandController.createJob);
+router.put('/jobs/:id', requirePermission('JOB_MANAGE'), SystemCommandController.updateJob);
+router.delete('/jobs/:id', requirePermission('JOB_MANAGE'), SystemCommandController.deleteJob);
 
 export const systemRoutes = router;

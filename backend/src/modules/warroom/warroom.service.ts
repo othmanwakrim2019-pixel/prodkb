@@ -1,6 +1,13 @@
 import { prisma } from '../../common/utils/prisma';
 
 class WarRoomService {
+    async findIncidentTeam(incidentId: string) {
+        return prisma.incident.findUnique({
+            where: { id: incidentId },
+            select: { assignedTeamId: true },
+        });
+    }
+
     async getHistory(incidentId: string, limit = 100) {
         return prisma.warRoomMessage.findMany({
             where: { incidentId },

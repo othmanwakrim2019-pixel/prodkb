@@ -4,7 +4,6 @@ import { teamService } from './team.service';
 import { AuthRequest } from '../../common/middleware/auth.middleware';
 import { createResponse } from '../../common/types/api.response';
 import { logAudit, generateAuditDiff } from '../audit/audit.service';
-import { prisma } from '../../common/utils/prisma';
 import { createTeamSchema, updateTeamSchema, addMemberSchema } from './team.schema';
 
 

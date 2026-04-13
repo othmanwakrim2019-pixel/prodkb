@@ -4,6 +4,7 @@ node_modules
 # Environment files
 .env
 .env.local
+.env.production
 .env.*.local
 !.env.example
 !.env.production.example
@@ -11,6 +12,7 @@ node_modules
 # Build outputs
 dist
 build
+.next
 
 # IDE
 .idea
@@ -45,3 +47,5 @@ backend/uploads/
 # Compiled Vite config artifacts
 frontend/vite.config.js
 frontend/vite.config.d.ts
+
+# Operational data files — never commit these

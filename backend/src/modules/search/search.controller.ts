@@ -1,7 +1,6 @@
 
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../common/utils/prisma';
-import { createResponse } from '../../common/types/api.response';
+import { searchService } from './search.service';
 
 export class SearchController {
     static async globalSearch(req: Request, res: Response, next: NextFunction) {
@@ -13,34 +12,8 @@ export class SearchController {
         }
 
         try {
-            const procedures = await prisma.procedure.findMany({
-                where: {
-                    OR: [
-                        { title: { contains: searchStr, mode: 'insensitive' } },
-                        { description: { contains: searchStr, mode: 'insensitive' } },
-                        { rootCause: { contains: searchStr, mode: 'insensitive' } },
-                        { resolutionSteps: { contains: searchStr, mode: 'insensitive' } },
-                        { errorCode: { contains: searchStr, mode: 'insensitive' } },
-                        { tags: { contains: searchStr, mode: 'insensitive' } },
-                    ],
-                },
-                take: 10,
-            });
-
-            const incidents = await prisma.incident.findMany({
-                where: {
-                    OR: [
-                        { title: { contains: searchStr, mode: 'insensitive' } },
-                        { description: { contains: searchStr, mode: 'insensitive' } },
-                        { logs: { some: { rawLog: { contains: searchStr, mode: 'insensitive' } } } },
-                        { logs: { some: { errorMessage: { contains: searchStr, mode: 'insensitive' } } } },
-                    ],
-                },
-                take: 10,
-                include: { logs: true },
-            });
-
-            res.json({ procedures, incidents });
+            const result = await searchService.globalSearch(searchStr);
+            res.json(result);
         } catch (error) {
             next(error);
         }

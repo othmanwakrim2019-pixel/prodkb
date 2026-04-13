@@ -37,7 +37,20 @@ npm run dev
 ### Pull Request Process
 1. Create a branch from `develop`
 2. Make your changes
-3. Ensure all checks pass: `npm test`, `npx tsc --noEmit`
+3. Before pushing, run the full pre-push checklist:
+   ```bash
+   # Backend
+   cd backend
+   npm run lint          # ESLint — must pass with 0 errors
+   npx tsc --noEmit      # Type check — must pass
+   npm test              # Jest — all tests must pass
+
+   # Frontend
+   cd frontend
+   npm run lint
+   npx tsc --noEmit
+   npm test
+   ```
 4. Submit PR to `develop`
 5. Get at least 1 approval
 6. Squash and merge
@@ -85,10 +98,11 @@ chore: upgrade Prisma to v6.19
 backend/
 ├── src/
 │   ├── common/          # Shared: middleware, utils, services, errors
-│   ├── config/          # Environment validation
+│   ├── config/          # Environment validation (env.ts, cors.ts, helmet.ts)
 │   ├── modules/         # Feature modules (auth, incidents, sla, etc.)
-│   ├── workers/         # Background workers (SLA, cleanup)
-│   └── server.ts        # Express app setup
+│   ├── workers/         # Background workers (sla, webhook, cleanup)
+│   ├── app.ts           # Express app setup (middleware, routes)
+│   └── server.ts        # Entry point (cluster, listen, graceful shutdown)
 ├── prisma/              # Database schema + migrations
 └── tests/               # Test suites
 

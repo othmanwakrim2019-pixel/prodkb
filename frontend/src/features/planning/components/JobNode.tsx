@@ -64,48 +64,49 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
     const statusOptions: PlanningStatusType[] = ['pending', 'running', 'done'];
 
     return (
-        <div className={`rounded-lg border-2 shadow-md min-w-[230px] max-w-[260px] ${style.bg} ${style.border} transition-all duration-200 ${isBlastBlocked ? 'ring-2 ring-orange-300 ring-offset-1' : ''} ${job.status === 'failed' ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}>
-            <Handle type="target" position={Position.Left} className="!bg-slate-400 !w-2.5 !h-2.5" />
+        <div
+            className={`min-w-[230px] max-w-[260px] rounded-lg border-2 shadow-md transition-all duration-200 ${style.bg} ${style.border} ${
+                isBlastBlocked ? 'ring-2 ring-orange-300 ring-offset-1' : ''
+            } ${job.status === 'failed' ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}
+        >
+            <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !bg-slate-400" />
 
-            {/* Blast Radius: blocked banner */}
             {isBlastBlocked && (
-                <div className="bg-orange-500 text-white text-[10px] font-bold text-center py-1 rounded-t-md animate-pulse">
-                    ⚠ BLOQUÉ — dépendance échouée
+                <div className="animate-pulse rounded-t-md bg-orange-500 py-1 text-center text-[10px] font-bold text-white">
+                    BLOCKED - failed dependency
                 </div>
             )}
 
-            {/* Blast Radius: impact count badge on failed nodes */}
             {job.status === 'failed' && blastCount && blastCount > 0 && (
-                <div className="bg-red-600 text-white text-[10px] font-bold text-center py-1 rounded-t-md">
-                    💥 {blastCount} tâche{blastCount > 1 ? 's' : ''} impactée{blastCount > 1 ? 's' : ''}
+                <div className="rounded-t-md bg-red-600 py-1 text-center text-[10px] font-bold text-white">
+                    Impact: {blastCount} task{blastCount > 1 ? 's' : ''}
                 </div>
             )}
 
             <div className="p-3">
-                {/* Header: Status + Delete */}
-                <div className="flex items-center justify-between mb-2">
+                <div className="mb-2 flex items-center justify-between">
                     <div className="relative">
                         <button
                             onClick={() => setShowDropdown(!showDropdown)}
-                            className={`text-xs font-mono ${style.badgeText} ${style.badge} px-2 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity`}
+                            className={`cursor-pointer rounded px-2 py-0.5 text-xs font-mono transition-opacity hover:opacity-80 ${style.badgeText} ${style.badge}`}
                             title="Click to change status"
                         >
-                            {job.status.toUpperCase()} ▾
+                            {job.status.toUpperCase()} v
                         </button>
                         {showDropdown && (
-                            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-[100px]">
+                            <div className="absolute left-0 top-full z-50 mt-1 min-w-[100px] rounded-lg border border-slate-200 bg-white shadow-lg">
                                 {statusOptions
-                                    .filter(s => s !== job.status)
-                                    .map(s => (
+                                    .filter((status) => status !== job.status)
+                                    .map((status) => (
                                         <button
-                                            key={s}
+                                            key={status}
                                             onClick={() => {
-                                                onStatusChange(job.id, s);
+                                                onStatusChange(job.id, status);
                                                 setShowDropdown(false);
                                             }}
-                                            className="block w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                                            className="block w-full px-3 py-1.5 text-left text-xs transition-colors first:rounded-t-lg last:rounded-b-lg hover:bg-slate-50"
                                         >
-                                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                                            {status.charAt(0).toUpperCase() + status.slice(1)}
                                         </button>
                                     ))}
                             </div>
@@ -113,53 +114,41 @@ function JobNodeComponent({ data }: NodeProps & { data: JobNodeData }) {
                     </div>
                     <button
                         onClick={() => onDelete(job.id)}
-                        className="text-slate-400 hover:text-red-500 transition-colors text-xs p-0.5"
+                        className="p-0.5 text-xs text-slate-400 transition-colors hover:text-red-500"
                         title="Delete job"
                     >
-                        ✕
+                        X
                     </button>
                 </div>
 
-                {/* System Name */}
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
-                    {job.system?.name ?? job.customTaskName ?? '—'}
+                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    {job.system?.name ?? job.customTaskName ?? '-'}
                 </p>
 
-                {/* Job Name + Code */}
-                <h3 className={`font-semibold text-sm leading-tight mb-1 ${style.text}`}>
+                <h3 className={`mb-1 text-sm font-semibold leading-tight ${style.text}`}>
                     {job.job?.name ?? job.customTaskName}
                 </h3>
-                <p className="text-xs text-slate-500 font-mono mb-1">{job.job?.code ?? ''}</p>
+                <p className="mb-1 font-mono text-xs text-slate-500">{job.job?.code ?? ''}</p>
 
-                {/* Scheduled Time */}
-                <p className="text-xs text-slate-400 mb-2">
-                    🕐 {scheduledDate}
-                </p>
+                <p className="mb-2 text-xs text-slate-400">Time: {scheduledDate}</p>
 
-                {/* Completion info */}
                 {job.status === 'done' && job.completedBy && (
-                    <p className="text-[10px] text-emerald-600">
-                        ✓ by {job.completedBy.name}
-                    </p>
+                    <p className="text-[10px] text-emerald-600">Done by {job.completedBy.name}</p>
                 )}
 
-                {/* Quick "Mark as Done" button for running jobs */}
                 {job.status === 'running' && (
                     <button
                         onClick={() => onStatusChange(job.id, 'done')}
-                        className="w-full text-xs font-medium py-1.5 px-3 rounded-md
-                                   bg-blue-600 text-white hover:bg-blue-700
-                                   transition-colors shadow-sm mt-1"
+                        className="mt-1 w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                     >
-                        ✓ Mark as Done
+                        Mark as Done
                     </button>
                 )}
             </div>
 
-            <Handle type="source" position={Position.Right} className="!bg-slate-400 !w-2.5 !h-2.5" />
+            <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !bg-slate-400" />
         </div>
     );
 }
 
 export const JobNode = memo(JobNodeComponent);
-

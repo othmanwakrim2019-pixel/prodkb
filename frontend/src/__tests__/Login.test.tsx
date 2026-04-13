@@ -69,18 +69,24 @@ describe('Login Component', () => {
         sessionStorage.clear();
     });
 
-    const renderLogin = () => {
-        return render(
-            <BrowserRouter>
+    const renderLogin = async () => {
+        const utils = render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
                     <Login />
                 </AuthProvider>
             </BrowserRouter>
         );
+
+        await waitFor(() => {
+            expect(mockGet).toHaveBeenCalled();
+        });
+
+        return utils;
     };
 
-    it('renders login form correctly', () => {
-        renderLogin();
+    it('renders login form correctly', async () => {
+        await renderLogin();
         expect(screen.getByText('Sign In')).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/enter your email/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
@@ -96,7 +102,7 @@ describe('Login Component', () => {
             }
         });
 
-        renderLogin();
+        await renderLogin();
 
         fireEvent.change(screen.getByPlaceholderText(/enter your email/i), { target: { value: 'inactive@prodkb.com' } });
         fireEvent.change(screen.getByPlaceholderText(/enter your password/i), { target: { value: 'password123' } });
@@ -114,12 +120,7 @@ describe('Login Component', () => {
             }
         });
 
-        renderLogin();
-
-        // Wait for the initial mount's initAuth() to call getMe() and consume the default rejection
-        await waitFor(() => {
-            expect(mockGet).toHaveBeenCalledTimes(1);
-        });
+        await renderLogin();
 
         // Now queue the resolve for the second getMe() call which happens inside AuthContext.login()
         mockGet.mockResolvedValueOnce({

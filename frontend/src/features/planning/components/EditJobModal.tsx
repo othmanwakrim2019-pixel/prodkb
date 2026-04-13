@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Save, X } from 'lucide-react';
 import type { PlanningJob } from '../../../types/planning';
 import { planningService } from '../api/planning.service';
 
@@ -14,8 +14,6 @@ interface EditJobModalProps {
 export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: EditJobModalProps) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-
-    // Form fields
     const [customTaskName, setCustomTaskName] = useState('');
     const [supportContact, setSupportContact] = useState('');
     const [scheduledDate, setScheduledDate] = useState('');
@@ -23,36 +21,43 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
     const [selectedDeps, setSelectedDeps] = useState<string[]>([]);
     const [notes, setNotes] = useState('');
 
-    // Populate form when job changes
     useEffect(() => {
-        if (!job) return;
-        const dt = new Date(job.scheduledTime);
+        if (!job) {
+            return;
+        }
+
+        const dateTime = new Date(job.scheduledTime);
         setCustomTaskName(job.customTaskName || '');
         setSupportContact(job.supportContact || '');
-        setScheduledDate(dt.toISOString().slice(0, 10));
-        setScheduledTime(dt.toTimeString().slice(0, 5));
+        setScheduledDate(dateTime.toISOString().slice(0, 10));
+        setScheduledTime(dateTime.toTimeString().slice(0, 5));
         setSelectedDeps(job.dependencies);
         setNotes(job.notes || '');
         setError('');
     }, [job]);
 
-    if (!isOpen || !job) return null;
+    if (!isOpen || !job) {
+        return null;
+    }
 
     const isManual = job.taskType === 'MANUAL_ACTION';
+    const otherJobs = existingJobs.filter((existingJob) => existingJob.id !== job.id);
 
-    const toggleDep = (id: string) => {
-        setSelectedDeps(prev =>
-            prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    const toggleDependency = (id: string) => {
+        setSelectedDeps((currentDeps) =>
+            currentDeps.includes(id) ? currentDeps.filter((depId) => depId !== id) : [...currentDeps, id]
         );
     };
 
     const handleSave = async () => {
         if (!scheduledDate || !scheduledTime) {
-            setError("La date et l'heure sont requises.");
+            setError('Date and time are required.');
             return;
         }
+
         setSaving(true);
         setError('');
+
         try {
             const scheduledTimeISO = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
             const payload: Record<string, unknown> = {
@@ -60,9 +65,11 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
                 dependencies: selectedDeps,
                 supportContact: supportContact.trim() || null,
             };
+
             if (isManual && customTaskName.trim()) {
                 payload.customTaskName = customTaskName.trim();
             }
+
             if (notes.trim()) {
                 payload.notes = notes.trim();
             }
@@ -71,109 +78,109 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
             onSaved();
             onClose();
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-                || 'Impossible de sauvegarder les modifications.';
-            setError(msg);
+            const message =
+                (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+                'Unable to save changes.';
+            setError(message);
         } finally {
             setSaving(false);
         }
     };
 
-    const otherJobs = existingJobs.filter(j => j.id !== job.id);
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-                    <h2 className="text-base font-semibold text-slate-800">Modifier la tâche</h2>
-                    <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                        <X className="w-5 h-5" />
+            <div className="mx-4 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                    <h2 className="text-base font-semibold text-slate-800">Edit Task</h2>
+                    <button onClick={onClose} className="p-1 text-slate-400 transition-colors hover:text-slate-600">
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                {/* Body */}
-                <div className="p-6 space-y-4">
+                <div className="space-y-4 p-6">
                     {error && (
-                        <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                             {error}
                         </div>
                     )}
 
-                    {/* Task name (MANUAL only) */}
                     {isManual && (
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Nom de la tâche</label>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Task Name</label>
                             <input
                                 type="text"
                                 value={customTaskName}
-                                onChange={e => setCustomTaskName(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="ex. Fermeture des agences"
+                                onChange={(event) => setCustomTaskName(event.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                placeholder="e.g. Close all agencies"
                             />
                         </div>
                     )}
 
-                    {/* BATCH task: show name as read-only */}
                     {!isManual && (
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Tâche (batch)</label>
-                            <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600">
-                                {job.job?.name || '—'} <span className="text-slate-400">/ {job.system?.name}</span>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Batch Task</label>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                                {job.job?.name || '-'} <span className="text-slate-400">/ {job.system?.name}</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Date + Time */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Date</label>
                             <input
                                 type="date"
                                 value={scheduledDate}
-                                onChange={e => setScheduledDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onChange={(event) => setScheduledDate(event.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Heure</label>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Time</label>
                             <input
                                 type="time"
                                 value={scheduledTime}
-                                onChange={e => setScheduledTime(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onChange={(event) => setScheduledTime(event.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
                     </div>
 
-                    {/* Support contact */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Responsable / Contact support</label>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Support Contact</label>
                         <input
                             type="text"
                             value={supportContact}
-                            onChange={e => setSupportContact(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="ex. exploitation_centrale"
+                            onChange={(event) => setSupportContact(event.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g. central operations"
                         />
                     </div>
 
-                    {/* Dependencies */}
                     {otherJobs.length > 0 && (
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Dépendances</label>
-                            <div className="max-h-36 overflow-y-auto space-y-1 border border-slate-200 rounded-lg p-2">
-                                {otherJobs.map(j => (
-                                    <label key={j.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 px-2 py-1 rounded">
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Dependencies</label>
+                            <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-2">
+                                {otherJobs.map((existingJob) => (
+                                    <label
+                                        key={existingJob.id}
+                                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-slate-50"
+                                    >
                                         <input
                                             type="checkbox"
-                                            checked={selectedDeps.includes(j.id)}
-                                            onChange={() => toggleDep(j.id)}
+                                            checked={selectedDeps.includes(existingJob.id)}
+                                            onChange={() => toggleDependency(existingJob.id)}
                                             className="accent-indigo-600"
                                         />
-                                        <span className="text-slate-700">{j.customTaskName || j.job?.name || 'Tâche'}</span>
-                                        <span className="text-xs text-slate-400 ml-auto">
-                                            {new Date(j.scheduledTime).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                                        <span className="text-slate-700">
+                                            {existingJob.customTaskName || existingJob.job?.name || 'Task'}
+                                        </span>
+                                        <span className="ml-auto text-xs text-slate-400">
+                                            {new Date(existingJob.scheduledTime).toLocaleDateString('fr-FR', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                            })}
                                         </span>
                                     </label>
                                 ))}
@@ -181,33 +188,39 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
                         </div>
                     )}
 
-                    {/* Internal notes */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Note interne (optionnel)</label>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Internal Note (optional)</label>
                         <input
                             type="text"
                             value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Commentaire ou observation"
+                            onChange={(event) => setNotes(event.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Comment or observation"
                         />
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50/50">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                        Annuler
+                <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-6 py-4">
+                    <button
+                        onClick={onClose}
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+                    >
+                        Cancel
                     </button>
                     <button
-                        onClick={handleSave}
+                        onClick={() => void handleSave()}
                         disabled={saving}
-                        className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg transition-colors"
+                        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
                     >
                         {saving ? (
-                            <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sauvegarde...</>
+                            <>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                Saving...
+                            </>
                         ) : (
-                            <><Save className="w-4 h-4" /> Sauvegarder</>
+                            <>
+                                <Save className="h-4 w-4" /> Save
+                            </>
                         )}
                     </button>
                 </div>
@@ -215,4 +228,3 @@ export const EditJobModal = ({ job, isOpen, onClose, onSaved, existingJobs }: Ed
         </div>
     );
 };
-
