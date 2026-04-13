@@ -49,7 +49,7 @@ DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
 echo "Using direct connection for migrations..."
 
 # Check if there are any pending migrations first (avoid advisory lock if nothing to do)
-MIGRATE_STATUS=$(DATABASE_URL="$DIRECT_URL" npx prisma migrate status 2>&1)
+MIGRATE_STATUS=$(DATABASE_URL="$DIRECT_URL" npx prisma migrate status 2>&1 || true)
 if echo "$MIGRATE_STATUS" | grep -q "Database schema is up to date"; then
     echo "No pending migrations — skipping migrate deploy."
 else
