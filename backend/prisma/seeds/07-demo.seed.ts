@@ -10,7 +10,7 @@
  * - 4 planning instances with jobs
  * - 80 audit log entries
  *
- * ⚠️  THROWS AN ERROR if NODE_ENV === 'production'.
+ *   THROWS AN ERROR if NODE_ENV === 'production'.
  *     This seed should never run in production.
  *     Use --demo flag to include it explicitly.
  */

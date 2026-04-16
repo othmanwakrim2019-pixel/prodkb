@@ -16,7 +16,7 @@ import { seedSystems } from './03-systems.seed';
 import { seedSLAs } from './04-slas.seed';
 import { seedEmailTemplates } from './05-email-templates.seed';
 import { seedConfig } from './06-config.seed';
-import { seedDemo } from './07-demo.seed';
+// seedDemo is dynamically imported below to avoid loading @faker-js/faker in production
 
 const includeDemo = process.argv.includes('--demo');
 
@@ -34,8 +34,9 @@ async function main(): Promise<void> {
     await seedEmailTemplates();
     await seedConfig();
 
-    // Demo seed — only when explicitly requested
+    // Demo seed — only when explicitly requested (dynamic import avoids loading @faker-js/faker in production)
     if (includeDemo) {
+        const { seedDemo } = await import('./07-demo.seed');
         await seedDemo();
     } else {
         console.log('\n Tip: Run with --demo to include demo data (50 users, 120 incidents, etc.)');

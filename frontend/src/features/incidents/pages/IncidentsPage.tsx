@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Download, Radio } from 'lucide-react';
+import { Plus, Trash2, Download } from 'lucide-react';
 import { IncidentFilters } from '../components/IncidentFilters';
 import { Incident } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '../../../components/ui/Pagination';
 import { exportToCSV } from '../../../utils/exportCSV';
-import { useIncidentStream } from '../hooks/useIncidentStream';
 import { CanAccess } from '../../../components/CanAccess';
 import { APP_PATHS } from '../../../app/route-meta';
 import { incidentService } from '../api/incident.service';
@@ -73,13 +72,7 @@ export const IncidentsPage = () => {
     }, [fetchIncidents]);
 
     // Real-time updates: auto-refresh when any incident event arrives
-    const { isConnected } = useIncidentStream({
-        onEvent: (event) => {
-            if (event.type !== 'connected') {
-                fetchIncidents();
-            }
-        },
-    });
+
 
     const handlePageChange = (newPage: number) => {
         const newParams = new URLSearchParams(searchParams);
@@ -98,12 +91,7 @@ export const IncidentsPage = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('incidents.title')}</h1>
-                {isConnected && (
-                    <span className="inline-flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <Radio className="h-3 w-3 animate-pulse" />
-                        Live
-                    </span>
-                )}
+
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => exportToCSV(Array.isArray(incidents) ? incidents : [], 'incidents', [

@@ -329,7 +329,7 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: prodkb-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://prodkb:prodkb_password@postgres:5432/prodkb?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@postgres:5432/${POSTGRES_DB:-prodkb}?sslmode=disable"
     depends_on:
       postgres:
         condition: service_healthy
