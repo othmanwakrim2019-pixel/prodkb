@@ -1,7 +1,6 @@
 /**
  * ConfirmDialog — replaces browser confirm() calls
- * Usage: const { confirm } = useConfirm();
- *        if (await confirm('Delete?', 'This cannot be undone.')) { ... }
+ * Flat enterprise panel, full dark mode support.
  */
 import { useState, useCallback, createContext, useContext, ReactNode, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
@@ -44,43 +43,46 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/50"
                         onClick={() => handleClose(false)}
                     />
                     {/* Dialog */}
-                    <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 animate-scale-in">
-                        <div className="flex items-start gap-4">
-                            {options.variant === 'danger' && (
-                                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg rounded max-w-sm w-full mx-4 animate-scale-in">
+                        {/* Header stripe for danger */}
+                        {options.variant === 'danger' && (
+                            <div className="h-1 bg-red-600 rounded-t w-full" />
+                        )}
+                        <div className="p-5">
+                            <div className="flex items-start gap-3">
+                                {options.variant === 'danger' && (
+                                    <div className="flex-shrink-0 h-8 w-8 rounded bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                        <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                        {options.title}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {options.message}
+                                    </p>
                                 </div>
-                            )}
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    {options.title}
-                                </h3>
-                                <p className="mt-2 text-sm text-slate-600">
-                                    {options.message}
-                                </p>
                             </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <button
-                                onClick={() => handleClose(false)}
-                                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                            >
-                                {options.cancelLabel || 'Cancel'}
-                            </button>
-                            <button
-                                onClick={() => handleClose(true)}
-                                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${options.variant === 'danger'
-                                        ? 'bg-red-600 hover:bg-red-700'
-                                        : 'bg-accent hover:bg-accent/90'
-                                    }`}
-                                autoFocus
-                            >
-                                {options.confirmLabel || 'Confirm'}
-                            </button>
+                            <div className="mt-5 flex justify-end gap-2">
+                                <button
+                                    onClick={() => handleClose(false)}
+                                    className="ent-btn-secondary"
+                                >
+                                    {options.cancelLabel || 'Cancel'}
+                                </button>
+                                <button
+                                    onClick={() => handleClose(true)}
+                                    className={options.variant === 'danger' ? 'ent-btn-danger' : 'ent-btn-primary'}
+                                    autoFocus
+                                >
+                                    {options.confirmLabel || 'Confirm'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

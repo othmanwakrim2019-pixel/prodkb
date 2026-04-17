@@ -13,6 +13,8 @@ const router = Router();
 router.post('/login', authLimiter, AuthController.login);
 router.post('/register', authenticate, requirePermission('USER_MANAGE'), AuthController.register);
 router.get('/me', authenticate, AuthController.getMe);
+router.put('/me', authenticate, AuthController.updateMe);
+router.put('/me/password', authenticate, AuthController.updateMyPassword);
 
 // ── Refresh Token ──
 // Reads refresh token from httpOnly cookie (no body needed)

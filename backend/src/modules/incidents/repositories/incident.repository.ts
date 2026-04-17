@@ -108,6 +108,19 @@ export class IncidentRepository {
         return prisma.incidentLog.delete({ where: { id } });
     }
 
+    async findActivityLogs(incidentId: string) {
+        return prisma.incidentLog.findMany({
+            where: {
+                incidentId,
+                logType: { in: ['activity', 'note', 'investigation', 'resolution', 'analysis', 'communication', 'other', 'file'] },
+            },
+            include: {
+                createdBy: { select: { id: true, name: true, email: true } },
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+    }
+
     async countIncidents(where: Record<string, unknown>) {
         return prisma.incident.count({ where });
     }

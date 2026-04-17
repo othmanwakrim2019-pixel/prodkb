@@ -66,6 +66,16 @@ export interface WarRoomMessage {
     user: { id: string; name: string };
 }
 
+export interface ActivityEntry {
+    id: string;
+    logType: string;         // 'activity' | 'note' | 'investigation' | 'file' | ...
+    rawLog: string | null;
+    fileName: string | null;
+    mimeType: string | null;
+    createdAt: string;
+    createdBy: { id: string; name: string; email: string } | null;
+}
+
 export const incidentService = {
     getAll: async (params?: IncidentQueryParams): Promise<PaginatedResponse<Incident>> => {
         const response = await api.get('/api/v1/incidents', { params });
@@ -211,5 +221,13 @@ export const incidentService = {
 
     deleteFile: (id: string, fileName: string): Promise<void> =>
         api.delete(`/api/v1/incidents/${id}/files/${fileName}`),
+
+    getActivity: async (incidentId: string): Promise<ActivityEntry[]> => {
+        const response = await api.get(`/api/v1/incidents/${incidentId}/activity`);
+        const payload = response.data;
+        if (Array.isArray(payload)) return payload;
+        if (payload?.data && Array.isArray(payload.data)) return payload.data;
+        return [];
+    },
 };
 

@@ -146,22 +146,22 @@ export const SystemManagementPage = () => {
     return (
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 className="text-lg font-semibold text-slate-900">{t('admin.systems.title')}</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('admin.systems.title')}</h2>
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative flex-1 md:flex-none">
-                        <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
                         <input
                             type="text"
                             placeholder="Search applications..."
                             value={systemSearch}
                             onChange={(e) => setSystemSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-slate-300 rounded-md focus:border-accent focus:ring-accent sm:text-sm w-full"
+                            className="ent-input pl-9"
                         />
                     </div>
                     {canManageSystems() && (
                         <button
                             onClick={() => setShowSystemForm(!showSystemForm)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                            className="ent-btn-primary whitespace-nowrap"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Application
@@ -171,7 +171,7 @@ export const SystemManagementPage = () => {
             </div>
 
             {showSystemForm && (
-                <form onSubmit={handleCreateSystem} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                <form onSubmit={handleCreateSystem} className="ent-card p-4 space-y-4">
                     <h3 className="font-medium text-slate-900">Create New System</h3>
                     <div className="grid grid-cols-1 gap-4">
                         <div>
@@ -181,7 +181,7 @@ export const SystemManagementPage = () => {
                                 required
                                 value={newSystem.name}
                                 onChange={(e) => setNewSystem({ ...newSystem, name: e.target.value })}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                className="ent-input"
                             />
                         </div>
                         <div>
@@ -189,7 +189,7 @@ export const SystemManagementPage = () => {
                             <textarea
                                 value={newSystem.description}
                                 onChange={(e) => setNewSystem({ ...newSystem, description: e.target.value })}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                className="ent-input"
                                 rows={3}
                             />
                         </div>
@@ -198,13 +198,13 @@ export const SystemManagementPage = () => {
                         <button
                             type="button"
                             onClick={() => setShowSystemForm(false)}
-                            className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            className="ent-btn-secondary"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                            className="ent-btn-primary"
                         >
                             Create Application
                         </button>
@@ -214,27 +214,27 @@ export const SystemManagementPage = () => {
 
             <div className="space-y-4">
                 {filteredSystems.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((system) => (
-                    <div key={system.id} className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
-                        <div className="px-6 py-4 flex items-center justify-between bg-slate-50">
+                    <div key={system.id} className="bg-white dark:bg-slate-900 shadow-sm rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedSystemId(expandedSystemId === system.id ? null : system.id)}>
-                                {expandedSystemId === system.id ? <ChevronUp className="h-5 w-5 text-slate-500" /> : <ChevronDown className="h-5 w-5 text-slate-500" />}
+                                {expandedSystemId === system.id ? <ChevronUp className="h-5 w-5 text-slate-500 dark:text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
                                 <div>
-                                    <h3 className="text-lg font-medium text-slate-900">{system.name}</h3>
-                                    {system.description && <p className="text-sm text-slate-500">{system.description}</p>}
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200">{system.name}</h3>
+                                    {system.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{system.description}</p>}
                                 </div>
                             </div>
                             {canManageSystems() && (
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setEditingSystem(system)}
-                                        className="text-slate-400 hover:text-accent"
+                                        className="p-2 rounded text-slate-400 hover:text-primary dark:hover:text-indigo-400 transition-colors"
                                         title="Edit system"
                                     >
                                         <Pencil className="h-4 w-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteSystem(system.id, system.name)}
-                                        className="text-slate-400 hover:text-red-600"
+                                        className="p-2 rounded text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                         title="Delete system"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -244,15 +244,15 @@ export const SystemManagementPage = () => {
                         </div>
 
                         {expandedSystemId === system.id && (
-                            <div className="px-6 py-4 border-t border-slate-200">
+                            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h4 className="font-medium text-slate-900">Uprocs (Jobs)</h4>
+                                    <h4 className="font-semibold text-sm text-slate-800 dark:text-slate-300">Uprocs (Jobs)</h4>
                                     {canManageSystems() && (
                                         <button
                                             onClick={() => setShowJobForm(system.id)}
-                                            className="text-sm text-accent hover:text-blue-800 font-medium flex items-center"
+                                            className="text-xs text-primary dark:text-indigo-400 hover:text-primary-hover dark:hover:text-indigo-300 font-medium flex items-center transition-colors"
                                         >
-                                            <Plus className="h-4 w-4 mr-1" />
+                                            <Plus className="h-3 w-3 mr-1" />
                                             Add Uproc
                                         </button>
                                     )}
@@ -316,43 +316,45 @@ export const SystemManagementPage = () => {
                                 )}
 
                                 {system.jobs && system.jobs.length > 0 ? (
-                                    <table className="min-w-full divide-y divide-slate-200">
-                                        <thead>
-                                            <tr>
-                                                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Code</th>
-                                                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                                                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Team</th>
-                                                {canManageSystems() && <th className="px-3 py-2 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-200">
-                                            {system.jobs.map((job: Job) => (
-                                                <tr key={job.id}>
-                                                    <td className="px-3 py-2 text-sm font-mono text-slate-700">{job.code}</td>
-                                                    <td className="px-3 py-2 text-sm text-slate-700">{job.name}</td>
-                                                    <td className="px-3 py-2 text-sm text-slate-500">{teams.find(t => t.id === job.teamId)?.name || '-'}</td>
-                                                    {canManageSystems() && (
-                                                        <td className="px-3 py-2 text-right text-sm">
-                                                            <button
-                                                                onClick={() => setEditingJob(job)}
-                                                                className="text-accent hover:text-blue-900 mr-2"
-                                                            >
-                                                                <Pencil className="h-3 w-3" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteJob(job.id, job.name)}
-                                                                className="text-red-600 hover:text-red-900"
-                                                            >
-                                                                <Trash2 className="h-3 w-3" />
-                                                            </button>
-                                                        </td>
-                                                    )}
+                                    <div className="overflow-x-auto rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+                                        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                                            <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                                                <tr>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Code</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Name</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Team</th>
+                                                    {canManageSystems() && <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>}
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                                {system.jobs.map((job: Job) => (
+                                                    <tr key={job.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-none">
+                                                        <td className="px-4 py-2 text-sm font-mono text-slate-700 dark:text-slate-300">{job.code}</td>
+                                                        <td className="px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-200">{job.name}</td>
+                                                        <td className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">{teams.find(t => t.id === job.teamId)?.name || '-'}</td>
+                                                        {canManageSystems() && (
+                                                            <td className="px-4 py-2 text-right text-sm">
+                                                                <button
+                                                                    onClick={() => setEditingJob(job)}
+                                                                    className="p-1 rounded text-slate-400 hover:text-primary dark:hover:text-indigo-400 transition-colors mr-1"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteJob(job.id, job.name)}
+                                                                    className="p-1 rounded text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 ) : (
-                                    <p className="text-sm text-slate-500 italic">No uprocs defined for this system.</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 italic">No uprocs defined for this system.</p>
                                 )}
                             </div>
                         )}

@@ -6,6 +6,7 @@ import { incidentAnalyticsService } from '../services/incident-analytics.service
 import { incidentCrudService, type FindAllFilters } from '../services/incident-crud.service';
 import { canAccessIncidentTeam, getScopedIncidentTeamIds } from '../services/incident-visibility.service';
 import { incidentSuggestionService } from '../services/suggestion.service';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export class IncidentQueryController {
     static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
@@ -116,6 +117,16 @@ export class IncidentQueryController {
             }
 
             res.json(createResponse(true, incident));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getActivity(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const logs = await incidentRepository.findActivityLogs(id);
+            res.json(createResponse(true, logs));
         } catch (error) {
             next(error);
         }

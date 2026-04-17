@@ -3,18 +3,19 @@
  * Shows user info, language toggle, change password, and sign out.
  */
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Key, LogOut, Globe, ChevronUp } from 'lucide-react';
+import { Key, LogOut, Globe, ChevronUp, UserCircle } from 'lucide-react';
 
 interface UserProfileDropdownProps {
     user: { name: string; email?: string; role: string } | null;
-    onChangePassword: () => void;
     onLogout: () => void;
 }
 
-export const UserProfileDropdown = ({ user, onChangePassword, onLogout }: UserProfileDropdownProps) => {
+export const UserProfileDropdown = ({ user, onLogout }: UserProfileDropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const currentLang = i18n.language?.startsWith('fr') ? 'fr' : 'en';
 
@@ -88,9 +89,18 @@ export const UserProfileDropdown = ({ user, onChangePassword, onLogout }: UserPr
                                 </span>
                             </button>
 
-                            {/* Change password */}
+                            {/* My Profile */}
                             <button
-                                onClick={() => { setIsOpen(false); onChangePassword(); }}
+                                onClick={() => { setIsOpen(false); navigate('/profile'); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+                            >
+                                <UserCircle className="h-4 w-4 text-slate-400" />
+                                <span>My Profile</span>
+                            </button>
+
+                            {/* Change password → go to profile security section */}
+                            <button
+                                onClick={() => { setIsOpen(false); navigate('/profile'); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
                             >
                                 <Key className="h-4 w-4 text-slate-400" />

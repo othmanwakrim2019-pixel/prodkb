@@ -72,9 +72,36 @@ export class AuthController {
     static async getMe(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             if (!req.user?.id) throw new ValidationError('User not authenticated');
-
             const user = await userService.findByIdWithPermissions(req.user.id);
             res.json(createResponse(true, user));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async updateMe(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            if (!req.user?.id) throw new ValidationError('User not authenticated');
+            const { name, email } = z.object({
+                name: z.string().min(1).max(100).optional(),
+                email: z.string().email().optional(),
+            }).parse(req.body);
+            const updated = await userService.update(req.user.id, { name, email } as Record<string, unknown>);
+            res.json(createResponse(true, updated, 'Profile updated'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async updateMyPassword(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            if (!req.user?.id) throw new ValidationError('User not authenticated');
+            const { currentPassword, newPassword } = z.object({
+                currentPassword: z.string().min(1),
+                newPassword: z.string().min(8),
+            }).parse(req.body);
+            await userService.changePassword(req.user.id, currentPassword, newPassword);
+            res.json(createResponse(true, null, 'Password updated'));
         } catch (error) {
             next(error);
         }

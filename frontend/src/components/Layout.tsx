@@ -2,12 +2,16 @@ import { Outlet, Link, useNavigate, useLocation, useSearchParams } from 'react-r
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { NotificationBell } from '../features/notifications/components/NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
+import { CommandPalette } from './CommandPalette';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import { CriticalIncidentBanner } from './CriticalIncidentBanner';
+import { incidentService } from '../features/incidents/api/incident.service';
 import {
     ADMIN_NAV_GROUPS,
     APP_PATHS,
@@ -70,7 +74,7 @@ const CollapsibleGroup = ({
             <button
                 onClick={onToggle}
                 className={clsx(
-                    'w-full flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-200',
+                    'w-full flex items-center px-4 py-2.5 text-sm font-medium rounded transition-none',
                     isAnyChildActive
                         ? 'bg-white/10 text-white'
                         : 'text-white/70 hover:bg-white/5 hover:text-white'
@@ -101,9 +105,9 @@ const CollapsibleGroup = ({
                                 key={child.tab || child.path}
                                 onClick={() => child.path ? onNavigatePath(child.path) : onChildClick(child.tab!)}
                                 className={clsx(
-                                    'w-full flex items-center px-4 py-2 text-xs font-medium rounded-md transition-all duration-150',
+                                    'w-full flex items-center px-4 py-2 text-xs font-medium rounded transition-none',
                                     isActive
-                                        ? 'bg-white/15 text-white border-l-2 border-white ml-0'
+                                        ? 'bg-white/15 text-white border-l-2 border-white/60 ml-0'
                                         : 'text-white/55 hover:bg-white/5 hover:text-white/90'
                                 )}
                             >
@@ -126,6 +130,27 @@ export const Layout = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const { t } = useTranslation();
     const currentTab = searchParams.get('tab');
+
+    // ── Feature 4: Live browser tab badge showing active incident count ──
+    useEffect(() => {
+        let cancelled = false;
+        const updateTitle = async () => {
+            try {
+                const result = await incidentService.getAll({ status: 'Open', limit: 1 });
+                if (!cancelled) {
+                    const section = getPrimarySectionLabel(location.pathname);
+                    const sectionLabel = section ? t(section.labelKey, section.defaultLabel) : 'ProdKB';
+                    const count = result.total ?? 0;
+                    document.title = count > 0 ? `(${count}) ${sectionLabel} — ProdKB` : `${sectionLabel} — ProdKB`;
+                }
+            } catch {
+                document.title = 'ProdKB';
+            }
+        };
+        updateTitle();
+        const interval = setInterval(updateTitle, 60_000);
+        return () => { cancelled = true; clearInterval(interval); };
+    }, [location.pathname, t]);
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
         location.pathname === APP_PATHS.admin
@@ -168,9 +193,9 @@ export const Layout = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-            <aside className="w-64 bg-primary dark:bg-slate-800 text-white flex flex-col fixed h-full z-30 transition-transform duration-200 -translate-x-full md:translate-x-0" id="sidebar">
-                <div className="p-6 border-b border-white/10">
-                    <img src="/logo.png" alt="CIH Bank" className="w-full max-h-20 object-contain" />
+            <aside className="w-64 bg-[#001a38] dark:bg-[#161a1d] text-slate-300 flex flex-col fixed h-full z-40 transition-transform duration-200 -translate-x-full md:translate-x-0 border-r border-slate-200 dark:border-slate-800" id="sidebar">
+                <div className="p-4 border-b border-white/5 bg-black/10">
+                    <img src="/logo.png" alt="CIH Bank" className="w-full max-h-12 object-contain" />
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin">
@@ -182,10 +207,10 @@ export const Layout = () => {
                                 key={item.path}
                                 to={item.path}
                                 className={clsx(
-                                    'flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors',
+                                    'flex items-center px-4 py-2.5 text-sm font-medium rounded transition-none',
                                     isActive
-                                        ? 'bg-white/10 text-white border-l-4 border-white'
-                                        : 'text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
+                                        ? 'bg-primary dark:bg-slate-800 text-white border-l-[3px] border-accent font-semibold'
+                                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-l-[3px] border-transparent'
                                 )}
                             >
                                 <Icon className="mr-3 h-5 w-5" />
@@ -222,13 +247,12 @@ export const Layout = () => {
 
                 <UserProfileDropdown
                     user={user}
-                    onChangePassword={() => setShowPasswordModal(true)}
                     onLogout={handleLogout}
                 />
             </aside>
 
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
-                <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-700/60 px-4 md:px-8 py-3 flex items-center justify-between">
+                <header className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-8 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm">
                         <button
                             className="md:hidden p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
@@ -252,6 +276,16 @@ export const Layout = () => {
                         )}
                     </div>
                     <div className="flex items-center gap-3">
+                        {/* Ctrl+K hint button */}
+                        <button
+                            onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }); window.dispatchEvent(e); }}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                            title="Open command palette (Ctrl+K)"
+                        >
+                            <Search className="h-3.5 w-3.5" />
+                            <span>Search...</span>
+                            <kbd className="ml-1 text-[10px] font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">Ctrl K</kbd>
+                        </button>
                         <ThemeToggle />
                         <NotificationBell />
                         <div className="flex items-center gap-1.5">
@@ -264,6 +298,9 @@ export const Layout = () => {
                     </div>
                 </header>
 
+                {/* Feature 2: Critical incident banner */}
+                <CriticalIncidentBanner />
+
                 <div className="flex-1 p-4 md:p-8">
                     <Outlet />
                 </div>
@@ -273,6 +310,12 @@ export const Layout = () => {
                 isOpen={showPasswordModal}
                 onClose={() => setShowPasswordModal(false)}
             />
+
+            {/* Global command palette — mounted here so it's always available */}
+            <CommandPalette />
+
+            {/* Feature 3: Keyboard shortcuts modal — press ? */}
+            <KeyboardShortcutsModal />
         </div>
     );
 };

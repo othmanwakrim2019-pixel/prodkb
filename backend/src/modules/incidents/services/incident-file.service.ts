@@ -41,6 +41,14 @@ export class IncidentFileService {
             sendNoteNotification(incident, 'note_added').catch(() => { });
         }
 
+        // Auto-log activity entry
+        await incidentRepository.createIncidentLog({
+            incidentId,
+            logType: 'activity',
+            rawLog: `Note added (type: **${data.logType}**)`,
+            createdById: userId,
+        });
+
         return log as unknown as IIncidentLog;
     }
 
@@ -68,6 +76,14 @@ export class IncidentFileService {
         if (incident) {
             sendNoteNotification(incident, 'file_uploaded').catch(() => { });
         }
+
+        // Auto-log file upload activity
+        await incidentRepository.createIncidentLog({
+            incidentId,
+            logType: 'activity',
+            rawLog: `File uploaded: **${fileData.fileName}**`,
+            createdById: userId,
+        });
 
         return log as unknown as IIncidentLog;
     }

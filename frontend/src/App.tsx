@@ -24,6 +24,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Planning = lazy(() => import('./pages/planning/Planning'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const MaintenanceAdmin = lazy(() => import('./features/admin/pages/MaintenanceAdminPage'));
+const UserProfile = lazy(() => import('./features/auth/pages/UserProfilePage'));
 
 function App() {
     return (
@@ -135,6 +136,15 @@ function App() {
                                         <ProtectedRoute permission="DASHBOARD_VIEW">
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><StatusPage /></ErrorBoundary>
+                                            </Suspense>
+                                        </ProtectedRoute>
+                                    } />
+
+                                    {/* User profile — accessible to all authenticated users */}
+                                    <Route path="/profile" element={
+                                        <ProtectedRoute>
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><UserProfile /></ErrorBoundary>
                                             </Suspense>
                                         </ProtectedRoute>
                                     } />

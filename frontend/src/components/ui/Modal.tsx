@@ -1,6 +1,7 @@
 /**
- * Modal — reusable modal component
- * Replaces 6+ independent modal implementations
+ * Modal — reusable dialog component
+ * Flat enterprise style: no rounded-xl, no shadow-2xl.
+ * Full dark mode support.
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
@@ -14,7 +15,7 @@ interface ModalProps {
     size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const SIZES = {
+const SIZES: Record<NonNullable<ModalProps['size']>, string> = {
     sm: 'max-w-sm',
     md: 'max-w-md',
     lg: 'max-w-lg',
@@ -24,23 +25,15 @@ const SIZES = {
 export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
     const overlayRef = useRef<HTMLDivElement>(null);
 
-    // Escape key to close
     useEffect(() => {
         if (!isOpen) return;
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('keydown', handler);
         return () => document.removeEventListener('keydown', handler);
     }, [isOpen, onClose]);
 
-    // Prevent body scroll when open
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = isOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
@@ -51,28 +44,28 @@ export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }:
             {/* Backdrop */}
             <div
                 ref={overlayRef}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
                 onClick={onClose}
             />
-            {/* Content */}
-            <div className={`relative bg-white rounded-xl shadow-2xl ${SIZES[size]} w-full mx-4 animate-scale-in`}>
+            {/* Panel */}
+            <div className={`relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg rounded ${SIZES[size]} w-full mx-4 animate-scale-in`}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-                    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                        className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-4 w-4" />
                     </button>
                 </div>
                 {/* Body */}
-                <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+                <div className="px-5 py-4 max-h-[70vh] overflow-y-auto text-sm text-slate-700 dark:text-slate-300">
                     {children}
                 </div>
                 {/* Footer */}
                 {footer && (
-                    <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+                    <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2 bg-slate-50 dark:bg-slate-800/50">
                         {footer}
                     </div>
                 )}
