@@ -16,6 +16,7 @@ jest.mock('../src/modules/incidents/repositories/incident.repository', () => ({
         updateIncident: jest.fn(),
         deleteIncident: jest.fn(),
         findProcedureById: jest.fn(),
+        createIncidentLog: jest.fn(),
     },
 }));
 jest.mock('../src/modules/auto-assign/auto-assign.service', () => ({

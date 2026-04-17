@@ -49,8 +49,9 @@ export const UserProfilePage = () => {
             await login();
             setEditing(false);
             toast.success('Profile updated successfully');
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to update profile');
+        } catch (err: unknown) {
+            const errorOptions = err as { response?: { data?: { message?: string } } };
+            toast.error(errorOptions?.response?.data?.message || 'Failed to update profile');
         } finally {
             setSaving(false);
         }
@@ -68,8 +69,9 @@ export const UserProfilePage = () => {
             setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
             setChangingPassword(false);
             toast.success('Password changed successfully');
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to change password');
+        } catch (err: unknown) {
+             const errorOptions = err as { response?: { data?: { message?: string } } };
+            toast.error(errorOptions?.response?.data?.message || 'Failed to change password');
         } finally {
             setPwSaving(false);
         }

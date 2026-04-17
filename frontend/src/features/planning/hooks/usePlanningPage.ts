@@ -173,7 +173,7 @@ export const usePlanningPage = () => {
         } catch (error) {
             console.error('Failed to delete planning instance:', error);
         }
-    }, [confirm, fetchInstances, selectedInstanceId]);
+    }, [confirm, toast, fetchInstances, selectedInstanceId]);
 
     const handleClone = useCallback(async () => {
         if (!selectedInstanceId) {

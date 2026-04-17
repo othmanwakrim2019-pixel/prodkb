@@ -54,12 +54,12 @@ const StatPill = ({
 );
 
 // ── Custom bar tooltip ─────────────────────────────────────────────────────
-const BarTooltip = ({ active, payload, label }: any) => {
+const BarTooltip = ({ active, payload, label }: { active?: boolean; payload?: { fill?: string; color?: string; name: string; value: number | string }[]; label?: string }) => {
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-3 py-2 shadow-lg text-xs">
             <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1">{label}</p>
-            {payload.map((p: any, i: number) => (
+            {payload.map((p, i) => (
                 <div key={i} className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full" style={{ background: p.fill || p.color }} />
                     <span className="text-slate-500">{p.name}:</span>

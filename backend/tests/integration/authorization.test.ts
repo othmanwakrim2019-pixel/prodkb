@@ -11,6 +11,12 @@ describe('Authorization Integration', () => {
     const password = 'password123';
 
     beforeAll(async () => {
+        // Ensure roles exist for tests to bind properly
+        const adminRoleObj = await prisma.role.findUnique({ where: { name: 'ADMIN' } });
+        if (!adminRoleObj) {
+            await prisma.role.create({ data: { name: 'ADMIN', description: 'Admin Role' } });
+        }
+
         await prisma.user.deleteMany({
             where: {
                 email: { in: [adminEmail, operatorEmail] },

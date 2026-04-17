@@ -114,6 +114,7 @@ export const HealthDashboardPage = () => {
         setLoading(false);
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         refresh();
         const interval = setInterval(refresh, 30000);

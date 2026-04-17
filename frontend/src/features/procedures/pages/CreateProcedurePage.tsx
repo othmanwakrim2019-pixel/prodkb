@@ -115,7 +115,7 @@ export const CreateProcedurePage = () => {
             };
             fetchProcedure();
         }
-    }, [isEditMode, id, setValue, navigate]);
+    }, [isEditMode, id, setValue, navigate, toast]);
 
     // Auto-fill title from selected job
     useEffect(() => {
