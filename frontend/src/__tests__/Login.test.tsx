@@ -67,9 +67,11 @@ describe('Login Component', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         sessionStorage.clear();
+        localStorage.clear();
     });
 
     const renderLogin = async () => {
+        localStorage.setItem('prodkb_auth_status', 'true');
         const utils = render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
@@ -87,7 +89,7 @@ describe('Login Component', () => {
 
     it('renders login form correctly', async () => {
         await renderLogin();
-        expect(screen.getByText('Sign In')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/enter your email/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();

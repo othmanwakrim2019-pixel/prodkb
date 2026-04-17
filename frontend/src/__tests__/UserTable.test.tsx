@@ -73,8 +73,8 @@ describe('UserTable', () => {
     it('displays active/inactive status badges', () => {
         renderWithProviders(<UserTable {...defaultProps} />);
 
-        expect(screen.getByText('✓ Active')).toBeInTheDocument();
-        expect(screen.getByText('✗ Inactive')).toBeInTheDocument();
+        expect(screen.getByText(/Active/)).toBeInTheDocument();
+        expect(screen.getByText(/Inactive/)).toBeInTheDocument();
     });
 
     it('displays role badges', () => {

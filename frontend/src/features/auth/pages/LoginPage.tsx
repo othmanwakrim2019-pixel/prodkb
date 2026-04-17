@@ -193,7 +193,7 @@ export const LoginPage = () => {
                                     {...register('password', { required: t('login.passwordRequired', 'Le mot de passe est requis') })}
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="current-password"
-                                    placeholder="••••••••••"
+                                    placeholder={t('login.passwordPlaceholder', '••••••••••')}
                                     className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-12 text-sm text-slate-800 placeholder-slate-400 outline-none shadow-sm transition-all focus:border-[#003d82] focus:ring-2 focus:ring-[#003d82]/15 hover:border-slate-300"
                                 />
                                 <button

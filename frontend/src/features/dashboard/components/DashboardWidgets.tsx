@@ -36,10 +36,14 @@ export interface KPICardProps {
     icon: React.ReactNode;
     trend?: 'up' | 'down' | 'neutral';
     delay?: string;
+    gradient?: string;
 }
 
-export const KPICard = ({ title, value, subtitle, icon, trend }: KPICardProps) => (
-    <div className="bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600 p-4 transition-none group text-left">
+export const KPICard = ({ title, value, subtitle, icon, trend, delay, gradient }: KPICardProps) => (
+    <div
+        className={`bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600 p-4 transition-none group text-left ${gradient || ''}`}
+        style={delay ? { animationDelay: delay } : undefined}
+    >
         <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{title}</span>
             <div className="text-slate-400 dark:text-slate-500">

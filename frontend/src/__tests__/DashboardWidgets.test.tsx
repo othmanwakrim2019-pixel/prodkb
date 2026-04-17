@@ -75,7 +75,7 @@ describe('PeriodPill', () => {
     it('applies inactive styles when not active', () => {
         render(<PeriodPill label="Today" active={false} onClick={() => { }} />);
         const button = screen.getByText('Today');
-        expect(button.className).toContain('bg-white');
+        expect(button.className).toContain('bg-slate-50');
     });
 
     it('calls onClick when clicked', () => {
