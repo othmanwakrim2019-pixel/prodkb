@@ -52,6 +52,9 @@ const PERMISSIONS: Array<{ code: string; description: string }> = [
     { code: 'MAINTENANCE_MANAGE', description: 'Create, edit, and delete maintenance windows' },
     // Audit
     { code: 'AUDIT_VIEW', description: 'View audit logs' },
+    // Gestion Équipe
+    { code: 'EQUIPE_VIEW', description: 'View team daily plans, tasks and astreinte schedule' },
+    { code: 'EQUIPE_MANAGE', description: 'Create/edit daily plans, assign tasks and astreinte rotations' },
 ];
 
 /** Role definitions with the permissions each role receives */
@@ -71,6 +74,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'PLANNING_VIEW', 'PLANNING_MANAGE',
             'ANALYTICS_VIEW',
             'JOB_VIEW',
+            'EQUIPE_VIEW', 'EQUIPE_MANAGE',
         ],
     },
     {
@@ -82,6 +86,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
             'JOB_VIEW',
+            'EQUIPE_VIEW',
         ],
     },
     {
@@ -92,6 +97,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'INCIDENT_VIEW',
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
+            'EQUIPE_VIEW',
         ],
     },
 ];

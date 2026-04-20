@@ -107,6 +107,45 @@ export const LogType = {
 export type LogTypeType = typeof LogType[keyof typeof LogType];
 
 /**
+ * Operational Task Types
+ */
+export const OperationalTaskType = {
+    MEP: 'MEP',
+    SUPERVISION: 'SUPERVISION',
+    TABLEAU_BORD: 'TABLEAU_BORD',
+    REPRISE_INCIDENT: 'REPRISE_INCIDENT',
+    CONTROLE_CHAINE: 'CONTROLE_CHAINE',
+    RAPPORT: 'RAPPORT',
+    CUSTOM: 'CUSTOM',
+} as const;
+
+export type OperationalTaskTypeType = typeof OperationalTaskType[keyof typeof OperationalTaskType];
+
+/**
+ * Operational Task Status
+ */
+export const OperationalTaskStatus = {
+    TODO: 'TODO',
+    IN_PROGRESS: 'IN_PROGRESS',
+    DONE: 'DONE',
+    BLOCKED: 'BLOCKED',
+} as const;
+
+export type OperationalTaskStatusType = typeof OperationalTaskStatus[keyof typeof OperationalTaskStatus];
+
+/**
+ * Operational Task Priority
+ */
+export const OperationalTaskPriority = {
+    LOW: 'LOW',
+    NORMAL: 'NORMAL',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL',
+} as const;
+
+export type OperationalTaskPriorityType = typeof OperationalTaskPriority[keyof typeof OperationalTaskPriority];
+
+/**
  * Permission codes
  */
 export const Permission = {
@@ -130,6 +169,10 @@ export const Permission = {
     SLA_MANAGE: 'SLA_MANAGE',
     ROLE_MANAGE: 'ROLE_MANAGE',
     AUDIT_VIEW: 'AUDIT_VIEW',
+
+    // Team Management (Astreinte & Daily Tasks)
+    EQUIPE_VIEW: 'EQUIPE_VIEW',
+    EQUIPE_MANAGE: 'EQUIPE_MANAGE',
 
     // Dashboard
     DASHBOARD_VIEW: 'DASHBOARD_VIEW',

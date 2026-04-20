@@ -1,0 +1,413 @@
+# 🧑‍💼 Gestion Équipe — Astreinte + Daily Tasks
+
+## The Two Operational Layers
+
+Your team runs on **two distinct but linked concepts**:
+
+```
+LAYER 1 — Weekly Astreinte (Rotation)
+─────────────────────────────────────
+  Week 1: Mohammed 📞  ← Any incident? He picks up.
+  Week 2: Yasser   📞
+  Week 3: Hamza    📞
+  ...
+  Automatic rotation, everyone knows who's on duty.
+
+LAYER 2 — Daily Task Assignments (Manager assigns)
+───────────────────────────────────────────────────
+  Monday 21/04:
+    Yasser  → Reprise d'incident (if declared)
+    Hamza   → MEP in production at 07:00
+    Rachid  → Create the daily board / tableau de bord
+    Amine   → Night: Supervise la chaîne compta
+
+  Weekend 26-27/04:
+    Ahmed   → Supervise incidents all weekend
+```
+
+These two layers work together: the **astreinte person** is the 24/7 fallback;
+the **daily tasks** are the planned operational duties for that specific day.
+
+---
+
+## 📅 Layer 1 — Astreinte Rotation
+
+### What it means
+- One person per week is **"de astreinte"** (on-call)
+- If **any incident is declared** → they are the primary responder
+- This rotates weekly across team members (e.g. round-robin)
+- Everyone can see **who is on astreinte this week** at a glance
+
+### UI — Astreinte Widget (visible on Dashboard)
+
+```
+┌─────────────────────────────────────────────────┐
+│  📞 Astreinte — Semaine 17 (21-27 Avr)          │
+│  ─────────────────────────────────────────────  │
+│  👤 Mohammed Alami       📱 +212 6XX XXX XXX    │
+│     Équipe Production    Fin: Dimanche 23:59     │
+│  ─────────────────────────────────────────────  │
+│  Semaine prochaine → Yasser Benali              │
+│  [Voir planning complet]                         │
+└─────────────────────────────────────────────────┘
+```
+
+### Data Model
+
+```prisma
+/// Weekly on-call rotation — one person per team per week
+model Astreinte {
+  id          String   @id @default(uuid())
+  weekNumber  Int                             // ISO week number (1-52)
+  year        Int
+  startDate   DateTime                        // Monday 00:00
+  endDate     DateTime                        // Sunday 23:59
+
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+
+  userId      String                          // who is on astreinte
+  user        User     @relation("AstreinteUser", fields: [userId], references: [id])
+
+  phone       String?                         // direct phone for this week
+  notes       String?                         // any special instructions
+
+  createdById String
+  createdBy   User     @relation("AstreinteCreatedBy", fields: [createdById], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([teamId, weekNumber, year])        // one person per team per week
+  @@index([teamId])
+  @@index([userId])
+  @@index([startDate, endDate])
+}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/astreintes` | List astreintes (filter by team, year) |
+| `GET` | `/api/v1/astreintes/current` | Who is on duty **right now** |
+| `POST` | `/api/v1/astreintes` | Assign astreinte for a week |
+| `PATCH` | `/api/v1/astreintes/:id` | Change the person (replacement) |
+| `DELETE` | `/api/v1/astreintes/:id` | Remove |
+| `GET` | `/api/v1/astreintes/planning` | Full yearly rotation calendar |
+
+---
+
+## 📋 Layer 2 — Daily Operational Tasks
+
+### What it means
+The manager opens the app and assigns tasks to each team member for a **specific day**
+(or weekend). Each task has a **type/role**, a **time slot**, and a **target** (system, chain, etc.).
+
+### Real examples from your team
+
+| Who | Task | Time | System/Domain |
+|-----|------|------|---------------|
+| Yasser | Reprise d'incident (si déclarée) | Morning | Any system |
+| Hamza | MEP en production | 07:00 | Target system |
+| Rachid | Créer tableau de bord du jour | Start of day | — |
+| Amine | Superviser la chaîne compta | Night | Chaîne compta |
+| Ahmed | Supervision incidents (weekend) | All day | All systems |
+
+### Task Types (Enum)
+
+```prisma
+enum OperationalTaskType {
+  ASTREINTE_BACKUP    // Backup responder for incidents
+  MEP                 // Mise En Production (deployment)
+  SUPERVISION         // Supervise a system or chain
+  TABLEAU_BORD        // Create/maintain daily dashboard/board
+  REPRISE_INCIDENT    // Take over ongoing incident recovery
+  CONTROLE_CHAINE     // Control/verify a processing chain
+  RAPPORT             // Write a report
+  CUSTOM              // Free text task
+}
+```
+
+### Data Model
+
+```prisma
+/// A day's operational task plan — groups tasks for one day
+model DailyPlan {
+  id          String      @id @default(uuid())
+  date        DateTime                         // the day this plan is for (date only)
+  label       String?                          // e.g. "Journée lundi", "Weekend 26-27 Avr"
+  isWeekend   Boolean     @default(false)
+  teamId      String
+  team        Team        @relation(fields: [teamId], references: [id])
+
+  createdById String
+  createdBy   User        @relation("PlanCreatedBy", fields: [createdById], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tasks       OperationalTask[]
+
+  @@unique([teamId, date])
+  @@index([teamId])
+  @@index([date])
+}
+
+/// One operational task assigned to one person for a day
+model OperationalTask {
+  id          String               @id @default(uuid())
+  planId      String
+  plan        DailyPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  title       String               // short label visible on the board
+  description String?              // details / instructions
+  taskType    OperationalTaskType  @default(CUSTOM)
+
+  // When during the day
+  startTime   DateTime?            // e.g. 07:00 for MEP
+  endTime     DateTime?            // e.g. 07:30
+
+  // Who
+  assignedToId String
+  assignedTo   User               @relation("AssignedOpTasks", fields: [assignedToId], references: [id])
+
+  // What system / chain it concerns
+  systemId    String?
+  system      System?             @relation(fields: [systemId], references: [id])
+  chainLabel  String?             // free text: "Chaîne compta", "Chaîne virements"
+
+  // Status tracking
+  status      OperationalTaskStatus @default(TODO)
+  note        String?              // operator completion note or blocker reason
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  priority    TaskPriority         @default(NORMAL)
+
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([planId])
+  @@index([assignedToId])
+  @@index([systemId])
+  @@index([status])
+  @@index([taskType])
+}
+
+enum OperationalTaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+```
+
+---
+
+## 🖥️ UI Screens
+
+### Screen 1 — Manager View: "Tableau des Équipes" (Main page)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  GESTION ÉQUIPE    [← Semaine 17]  Lundi 21 Avr 2026  [→]       │
+│  Équipe Production           [+ Nouveau plan]  [Astreinte ▾]    │
+├──────────────────────────────────────────────────────────────────┤
+│  📞 ASTREINTE CETTE SEMAINE: Mohammed Alami                      │
+│     Disponible 24/7  •  +212 6XX XXX XXX  •  Fin: Dim 27 Avr    │
+├────────────┬────────────┬────────────┬────────────┬─────────────┤
+│  👤 Yasser │  👤 Hamza  │  👤 Rachid │  👤 Amine  │  👤 Ahmed   │
+│  ╌╌╌╌╌╌╌╌ │  ╌╌╌╌╌╌╌╌ │  ╌╌╌╌╌╌╌╌ │  ╌╌╌╌╌╌╌╌ │  ╌╌╌╌╌╌╌╌   │
+│  🔴 Reprise│  🟡 MEP    │  🟢 Tableau│  🟡        │  (Weekend)  │
+│  d'incident│  07:00     │  de bord   │  Chaîne    │             │
+│  si décl.  │  CBS Core  │  du jour   │  Compta    │             │
+│  ─ TODO ─  │  ─ DONE ─  │  ─ DONE ─  │  ─ Nuit ─  │             │
+│            │            │            │  IN PROG.  │             │
+│  [+ Tâche] │  [+ Tâche] │  [+ Tâche] │  [+ Tâche] │  [+ Tâche] │
+└────────────┴────────────┴────────────┴────────────┴─────────────┘
+```
+
+### Screen 2 — Manager View: Planning de la semaine (weekly view)
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Semaine 17 — 21 au 27 Avril 2026                                          │
+│  📞 Astreinte: Mohammed                                                    │
+│  ─────────────────────────────────────────────────────────────────────     │
+│           Lun 21│ Mar 22│ Mer 23│ Jeu 24│ Ven 25│ Sam 26│ Dim 27          │
+│  Yasser   Repris│ MEP   │ Contrôl│       │       │       │                 │
+│  Hamza    MEP   │       │       │ MEP   │       │       │                 │
+│  Rachid   Tablx │ Tablx │ Tablx │ Tablx │ Tablx │       │                 │
+│  Amine          │       │       │       │ Compta│ Compta│ Compta          │
+│  Ahmed          │       │       │       │       │ Superv│ Superv          │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  [Cliquer une case pour assigner une tâche]                                │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Screen 3 — Operator View: "Mes Tâches du Jour"
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  👋 Bonjour Hamza          Lundi 21 Avril 2026            │
+│  ─────────────────────────────────────────────────────     │
+│  📞 Astreinte: Mohammed Alami  📱 +212 6XX XXX XXX        │
+│     (c'est lui qui répond si une panne se déclare)        │
+│  ─────────────────────────────────────────────────────     │
+│                                                            │
+│  MA TÂCHE DU JOUR                                          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ 🟡 MEP EN PRODUCTION          07:00 → 07:30          │  │
+│  │   Système: CBS Core                                  │  │
+│  │   Déployer la version 2.4.1 en production            │  │
+│  │                                     ────────────     │  │
+│  │   [▶ Démarrer]  [⚠ Signaler problème]               │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                            │
+│  Status: ✅ Terminé à 07:22  "Déploiement OK, RAS"        │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Screen 4 — Astreinte Planning (full yearly calendar)
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  📅 Planning Astreinte 2026 — Équipe Production            │
+│  [◀ 2025]  Année 2026  [2027 ▶]    [+ Assigner semaine]   │
+│  ─────────────────────────────────────────────────────     │
+│  S01  02-08 Jan   👤 Yasser   ✓ assigné                   │
+│  S02  09-15 Jan   👤 Hamza    ✓ assigné                   │
+│  S03  16-22 Jan   👤 Rachid   ✓ assigné                   │
+│  ...                                                       │
+│  S17  21-27 Avr   👤 Mohammed ← CETTE SEMAINE 📞          │
+│  S18  28 Avr-4 Mai 👤 Yasser                              │
+│  S19  05-11 Mai   ⚠️ NON ASSIGNÉ                          │
+│  ...                                                       │
+│  ─────────────────────────────────────────────────────     │
+│  Couverture: 17/52 semaines assignées   [Remplir auto ↺]   │
+└────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔔 Notifications & Alerts
+
+| Event | Who notified | Channel |
+|-------|-------------|---------|
+| Task assigned to me | Operator | 🔔 In-app + 📧 Email |
+| My task is BLOCKED | Manager | 🔔 In-app + 📧 Email |
+| Task overdue (past startTime) | Manager + Operator | 🔔 In-app |
+| Astreinte week starts | On-call person | 🔔 In-app + 📧 Email (Sunday night) |
+| Week not covered (no astreinte) | Manager | 🔔 In-app warning |
+| New incident declared | On-call person | 🔔 In-app (urgent) |
+
+---
+
+## 🔌 Complete API Design
+
+### Astreinte endpoints
+| Method | Path | Who |
+|--------|------|-----|
+| `GET` | `/api/v1/astreintes/current` | Anyone — shows current on-call |
+| `GET` | `/api/v1/astreintes?year=2026&teamId=...` | Manager |
+| `POST` | `/api/v1/astreintes` | Manager — assign a week |
+| `PATCH` | `/api/v1/astreintes/:id` | Manager — replace person |
+| `DELETE` | `/api/v1/astreintes/:id` | Manager |
+
+### Daily Plan endpoints
+| Method | Path | Who |
+|--------|------|-----|
+| `GET` | `/api/v1/plans?date=2026-04-21&teamId=...` | Manager — day view |
+| `GET` | `/api/v1/plans/week?weekStart=2026-04-21` | Manager — week view |
+| `POST` | `/api/v1/plans` | Manager — create day plan |
+| `GET` | `/api/v1/plans/:id` | Manager — plan detail |
+
+### Operational Task endpoints
+| Method | Path | Who |
+|--------|------|-----|
+| `POST` | `/api/v1/plans/:planId/tasks` | Manager — assign task |
+| `PATCH` | `/api/v1/tasks/:id` | Manager — edit task |
+| `DELETE` | `/api/v1/tasks/:id` | Manager |
+| `PATCH` | `/api/v1/tasks/:id/status` | **Operator** — update status |
+| `GET` | `/api/v1/me/tasks/today` | **Operator** — my tasks today |
+| `GET` | `/api/v1/me/tasks/week` | **Operator** — my week |
+
+---
+
+## 🗄️ Final Data Model Summary
+
+```
+User ──────────────────┐
+  │                    │
+  │ (assigned to)      │ (creates)
+  ▼                    ▼
+OperationalTask ←── DailyPlan ──→ Team
+  │
+  ├── systemId → System
+  ├── chainLabel (free text)
+  ├── taskType (MEP, SUPERVISION, REPRISE_INCIDENT...)
+  ├── startTime / endTime
+  └── status (TODO / IN_PROGRESS / DONE / BLOCKED)
+
+User ──────────────────┐
+  │ (on astreinte)     │ (creates)
+  ▼                    ▼
+Astreinte ──────────→ Team  (one per week per team)
+  └── weekNumber, year, startDate, endDate, phone
+```
+
+---
+
+## 📦 Implementation Phases
+
+### Phase 1 — Astreinte Module (Backend) ⏱️ 1 day
+- [ ] Prisma: `Astreinte` model + migration
+- [ ] `src/modules/astreinte/` — CRUD + `GET /current`
+- [ ] Notification: email to person when astreinte week starts (Sunday evening cron)
+- [ ] Notification: alert manager for uncovered weeks
+
+### Phase 2 — Daily Plan + Tasks (Backend) ⏱️ 1.5 days
+- [ ] Prisma: `DailyPlan`, `OperationalTask`, enums + migration
+- [ ] `src/modules/daily-plan/` — CRUD for plans + tasks
+- [ ] `GET /me/tasks/today` and `GET /me/tasks/week` endpoints
+- [ ] `PATCH /tasks/:id/status` — operator status update + notification trigger
+
+### Phase 3 — Frontend: Manager Views ⏱️ 2 days
+- [ ] `src/features/equipe/` — new feature folder
+- [ ] Astreinte yearly calendar page
+- [ ] Daily task board (columns per person)
+- [ ] Weekly view grid (person × day)
+- [ ] Task assignment modal (pick person, type, system, time)
+
+### Phase 4 — Frontend: Operator View ⏱️ 1 day
+- [ ] "Mes Tâches" page (today + this week)
+- [ ] Astreinte banner (who is on call this week)
+- [ ] Status update buttons + note input
+- [ ] Blocked flag with reason
+
+### Phase 5 — Polish ⏱️ 0.5 day
+- [ ] Dashboard widget: astreinte this week + today's tasks summary
+- [ ] Export weekly plan as PDF / Excel
+
+**Total estimate: ~6 days**
+
+---
+
+## ✅ What Already Exists — No Rebuild Needed
+
+| Existing | Used for |
+|----------|----------|
+| `Team` + `TeamMember` | Plans scoped to team; assignees = team members |
+| `System` | Tasks linked to existing monitored servers |
+| `User` + `Role` | Manager role gates plan creation; operators see own tasks |
+| `Notification` model | Reuse for task-assigned, blocked, astreinte-start events |
+| `AuditLog` | All status changes auto-audited |
+| `Incident` | Astreinte person auto-linked when an incident is declared |

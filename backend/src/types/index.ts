@@ -217,6 +217,68 @@ export interface IProcedure {
 }
 
 /**
+ * Astreinte (On-call) interface
+ */
+export interface IAstreinte {
+    id: string;
+    weekNumber: number;
+    year: number;
+    startDate: Date;
+    endDate: Date;
+    phone: string | null;
+    notes: string | null;
+    teamId: string;
+    team?: ITeam;
+    userId: string;
+    user?: IUserPublic;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+/**
+ * Daily Plan interface
+ */
+export interface IDailyPlan {
+    id: string;
+    date: Date;
+    label: string | null;
+    isWeekend: boolean;
+    teamId: string;
+    team?: ITeam;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+    tasks?: IOperationalTask[];
+}
+
+/**
+ * Operational Task interface
+ */
+export interface IOperationalTask {
+    id: string;
+    planId: string;
+    title: string;
+    description: string | null;
+    taskType: string;
+    priority: string;
+    status: string;
+    startTime: Date | null;
+    endTime: Date | null;
+    systemId: string | null;
+    system?: ISystem | null;
+    chainLabel: string | null;
+    assignedToId: string;
+    assignedTo?: IUserPublic;
+    note: string | null;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+/**
  * Create incident DTO
  */
 export interface CreateIncidentDTO {

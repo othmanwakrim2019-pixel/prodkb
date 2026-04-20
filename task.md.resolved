@@ -1,0 +1,53 @@
+# Gestion Équipe — Task Checklist
+
+## Phase 1 — Prisma Schema + Migration
+- [/] Add enums: `OperationalTaskType`, `OperationalTaskStatus`, `OperationalTaskPriority`
+- [ ] Add model: `Astreinte`
+- [ ] Add model: `DailyPlan`
+- [ ] Add model: `OperationalTask`
+- [ ] Add back-relations to `User`, `Team`, `System`
+- [ ] Run `npx prisma migrate dev --name gestion_equipe`
+- [ ] Run `npx prisma generate`
+
+## Phase 2 — Backend: Astreinte Module
+- [ ] `astreinte.schema.ts` (Zod)
+- [ ] `repositories/astreinte.repository.ts`
+- [ ] `astreinte.service.ts`
+- [ ] `astreinte.controller.ts`
+- [ ] `astreinte.routes.ts`
+- [ ] Register in `v1.routes.ts`
+
+## Phase 3 — Backend: Équipe Module (Plans + Tasks)
+- [ ] `equipe.schema.ts` (Zod)
+- [ ] `repositories/equipe.repository.ts`
+- [ ] `equipe.service.ts`
+- [ ] `equipe.controller.ts`
+- [ ] `equipe.routes.ts`
+- [ ] Register in `v1.routes.ts`
+
+## Phase 4 — Permissions Seed
+- [ ] Add `EQUIPE_VIEW` and `EQUIPE_MANAGE` permissions to seed
+
+## Phase 5 — Frontend: API Layer
+- [ ] `features/equipe/api/astreinteApi.ts`
+- [ ] `features/equipe/api/equipeApi.ts`
+
+## Phase 6 — Frontend: Components
+- [ ] `AstreinteWidget.tsx`
+- [ ] `AstreintePlanning.tsx`
+- [ ] `AssignAstreinteModal.tsx`
+- [ ] `DailyBoard.tsx`
+- [ ] `WeekGrid.tsx`
+- [ ] `AssignTaskModal.tsx`
+- [ ] `TaskCard.tsx`
+- [ ] `UpdateStatusModal.tsx`
+- [ ] `MyTasksBoard.tsx`
+
+## Phase 7 — Frontend: Pages + Routing
+- [ ] `features/equipe/pages/EquipePage.tsx`
+- [ ] `features/equipe/pages/MesTachesPage.tsx`
+- [ ] Update `route-meta.ts` (paths + nav items)
+- [ ] Update `App.tsx` (lazy routes)
+
+## Phase 8 — Dashboard Integration
+- [ ] Add `AstreinteWidget` to Dashboard page
