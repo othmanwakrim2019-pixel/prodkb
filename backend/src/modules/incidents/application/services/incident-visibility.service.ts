@@ -1,5 +1,5 @@
-import { Permission } from '../../../constants';
-import { isAdminRole, normalizeRole } from '../../../common/auth/authorization.policy';
+import { Permission } from '../../../../constants';
+import { isAdminRole, normalizeRole } from '../../../../common/auth/authorization.policy';
 
 const GLOBAL_INCIDENT_PERMISSIONS = new Set([
     Permission.VIEW_ALL_INCIDENTS,

@@ -1,16 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
-import { ForbiddenError } from '../../../common/errors/app.error';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../common/types/api.response';
-import { sanitizeObject } from '../../../common/utils/sanitize';
-import { UserRole } from '../../../constants';
-import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../../types';
-import { logAudit, generateAuditDiff } from '../../audit/audit.service';
+import { ForbiddenError } from '../../../../common/errors/app.error';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../../common/types/api.response';
+import { sanitizeObject } from '../../../../common/utils/sanitize';
+import { UserRole } from '../../../../constants';
+import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../../../types';
+import { logAudit, generateAuditDiff } from '../../../audit/audit.service';
 import { addIncidentLogSchema, createIncidentSchema, updateIncidentSchema } from '../incident.schema';
-import { incidentCrudService } from '../services/incident-crud.service';
-import { incidentFileService } from '../services/incident-file.service';
-import { incidentStatusService } from '../services/incident-status.service';
-import { canAccessIncidentTeam, hasGlobalIncidentAccess } from '../services/incident-visibility.service';
+import { incidentCrudService } from '../../application/services/incident-crud.service';
+import { incidentFileService } from '../../application/services/incident-file.service';
+import { incidentStatusService } from '../../application/services/incident-status.service';
+import { canAccessIncidentTeam, hasGlobalIncidentAccess } from '../../application/services/incident-visibility.service';
 import { requireAuthenticatedUserId } from './incident-controller.shared';
 
 export class IncidentCommandController {

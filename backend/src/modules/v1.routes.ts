@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'express';
-import { incidentRoutes } from './incidents/incident.routes';
+import { incidentRoutes } from './incidents/presentation/incident.routes';
 import { userRoutes } from './users/user.routes';
 import { teamRoutes } from './teams/team.routes';
 import { systemRoutes } from './systems/system.routes';

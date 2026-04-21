@@ -1,12 +1,12 @@
-import { logger } from '../../../common/utils/logger';
-import { NotFoundError, ValidationError, ConflictError } from '../../../common/errors/app.error';
-import { IncidentStatus } from '../../../constants';
-import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams } from '../../../types';
-import { autoAssignService } from '../../auto-assign/auto-assign.service';
-import { webhookService } from '../../webhooks/webhook.service';
+import { logger } from '../../../../common/utils/logger';
+import { NotFoundError, ValidationError, ConflictError } from '../../../../common/errors/app.error';
+import { IncidentStatus } from '../../../../constants';
+import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams } from '../../../../types';
+import { autoAssignService } from '../../../auto-assign/auto-assign.service';
+import { webhookService } from '../../../webhooks/webhook.service';
 import { validateStatusTransition, sendNotification } from './incident-shared';
-import { eventPublisher } from '../../events/event.publisher';
-import { incidentRepository } from '../repositories/incident.repository';
+import { eventPublisher } from '../../../events/event.publisher';
+import { incidentRepository } from '../../infrastructure/prisma-incident.repository';
 
 export interface FindAllFilters {
     status?: string;

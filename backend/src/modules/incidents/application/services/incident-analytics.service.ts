@@ -1,7 +1,7 @@
-import { IncidentStatus } from '../../../constants';
+import { IncidentStatus } from '../../../../constants';
 import { IncidentStats } from './incident-shared';
 import { hasGlobalIncidentAccess } from './incident-visibility.service';
-import { incidentRepository } from '../repositories/incident.repository';
+import { incidentRepository } from '../../infrastructure/prisma-incident.repository';
 
 export interface StatsFilters {
     startDate?: Date;

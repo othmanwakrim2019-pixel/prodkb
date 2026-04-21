@@ -10,8 +10,8 @@
  * @module modules/incidents/suggestion.service
  */
 
-import { logger } from '../../../common/utils/logger';
-import { incidentRepository } from '../repositories/incident.repository';
+import { logger } from '../../../../common/utils/logger';
+import { incidentRepository } from '../../infrastructure/prisma-incident.repository';
 
 export interface ProcedureSuggestion {
     procedureId: string;

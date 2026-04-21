@@ -1,12 +1,12 @@
 import type { NextFunction, Response } from 'express';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../../common/errors/app.error';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { fileUploadService } from '../../../common/services/file-upload.service';
-import { createResponse } from '../../../common/types/api.response';
-import { logger } from '../../../common/utils/logger';
-import { incidentCrudService } from '../services/incident-crud.service';
-import { incidentFileService } from '../services/incident-file.service';
-import { canAccessIncidentTeam } from '../services/incident-visibility.service';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../../../common/errors/app.error';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { fileUploadService } from '../../../../common/services/file-upload.service';
+import { createResponse } from '../../../../common/types/api.response';
+import { logger } from '../../../../common/utils/logger';
+import { incidentCrudService } from '../../application/services/incident-crud.service';
+import { incidentFileService } from '../../application/services/incident-file.service';
+import { canAccessIncidentTeam } from '../../application/services/incident-visibility.service';
 import { requireAuthenticatedUserId, validateSafeFilename } from './incident-controller.shared';
 
 export class IncidentFileController {

@@ -1,11 +1,11 @@
-import { incidentCrudService } from '../src/modules/incidents/services/incident-crud.service';
-import { incidentRepository } from '../src/modules/incidents/repositories/incident.repository';
+import { incidentCrudService } from '../src/modules/incidents/application/services/incident-crud.service';
+import { incidentRepository } from '../src/modules/incidents/infrastructure/prisma-incident.repository';
 import { autoAssignService } from '../src/modules/auto-assign/auto-assign.service';
 import { webhookService } from '../src/modules/webhooks/webhook.service';
 import { eventPublisher } from '../src/modules/events/event.publisher';
 import { IncidentStatus } from '../src/constants';
 
-jest.mock('../src/modules/incidents/repositories/incident.repository', () => ({
+jest.mock('../src/modules/incidents/infrastructure/prisma-incident.repository', () => ({
     incidentRepository: {
         findIncidents: jest.fn(),
         findIncidentById: jest.fn(),
@@ -34,8 +34,8 @@ jest.mock('../src/modules/events/event.publisher', () => ({
         emit: jest.fn().mockResolvedValue(undefined),
     },
 }));
-jest.mock('../src/modules/incidents/services/incident-shared', () => {
-    const actual = jest.requireActual('../src/modules/incidents/services/incident-shared');
+jest.mock('../src/modules/incidents/application/services/incident-shared', () => {
+    const actual = jest.requireActual('../src/modules/incidents/application/services/incident-shared');
     return {
         ...actual,
         sendNotification: jest.fn().mockResolvedValue(undefined),

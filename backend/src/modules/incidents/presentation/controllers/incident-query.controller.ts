@@ -1,12 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
-import { ForbiddenError } from '../../../common/errors/app.error';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../common/types/api.response';
-import { incidentAnalyticsService } from '../services/incident-analytics.service';
-import { incidentCrudService, type FindAllFilters } from '../services/incident-crud.service';
-import { canAccessIncidentTeam, getScopedIncidentTeamIds } from '../services/incident-visibility.service';
-import { incidentSuggestionService } from '../services/suggestion.service';
-import { incidentRepository } from '../repositories/incident.repository';
+import { ForbiddenError } from '../../../../common/errors/app.error';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../../common/types/api.response';
+import { incidentAnalyticsService } from '../../application/services/incident-analytics.service';
+import { incidentCrudService, type FindAllFilters } from '../../application/services/incident-crud.service';
+import { canAccessIncidentTeam, getScopedIncidentTeamIds } from '../../application/services/incident-visibility.service';
+import { incidentSuggestionService } from '../../application/services/suggestion.service';
+import { incidentRepository } from '../../infrastructure/prisma-incident.repository';
 
 export class IncidentQueryController {
     static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
