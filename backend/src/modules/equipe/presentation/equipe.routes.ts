@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, requirePermission } from '../../common/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../../common/middleware/auth.middleware';
 import { EquipeQueryController } from './controllers/equipe-query.controller';
 import { EquipeCommandController } from './controllers/equipe-command.controller';
 
@@ -19,11 +19,11 @@ router.post('/plans/:planId/tasks', requirePermission('EQUIPE_MANAGE'), EquipeCo
 router.patch('/tasks/:id',          requirePermission('EQUIPE_MANAGE'), EquipeCommandController.updateTask);
 router.delete('/tasks/:id',         requirePermission('EQUIPE_MANAGE'), EquipeCommandController.deleteTask);
 
-// ── Task status — operator (own tasks only) ─────────────────────────────────
-router.patch('/tasks/:id/status', EquipeCommandController.updateTaskStatus);
+// ── Task status — operator updates their own task status ────────────────────
+router.patch('/tasks/:id/status', requirePermission('MES_TACHES_VIEW'), EquipeCommandController.updateTaskStatus);
 
-// ── Personal task board ─────────────────────────────────────────────────────
-router.get('/me/tasks/today', EquipeQueryController.getMyTasksToday);
-router.get('/me/tasks/week',  EquipeQueryController.getMyTasksWeek);
+// ── Personal task board (Mes Tâches) ─────────────────────────────────────────
+router.get('/me/tasks/today', requirePermission('MES_TACHES_VIEW'), EquipeQueryController.getMyTasksToday);
+router.get('/me/tasks/week',  requirePermission('MES_TACHES_VIEW'), EquipeQueryController.getMyTasksWeek);
 
 export const equipeRoutes = router;

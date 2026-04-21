@@ -27,7 +27,7 @@ import { postMortemRoutes } from './postmortem/postmortem.routes';
 import { maintenanceRoutes } from './maintenance/maintenance.routes';
 import { warRoomRoutes } from './warroom/warroom.routes';
 import { astreinteRoutes } from './astreinte/astreinte.routes';
-import { equipeRoutes } from './equipe/equipe.routes';
+import { equipeRoutes } from './equipe/presentation/equipe.routes';
 
 const router = Router();
 console.log('Mounting v1 routes...');

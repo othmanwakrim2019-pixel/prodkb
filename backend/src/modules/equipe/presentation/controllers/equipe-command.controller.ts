@@ -1,15 +1,15 @@
 import type { Response, NextFunction } from 'express';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../common/types/api.response';
-import { logAudit } from '../../audit/audit.service';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../../common/types/api.response';
+import { logAudit } from '../../../audit/audit.service';
 import {
     createDailyPlanSchema,
     createOperationalTaskSchema,
     updateOperationalTaskSchema,
     updateTaskStatusSchema,
 } from '../equipe.schema';
-import { equipePlanService } from '../services/equipe-plan.service';
-import { equipeTaskService } from '../services/equipe-task.service';
+import { equipePlanService } from '../../application/services/equipe-plan.service';
+import { equipeTaskService } from '../../application/services/equipe-task.service';
 
 export class EquipeCommandController {
     /** POST /api/v1/equipe/plans */

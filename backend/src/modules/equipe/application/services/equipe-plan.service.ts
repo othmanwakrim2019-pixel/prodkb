@@ -1,7 +1,7 @@
-import { IDailyPlan } from '../../../types';
-import { equipeRepository } from '../repositories/equipe.repository';
-import { NotFoundError, ConflictError } from '../../../common/errors/app.error';
-import { logger } from '../../../common/utils/logger';
+import { IDailyPlan } from '../../../../types';
+import { equipeRepository } from '../../infrastructure/prisma-equipe.repository';
+import { NotFoundError, ConflictError } from '../../../../common/errors/app.error';
+import { logger } from '../../../../common/utils/logger';
 
 export class EquipePlanService {
     async listPlans(filters: { teamId?: string; startDate?: Date; endDate?: Date }): Promise<IDailyPlan[]> {

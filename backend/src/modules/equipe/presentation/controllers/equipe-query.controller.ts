@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../common/types/api.response';
-import { equipePlanService } from '../services/equipe-plan.service';
-import { equipeTaskService } from '../services/equipe-task.service';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../../common/types/api.response';
+import { equipePlanService } from '../../application/services/equipe-plan.service';
+import { equipeTaskService } from '../../application/services/equipe-task.service';
 
 export class EquipeQueryController {
     /** GET /api/v1/equipe/plans?date=...&teamId=...        → single day plan
