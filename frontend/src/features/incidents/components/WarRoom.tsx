@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getWarRoomSocket } from '../../../utils/socket';
 import { useAuth } from '../../../context/AuthContext';
 import { Send, Users, Zap, MessageSquare, AlertCircle } from 'lucide-react';
-import { incidentService, type WarRoomMessage as Message } from '../api/incident.service';
+import { incidentService } from '../api/incident.service';
+import type { WarRoomMessage as Message } from '../model/incident.types';
 
 interface Participant {
     userId: string;

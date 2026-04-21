@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileDown } from 'lucide-react';
-import { incidentService, type PostMortem } from '../api/incident.service';
+import { incidentService } from '../api/incident.service';
+import type { PostMortem } from '../model/incident.types';
 
 interface Props {
     incidentId: string;

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { APP_PATHS } from '../../../app/route-meta';
-import { incidentService, type SimilarIncident } from '../api/incident.service';
+import { incidentService } from '../api/incident.service';
+import type { SimilarIncident } from '../model/incident.types';
 
 interface Props {
     title: string;

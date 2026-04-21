@@ -9,7 +9,8 @@ import {
     MessageSquare, Paperclip, BookOpen, Users, Shield,
     Clock, RefreshCw,
 } from 'lucide-react';
-import { incidentService, type ActivityEntry } from '../api/incident.service';
+import { incidentService } from '../api/incident.service';
+import type { ActivityEntry } from '../model/incident.types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

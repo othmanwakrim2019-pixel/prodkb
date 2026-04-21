@@ -31,7 +31,7 @@ export enum UserRole {
 export type { paths, components } from './api.generated';
 
 // ── Planning types ──
-export type * from './planning';
+export type * from '../features/planning/model/planning';
 
 export interface User {
     id: string;
