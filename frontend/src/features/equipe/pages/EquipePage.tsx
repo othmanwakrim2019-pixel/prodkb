@@ -227,6 +227,7 @@ export default function EquipePage() {
                     {loading ? <div className="ent-card p-8 text-center text-sm text-slate-400">Chargement...</div> : (
                         <WeekGrid
                             weekPlans={weekPlans}
+                            weekStart={weekStart}
                             members={teamMembers}
                             onCellClick={handleWeekCellClick}
                         />

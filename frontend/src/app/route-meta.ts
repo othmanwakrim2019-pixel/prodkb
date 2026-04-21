@@ -74,7 +74,7 @@ export const TOP_NAV_ITEMS: NavItem[] = [
     { labelKey: 'nav.search',     defaultLabel: 'Search',        path: APP_PATHS.search,     icon: Search,          permission: 'SEARCH_VIEW' },
     { labelKey: 'nav.planning',   defaultLabel: 'Planning',      path: APP_PATHS.planning,   icon: CalendarClock,   permission: 'PLANNING_VIEW' },
     { labelKey: 'nav.equipe',     defaultLabel: 'Équipe',        path: APP_PATHS.equipe,     icon: Users2,          permission: 'EQUIPE_VIEW' },
-    { labelKey: 'nav.mesTaches',  defaultLabel: 'Mes Tâches',    path: APP_PATHS.mesTaches,  icon: ClipboardList,   permission: 'EQUIPE_VIEW' },
+    { labelKey: 'nav.mesTaches',  defaultLabel: 'Mes Tâches',    path: APP_PATHS.mesTaches,  icon: ClipboardList,   permission: 'MES_TACHES_VIEW' },
     { labelKey: 'nav.status',     defaultLabel: 'Public Status', path: APP_PATHS.status,     icon: ActivitySquare,  permission: 'DASHBOARD_VIEW' },
 ];
 

@@ -25,6 +25,12 @@ export class AstreinteService {
         return result as unknown as IAstreinte | null;
     }
 
+    /** Get current astreinte without a specific team filter */
+    async getCurrentAny(): Promise<IAstreinte | null> {
+        const result = await astreinteRepository.findCurrentAny();
+        return result as unknown as IAstreinte | null;
+    }
+
     async assign(data: {
         weekNumber: number;
         year: number;

@@ -9,7 +9,7 @@ import type {
     PlanningInstance,
     PlanningJob,
     PlanningPeriod,
-} from '../../../types/planning';
+} from '../model/planning';
 
 type ViewMode = 'table' | 'flow';
 type FlowDirection = 'LR' | 'TB';

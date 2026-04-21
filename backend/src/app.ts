@@ -119,6 +119,23 @@ app.get('/health', async (_req, res) => {
 // ── Prometheus metrics endpoint (no auth — scraped by Prometheus inside Docker) ──
 app.get('/metrics', getMetricsHandler);
 
+app.get('/debug-routes', (req, res) => {
+    const routes: string[] = [];
+    const print = (path: string, layer: any) => {
+        if (layer.route) {
+            layer.route.stack.forEach((stackItem: any) => {
+                routes.push(`${stackItem.method.toUpperCase()} ${path}${layer.route.path}`);
+            });
+        } else if (layer.name === 'router' && layer.handle.stack) {
+            layer.handle.stack.forEach((stackItem: any) => {
+                print(`${path}${layer.regexp.source.replace('\\/?', '').replace('(?=\\/|$)', '').replace('^', '').replace('\\/', '/')}`, stackItem);
+            });
+        }
+    };
+    (app as any)._router.stack.forEach((layer: any) => print('', layer));
+    res.json(routes);
+});
+
 // ── Bull Board — queue dashboard (admin-only) ──
 const bullBoardAdapter = new ExpressAdapter();
 bullBoardAdapter.setBasePath('/admin/queues');
@@ -129,6 +146,7 @@ createBullBoard({
 app.use('/admin/queues', authenticate, authorize(['ADMIN']), bullBoardAdapter.getRouter());
 
 // ── Routes ──
+console.log('Registering routes in app.ts...');
 app.use('/api/status-data', statusRoutes);                          // Public status page
 app.use('/auth/v1', apiLimiter, authRoutes);                    // Auth (versioned)
 app.use('/auth', apiLimiter, authRoutes);                       // Auth (backward compat)

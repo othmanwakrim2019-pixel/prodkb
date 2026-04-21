@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { CreateInstancePayload, PlanningPeriod } from '../../../types/planning';
+import type { CreateInstancePayload, PlanningPeriod } from '../model/planning';
 import { planningService } from '../api/planning.service';
 
 interface CreateInstanceModalProps {

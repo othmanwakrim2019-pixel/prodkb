@@ -24,6 +24,7 @@
     "worker:sla": "tsx src/workers/sla.worker.ts",
     "worker:webhook": "tsx src/workers/webhook.worker.ts",
     "worker:digest": "tsx src/workers/digest.worker.ts",
+    "worker:astreinte": "tsx src/workers/astreinte.worker.ts",
     "worker:cleanup": "tsx src/workers/cleanup.worker.ts",
     "── Code Quality ──": "",
     "typecheck": "tsc --noEmit",

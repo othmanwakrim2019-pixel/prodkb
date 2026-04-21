@@ -5,7 +5,7 @@ import { AddJobModal } from '../components/AddJobModal';
 import { CreateInstanceModal } from '../components/CreateInstanceModal';
 import { ImportCsvModal } from '../components/ImportCsvModal';
 import { EditJobModal } from '../components/EditJobModal';
-import type { InstanceStatusType, PlanningPeriod } from '../../../types/planning';
+import type { InstanceStatusType, PlanningPeriod } from '../model/planning';
 import {
     Plus,
     Archive,

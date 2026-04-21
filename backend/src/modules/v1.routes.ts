@@ -7,12 +7,12 @@
 
 import { Router } from 'express';
 import { incidentRoutes } from './incidents/presentation/incident.routes';
-import { userRoutes } from './users/user.routes';
-import { teamRoutes } from './teams/team.routes';
-import { systemRoutes } from './systems/system.routes';
-import { procedureRoutes } from './procedures/procedure.routes';
-import { roleRoutes } from './roles/role.routes';
-import { slaRoutes } from './sla/sla.routes';
+import { userRoutes } from './users/presentation/user.routes';
+import { teamRoutes } from './teams/presentation/team.routes';
+import { systemRoutes } from './systems/presentation/system.routes';
+import { procedureRoutes } from './procedures/presentation/procedure.routes';
+import { roleRoutes } from './roles/presentation/role.routes';
+import { slaRoutes } from './sla/presentation/sla.routes';
 import { configRoutes } from './config/config.routes';
 import { emailTemplateRoutes } from './email-templates/email-template.routes';
 import { auditRoutes } from './audit/audit.routes';

@@ -9,7 +9,7 @@ import type {
     PlanningJob,
     PlanningPeriod,
     PlanningStatusType,
-} from '../../../types/planning';
+} from '../model/planning';
 
 interface ListPlanningInstancesParams {
     period: PlanningPeriod;

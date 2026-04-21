@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Cpu, User } from 'lucide-react';
 import type { Job, System } from '../../../types';
-import type { CreatePlanningJobPayload, PlanningJob, TaskType } from '../../../types/planning';
+import type { CreatePlanningJobPayload, PlanningJob, TaskType } from '../model/planning';
 import { planningService } from '../api/planning.service';
 
 interface AddJobModalProps {

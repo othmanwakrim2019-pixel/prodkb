@@ -2,8 +2,9 @@
  * useIncidents — hook for paginated incident list with filters
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { incidentService, type IncidentQueryParams, type PaginatedResponse } from '../api/incident.service';
+import { incidentService } from '../api/incident.service';
 import type { Incident } from '../../../types';
+import type { IncidentQueryParams, PaginatedResponse } from '../model/incident.types';
 
 export interface UseIncidentsReturn {
     incidents: Incident[];

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { PlanningJob, PlanningStatusType } from '../../../types/planning';
+import type { PlanningJob, PlanningStatusType } from '../model/planning';
 
 const STATUS_STYLES: Record<string, { bg: string; border: string; badge: string; badgeText: string; text: string }> = {
     pending: {

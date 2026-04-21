@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 import { Upload, Download, CheckCircle, AlertTriangle, X, FileText } from 'lucide-react';
-import type { PlanningPeriod } from '../../../types/planning';
+import type { PlanningPeriod } from '../model/planning';
 import { planningService } from '../api/planning.service';
 
 interface ImportResult {

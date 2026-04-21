@@ -160,9 +160,9 @@ function App() {
                                         </ProtectedRoute>
                                     } />
 
-                                    {/* Mes Tâches — personal operator view */}
+                                    {/* Mes Tâches — personal operator view (MES_TACHES_VIEW) */}
                                     <Route path={APP_PATHS.mesTaches} element={
-                                        <ProtectedRoute permission="EQUIPE_VIEW">
+                                        <ProtectedRoute permission="MES_TACHES_VIEW">
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><MesTachesPage /></ErrorBoundary>
                                             </Suspense>

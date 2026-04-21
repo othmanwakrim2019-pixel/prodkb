@@ -225,6 +225,9 @@ model Astreinte {
   createdById String
   createdBy   User     @relation("AstreinteCreatedBy", fields: [createdById], references: [id])
 
+  // ── Relations ──
+  incidents      Incident[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -453,6 +456,10 @@ model Incident {
   // Linked resolution procedure
   linkedProcedureId String?
   linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
+
+  // Astreinte auto-link (Phase 2 integration)
+  astreinteId    String?
+  astreinte      Astreinte? @relation(fields: [astreinteId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

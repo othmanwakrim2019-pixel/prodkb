@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { OperationalTask, TaskStatus } from '../api/equipe.service';
 import { equipeService } from '../api/equipe.service';
 import { TASK_STATUS_LABELS } from './equipe.constants';
+import { useToast } from '../../../components/ui/Toast';
 
 interface UpdateStatusModalProps {
     task:    OperationalTask;
@@ -18,20 +19,24 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string; tw: string }[] = [
 ];
 
 export function UpdateStatusModal({ task, onClose, onSaved }: UpdateStatusModalProps) {
+    const toast = useToast();
     const [status, setStatus] = useState<TaskStatus>(task.status);
     const [note,   setNote]   = useState(task.note ?? '');
     const [saving, setSaving] = useState(false);
-    const [error,  setError]  = useState<string | null>(null);
 
     const handleSave = async () => {
+        if (status === 'BLOCKED' && !note.trim()) {
+            toast.error('Veuillez décrire la raison du blocage.');
+            return;
+        }
         setSaving(true);
-        setError(null);
         try {
             const updated = await equipeService.updateTaskStatus(task.id, { status, note: note || undefined });
+            toast.success('Statut mis à jour.');
             onSaved(updated);
             onClose();
         } catch {
-            setError('Erreur lors de la mise à jour.');
+            toast.error('Erreur lors de la mise à jour.');
         } finally {
             setSaving(false);
         }
@@ -102,10 +107,6 @@ export function UpdateStatusModal({ task, onClose, onSaved }: UpdateStatusModalP
                         onChange={(e) => setNote(e.target.value)}
                     />
                 </div>
-
-                {error && (
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                )}
 
                 {/* Footer */}
                 <div className="flex justify-end gap-3 pt-1">

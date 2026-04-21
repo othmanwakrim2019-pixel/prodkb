@@ -46,3 +46,11 @@ export const TASK_PRIORITY_DOT: Record<TaskPriority, string> = {
     HIGH:     '🟡',
     CRITICAL: '🔴',
 };
+
+/** CSS hex colors per task status (used for inline `style` props where Tailwind JIT can't be used) */
+export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
+    TODO:        '#94a3b8', // slate-400
+    IN_PROGRESS: '#3b82f6', // blue-500
+    DONE:        '#10b981', // emerald-500
+    BLOCKED:     '#ef4444', // red-500
+};

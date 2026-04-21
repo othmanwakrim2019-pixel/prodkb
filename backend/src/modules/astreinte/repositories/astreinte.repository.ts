@@ -35,6 +35,18 @@ export class AstreinteRepository {
         });
     }
 
+    /** Find the current week's astreinte with no team filter (for dashboard/my-tasks widget) */
+    async findCurrentAny(date: Date = new Date()) {
+        return prisma.astreinte.findFirst({
+            where: {
+                startDate: { lte: date },
+                endDate:   { gte: date },
+            },
+            include: astreinteDefaultInclude,
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
     async findByWeek(teamId: string, weekNumber: number, year: number) {
         return prisma.astreinte.findUnique({
             where: {

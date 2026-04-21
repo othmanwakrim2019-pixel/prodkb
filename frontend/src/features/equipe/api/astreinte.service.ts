@@ -49,8 +49,10 @@ export interface UpdateAstreinteDto {
 
 export const astreinteService = {
     getCurrent: async (teamId?: string): Promise<Astreinte | null> => {
-        if (!teamId) return null;
-        const response = await api.get(`/api/v1/astreintes/current/${teamId}`);
+        const url = teamId
+            ? `/api/v1/astreintes/current/${teamId}`
+            : `/api/v1/astreintes/current`;
+        const response = await api.get(url);
         return unwrapObject<Astreinte>(response.data);
     },
 

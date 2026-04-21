@@ -53,8 +53,9 @@ const PERMISSIONS: Array<{ code: string; description: string }> = [
     // Audit
     { code: 'AUDIT_VIEW', description: 'View audit logs' },
     // Gestion Équipe
-    { code: 'EQUIPE_VIEW', description: 'View team daily plans, tasks and astreinte schedule' },
-    { code: 'EQUIPE_MANAGE', description: 'Create/edit daily plans, assign tasks and astreinte rotations' },
+    { code: 'EQUIPE_VIEW',      description: 'View team daily plans, tasks and astreinte schedule (manager board)' },
+    { code: 'EQUIPE_MANAGE',    description: 'Create/edit daily plans, assign tasks and astreinte rotations' },
+    { code: 'MES_TACHES_VIEW', description: 'View own assigned tasks (Mes Tâches personal page)' },
 ];
 
 /** Role definitions with the permissions each role receives */
@@ -74,7 +75,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'PLANNING_VIEW', 'PLANNING_MANAGE',
             'ANALYTICS_VIEW',
             'JOB_VIEW',
-            'EQUIPE_VIEW', 'EQUIPE_MANAGE',
+            'EQUIPE_VIEW', 'EQUIPE_MANAGE', 'MES_TACHES_VIEW',
         ],
     },
     {
@@ -86,7 +87,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
             'JOB_VIEW',
-            'EQUIPE_VIEW',
+            'MES_TACHES_VIEW',   // sees own tasks but NOT the manager board
         ],
     },
     {
@@ -97,7 +98,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'INCIDENT_VIEW',
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
-            'EQUIPE_VIEW',
+            'MES_TACHES_VIEW',   // sees own tasks but NOT the manager board
         ],
     },
 ];

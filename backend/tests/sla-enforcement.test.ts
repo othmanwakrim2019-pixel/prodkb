@@ -1,11 +1,11 @@
-import { SLAEnforcementService } from '../src/modules/sla/sla-enforcement.service';
-import { slaRepository } from '../src/modules/sla/repositories/sla.repository';
+import { SLAEnforcementService } from '../src/modules/sla/application/sla-enforcement.service';
+import { slaRepository } from '../src/modules/sla/infrastructure/prisma-sla.repository';
 import { escalationService } from '../src/modules/escalation/escalation.service';
 import { webhookService } from '../src/modules/webhooks/webhook.service';
 import { emailService } from '../src/common/services/email.service';
 import { IncidentStatus } from '../src/constants';
 
-jest.mock('../src/modules/sla/repositories/sla.repository', () => ({
+jest.mock('../src/modules/sla/infrastructure/prisma-sla.repository', () => ({
     slaRepository: {
         findUnbreachedActiveIncidentsWithSla: jest.fn(),
         markIncidentSlaBreached: jest.fn(),

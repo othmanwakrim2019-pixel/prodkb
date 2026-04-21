@@ -17,6 +17,16 @@ export class AstreinteQueryController {
         }
     }
 
+    /** GET /api/v1/astreintes/current  (no teamId — returns any current astreinte) */
+    static async getAny(req: Request, res: Response, next: NextFunction) {
+        try {
+            const current = await astreinteService.getCurrentAny();
+            res.json(createResponse(true, current));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     /** GET /api/v1/astreintes/current/:teamId */
     static async getCurrent(req: Request, res: Response, next: NextFunction) {
         try {

@@ -15,7 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { JobNode } from './JobNode';
-import type { PlanningJob, PlanningStatusType } from '../../../types/planning';
+import type { PlanningJob, PlanningStatusType } from '../model/planning';
 import { planningService } from '../api/planning.service';
 
 interface PlanningFlowProps {

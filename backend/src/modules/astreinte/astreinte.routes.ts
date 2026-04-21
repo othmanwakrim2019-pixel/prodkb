@@ -10,8 +10,9 @@ const router = Router();
 router.use(authenticate);
 
 // ── Read routes (EQUIPE_VIEW) ────────────────────────────────────────────────
-router.get('/',                    requirePermission('EQUIPE_VIEW'), AstreinteQueryController.list);
-router.get('/current/:teamId',     requirePermission('EQUIPE_VIEW'), AstreinteQueryController.getCurrent);
+router.get('/',         requirePermission('EQUIPE_VIEW'), AstreinteQueryController.list);
+router.get('/current',  requirePermission('EQUIPE_VIEW'), AstreinteQueryController.getAny);
+router.get('/current/:teamId', requirePermission('EQUIPE_VIEW'), AstreinteQueryController.getCurrent);
 
 // ── Write routes (EQUIPE_MANAGE) ─────────────────────────────────────────────
 router.post('/',

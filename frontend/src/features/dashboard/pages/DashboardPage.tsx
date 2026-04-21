@@ -13,6 +13,7 @@ import { CanAccess } from '../../../components/CanAccess';
 import { APP_PATHS } from '../../../app/route-meta';
 import { incidentService } from '../../incidents/api/incident.service';
 import { systemService, teamService } from '../../admin/api/admin.service';
+import { AstreinteWidget } from '../../equipe/components/AstreinteWidget';
 
 interface DashboardStats {
     createdToday: number;
@@ -328,9 +329,12 @@ const DashboardPage = () => {
                 </div>
             </div>
 
-            {/* ═══ SYSTEM HEALTH ═══ */}
+            {/* ═══ SYSTEM HEALTH + ASTREINTE ═══ */}
             <div className="grid gap-4 lg:grid-cols-2">
                 <SystemHealthWidget />
+                <CanAccess permission="MES_TACHES_VIEW">
+                    <AstreinteWidget />
+                </CanAccess>
             </div>
 
             {/* ═══ ANALYTICS & KPI ═══ */}

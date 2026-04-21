@@ -4,77 +4,15 @@
 import api from '../../../utils/axios';
 import { unwrapArray, unwrapObject } from '../../../utils/api-response';
 import type { Incident, Job, Log, Procedure, SLA, System, Team } from '../../../types';
-
-export interface PaginatedResponse<T> {
-    data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-}
-
-export interface IncidentQueryParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-    severity?: string;
-    systemId?: string;
-    teamId?: string;
-    startDate?: string;
-    endDate?: string;
-}
-
-export interface DashboardStats {
-    createdToday: number;
-    resolvedToday: number;
-    activeIncidents: number;
-    avgResolutionTimeMinutes: number;
-    trends: Array<{ date: string; created: number; resolved: number }>;
-    statusBreakdown: Array<{ status: string; count: number }>;
-    topSystems: Array<{ systemId: string; name: string; count: number }>;
-    myWork?: { myTeamQueue: number; myTeamBreaches: number };
-}
-
-export interface SimilarIncident {
-    id: string;
-    title: string;
-    status: string;
-    severity: string;
-    createdAt: string;
-    linkedProcedure?: { id: string; title: string } | null;
-}
-
-export interface PostMortem {
-    id: string;
-    summary: string;
-    rootCause: string;
-    timeline: string;
-    impact: string;
-    lessonsLearned: string;
-    preventiveActions: string;
-    status: string;
-    createdBy?: { name: string };
-    updatedAt: string;
-}
-
-export interface WarRoomMessage {
-    id: string;
-    content: string;
-    type: 'message' | 'system_event';
-    createdAt: string;
-    user: { id: string; name: string };
-}
-
-export interface ActivityEntry {
-    id: string;
-    logType: string;         // 'activity' | 'note' | 'investigation' | 'file' | ...
-    rawLog: string | null;
-    fileName: string | null;
-    mimeType: string | null;
-    createdAt: string;
-    createdBy: { id: string; name: string; email: string } | null;
-}
+import type {
+    PaginatedResponse,
+    IncidentQueryParams,
+    DashboardStats,
+    SimilarIncident,
+    PostMortem,
+    WarRoomMessage,
+    ActivityEntry
+} from '../model/incident.types';
 
 export const incidentService = {
     getAll: async (params?: IncidentQueryParams): Promise<PaginatedResponse<Incident>> => {

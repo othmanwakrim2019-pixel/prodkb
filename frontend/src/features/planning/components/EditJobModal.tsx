@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Save, X } from 'lucide-react';
-import type { PlanningJob } from '../../../types/planning';
+import type { PlanningJob } from '../model/planning';
 import { planningService } from '../api/planning.service';
 
 interface EditJobModalProps {

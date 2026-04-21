@@ -3,12 +3,7 @@
  * Presets are stored as: { id, name, params: URLSearchParams-like object }
  */
 import { useState, useCallback } from 'react';
-
-export interface FilterPreset {
-    id: string;
-    name: string;
-    params: Record<string, string>;
-}
+import type { FilterPreset } from '../model/incident.types';
 
 const STORAGE_KEY = 'prodkb_incident_filter_presets';
 

@@ -1,18 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-
-export interface IncidentEvent {
-    type: 'incident.created' | 'incident.updated' | 'incident.resolved' | 'incident.deleted' | 'log.added' | 'connected';
-    incidentId?: string;
-    data?: {
-        id: string;
-        title?: string;
-        status?: string;
-        severity?: string;
-        systemName?: string;
-        [key: string]: unknown;
-    };
-    timestamp: string;
-}
+import type { IncidentEvent } from '../model/incident.types';
 
 interface UseIncidentStreamOptions {
     /** Called when any incident event is received */

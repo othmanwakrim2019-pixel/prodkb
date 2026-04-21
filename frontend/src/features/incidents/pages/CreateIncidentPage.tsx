@@ -12,20 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { APP_PATHS } from '../../../app/route-meta';
 import { incidentService } from '../api/incident.service';
 import { useToast } from '../../../components/ui/Toast';
-
-interface CreateIncidentFormValues {
-    title: string;
-    description: string;
-    environment: string;
-    severity: string;
-    impact: string;
-    detectionSource: string;
-    systemId: string;
-    jobId: string;
-    assignedTeamId: string;
-    slaId: string;
-    logs: { logType: string; rawLog: string; errorMessage: string }[];
-}
+import type { CreateIncidentFormValues } from '../model/incident.types';
 
 export const CreateIncidentPage = () => {
     const { hasPermission } = useAuth();
