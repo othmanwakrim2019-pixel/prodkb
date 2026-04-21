@@ -21,9 +21,9 @@ import { allowedOrigins } from './config/cors';
 import { logger } from './common/utils/logger';
 import { prisma } from './common/utils/prisma';
 import { redis } from './common/utils/redis';
-import { registerSLARepeatable, slaQueue } from './modules/sla/sla.queue';
-import { webhookQueue } from './modules/webhooks/webhook.queue';
-import { registerWarRoomGateway } from './modules/warroom/warroom.gateway';
+import { registerSLARepeatable, slaQueue } from './modules/sla/application/sla.queue';
+import { webhookQueue } from './modules/webhooks/application/webhook.queue';
+import { registerWarRoomGateway } from './modules/warroom/presentation/warroom.gateway';
 import { startMetricsInterval, stopMetricsInterval } from './common/middleware/metrics.middleware';
 
 const PORT = env.PORT || 3000;

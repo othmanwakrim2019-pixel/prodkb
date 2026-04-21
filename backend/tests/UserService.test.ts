@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
-import { userService } from '../src/modules/users/user.service';
-import { userRepository } from '../src/modules/users/repositories/user.repository';
+import { userService } from '../src/modules/users/application/user.service';
+import { userRepository } from '../src/modules/users/infrastructure/prisma-user.repository';
 
 jest.mock('bcryptjs');
-jest.mock('../src/modules/users/repositories/user.repository', () => ({
+jest.mock('../src/modules/users/infrastructure/prisma-user.repository', () => ({
     userRepository: {
         findAllUsers: jest.fn(),
         findAllUsersDetailed: jest.fn(),

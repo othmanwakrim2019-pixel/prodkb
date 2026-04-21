@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { createResponse } from '../../../common/types/api.response';
+import { createResponse } from '../../../../common/types/api.response';
 import { systemService } from '../../application/system.service';
 
 export class SystemQueryController {

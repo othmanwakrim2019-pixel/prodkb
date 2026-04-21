@@ -3,8 +3,8 @@ import { app } from '../../src/app';
 import { prisma } from '../../src/common/utils/prisma';
 import bcrypt from 'bcryptjs';
 
-import { userService } from '../../src/modules/users/user.service';
-import { authService } from '../../src/modules/auth/auth.service';
+import { userService } from '../../src/modules/users/application/user.service';
+import { authService } from '../../src/modules/auth/application/auth.service';
 
 describe('Auth Integration', () => {
     const testUser = {

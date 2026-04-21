@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { userService } from '../../application/user.service';
-import { AuthRequest, invalidateAuthCache } from '../../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../../common/types/api.response';
-import { logAudit } from '../../../audit/audit.service';
+import { userService } from '../application/user.service';
+import { AuthRequest, invalidateAuthCache } from '../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../common/types/api.response';
+import { logAudit, generateAuditDiff } from '../../audit/application/audit.service';
 import { updateUserSchema, changePasswordSchema } from './user.schema';
 
 

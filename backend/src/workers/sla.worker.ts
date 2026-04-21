@@ -11,8 +11,8 @@
 
 import 'dotenv/config';
 import { Worker, Job } from 'bullmq';
-import { SLA_QUEUE_NAME } from '../modules/sla/sla.queue';
-import { slaEnforcementService } from '../modules/sla/sla-enforcement.service';
+import { SLA_QUEUE_NAME } from '../modules/sla/application/sla.queue';
+import { slaEnforcementService } from '../modules/sla/application/sla-enforcement.service';
 import { logger } from '../common/utils/logger';
 import { prisma } from '../common/utils/prisma';
 import { parseRedisUrl } from '../common/utils/redis';

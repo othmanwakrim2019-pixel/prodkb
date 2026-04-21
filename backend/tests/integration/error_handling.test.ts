@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { app } from '../../src/app';
-import { userService } from '../../src/modules/users/user.service';
-import { authService } from '../../src/modules/auth/auth.service';
+import { userService } from '../../src/modules/users/application/user.service';
+import { authService } from '../../src/modules/auth/application/auth.service';
 import { prisma } from '../../src/common/utils/prisma';
 
 describe('Centralized Error Handling Integration', () => {

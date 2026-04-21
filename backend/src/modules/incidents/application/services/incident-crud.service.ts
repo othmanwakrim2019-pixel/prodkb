@@ -2,10 +2,10 @@ import { logger } from '../../../../common/utils/logger';
 import { NotFoundError, ValidationError, ConflictError } from '../../../../common/errors/app.error';
 import { IncidentStatus } from '../../../../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO, IIncident, PaginatedResult, PaginationParams } from '../../../../types';
-import { autoAssignService } from '../../../auto-assign/auto-assign.service';
-import { webhookService } from '../../../webhooks/webhook.service';
+import { autoAssignService } from '../../../auto-assign/application/auto-assign.service';
+import { webhookService } from '../../../webhooks/application/webhook.service';
 import { validateStatusTransition, sendNotification } from './incident-shared';
-import { eventPublisher } from '../../../events/event.publisher';
+import { eventPublisher } from '../../../events/application/event.publisher';
 import { incidentRepository } from '../../infrastructure/prisma-incident.repository';
 
 export interface FindAllFilters {

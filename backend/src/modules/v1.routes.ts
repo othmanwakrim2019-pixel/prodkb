@@ -6,6 +6,7 @@
  */
 
 import { Router } from 'express';
+import { authRoutes } from './auth/presentation/auth.routes';
 import { incidentRoutes } from './incidents/presentation/incident.routes';
 import { userRoutes } from './users/presentation/user.routes';
 import { teamRoutes } from './teams/presentation/team.routes';
@@ -13,20 +14,21 @@ import { systemRoutes } from './systems/presentation/system.routes';
 import { procedureRoutes } from './procedures/presentation/procedure.routes';
 import { roleRoutes } from './roles/presentation/role.routes';
 import { slaRoutes } from './sla/presentation/sla.routes';
-import { configRoutes } from './config/config.routes';
-import { emailTemplateRoutes } from './email-templates/email-template.routes';
-import { auditRoutes } from './audit/audit.routes';
-import { searchRoutes } from './search/search.routes';
+import { configRoutes } from './config/presentation/config.routes';
+import { emailTemplateRoutes } from './email-templates/presentation/email-template.routes';
+import { auditRoutes } from './audit/presentation/audit.routes';
+import { searchRoutes } from './search/presentation/search.routes';
 import { planningRoutes } from './planning/presentation/planning.routes';
-import { escalationRoutes } from './escalation/escalation.routes';
-import { autoAssignRoutes } from './auto-assign/auto-assign.routes';
-import { webhookRoutes } from './webhooks/webhook.routes';
-import { analyticsRoutes } from './analytics/analytics.routes';
-import { notificationRoutes } from './notifications/notification.routes';
-import { postMortemRoutes } from './postmortem/postmortem.routes';
-import { maintenanceRoutes } from './maintenance/maintenance.routes';
-import { warRoomRoutes } from './warroom/warroom.routes';
-import { astreinteRoutes } from './astreinte/astreinte.routes';
+import { escalationRoutes } from './escalation/presentation/escalation.routes';
+import { autoAssignRoutes } from './auto-assign/presentation/auto-assign.routes';
+import { webhookRoutes } from './webhooks/presentation/webhook.routes';
+import { analyticsRoutes } from './analytics/presentation/analytics.routes';
+import { notificationRoutes } from './notifications/presentation/notification.routes';
+import { postMortemRoutes } from './postmortem/presentation/postmortem.routes';
+import { maintenanceRoutes } from './maintenance/presentation/maintenance.routes';
+import { warRoomRoutes } from './warroom/presentation/warroom.routes';
+import { astreinteRoutes } from './astreinte/presentation/astreinte.routes';
+import { eventRoutes } from './events/presentation/events.routes';
 import { equipeRoutes } from './equipe/presentation/equipe.routes';
 
 const router = Router();
@@ -54,6 +56,7 @@ router.use('/webhooks', webhookRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/incidents', postMortemRoutes);
+router.use('/events', eventRoutes);
 
 // Team Management (Astreinte + Daily Plans)
 router.use('/astreintes', astreinteRoutes);

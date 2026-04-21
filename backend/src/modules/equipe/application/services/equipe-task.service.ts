@@ -5,7 +5,7 @@ import { equipeRepository } from '../../infrastructure/prisma-equipe.repository'
 import { NotFoundError, ForbiddenError } from '../../../../common/errors/app.error';
 import { logger } from '../../../../common/utils/logger';
 import { equipePlanService } from './equipe-plan.service';
-import { notificationService } from '../../../notifications/notification.service';
+import { notificationService } from '../../../notifications/application/notification.service';
 
 export class EquipeTaskService {
     async getTaskById(id: string): Promise<IOperationalTask> {

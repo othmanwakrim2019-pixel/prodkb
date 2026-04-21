@@ -1,7 +1,7 @@
 import { SLAEnforcementService } from '../src/modules/sla/application/sla-enforcement.service';
 import { slaRepository } from '../src/modules/sla/infrastructure/prisma-sla.repository';
-import { escalationService } from '../src/modules/escalation/escalation.service';
-import { webhookService } from '../src/modules/webhooks/webhook.service';
+import { escalationService } from '../src/modules/escalation/application/escalation.service';
+import { webhookService } from '../src/modules/webhooks/application/webhook.service';
 import { emailService } from '../src/common/services/email.service';
 import { IncidentStatus } from '../src/constants';
 
@@ -14,12 +14,12 @@ jest.mock('../src/modules/sla/infrastructure/prisma-sla.repository', () => ({
         findIncidentEscalationState: jest.fn(),
     },
 }));
-jest.mock('../src/modules/escalation/escalation.service', () => ({
+jest.mock('../src/modules/escalation/application/escalation.service', () => ({
     escalationService: {
         escalateIncident: jest.fn().mockResolvedValue(undefined),
     },
 }));
-jest.mock('../src/modules/webhooks/webhook.service', () => ({
+jest.mock('../src/modules/webhooks/application/webhook.service', () => ({
     webhookService: {
         dispatch: jest.fn().mockResolvedValue(undefined),
     },

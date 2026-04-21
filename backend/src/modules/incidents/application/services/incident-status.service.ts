@@ -2,7 +2,7 @@ import { logger } from '../../../../common/utils/logger';
 import { ValidationError } from '../../../../common/errors/app.error';
 import { IncidentStatus } from '../../../../constants';
 import type { IIncident } from '../../../../types';
-import { webhookService } from '../../../webhooks/webhook.service';
+import { webhookService } from '../../../webhooks/application/webhook.service';
 import { sendNotification } from './incident-shared';
 import { incidentCrudService } from './incident-crud.service';
 import { incidentRepository } from '../../infrastructure/prisma-incident.repository';

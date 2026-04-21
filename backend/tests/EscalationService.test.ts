@@ -1,7 +1,7 @@
-import { escalationService } from '../src/modules/escalation/escalation.service';
-import { escalationRepository } from '../src/modules/escalation/repositories/escalation.repository';
+import { escalationService } from '../src/modules/escalation/application/escalation.service';
+import { escalationRepository } from '../src/modules/escalation/infrastructure/prisma-escalation.repository';
 
-jest.mock('../src/modules/escalation/repositories/escalation.repository', () => ({
+jest.mock('../src/modules/escalation/infrastructure/prisma-escalation.repository', () => ({
     escalationRepository: {
         findRules: jest.fn(),
         createRule: jest.fn(),

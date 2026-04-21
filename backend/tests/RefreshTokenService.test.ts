@@ -1,12 +1,12 @@
 import crypto from 'crypto';
-import { refreshTokenService } from '../src/modules/auth/refresh-token.service';
-import { authRepository } from '../src/modules/auth/repositories/auth.repository';
+import { refreshTokenService } from '../src/modules/auth/application/refresh-token.service';
+import { authRepository } from '../src/modules/auth/infrastructure/prisma-auth.repository';
 import { JwtService } from '../src/common/utils/jwt.utils';
 
 jest.mock('crypto', () => ({
     randomBytes: jest.fn(),
 }));
-jest.mock('../src/modules/auth/repositories/auth.repository', () => ({
+jest.mock('../src/modules/auth/infrastructure/prisma-auth.repository', () => ({
     authRepository: {
         createRefreshToken: jest.fn(),
         findRefreshToken: jest.fn(),

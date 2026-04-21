@@ -13,8 +13,8 @@
 
 import { logger } from '../../../common/utils/logger';
 import { emailService } from '../../../common/services/email.service';
-import { escalationService } from '../../escalation/escalation.service';
-import { webhookService } from '../../webhooks/webhook.service';
+import { escalationService } from '../../escalation/application/escalation.service';
+import { webhookService } from '../../webhooks/application/webhook.service';
 import { slaRepository } from '../infrastructure/prisma-sla.repository';
 
 export class SLAEnforcementService {

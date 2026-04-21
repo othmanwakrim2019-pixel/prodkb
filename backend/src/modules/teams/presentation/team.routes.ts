@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { TeamController } from './team.controller';
+import { TeamController } from '../presentation/team.controller';
 import { authenticate, requirePermission } from '../../../common/middleware/auth.middleware';
 
 const router = Router();

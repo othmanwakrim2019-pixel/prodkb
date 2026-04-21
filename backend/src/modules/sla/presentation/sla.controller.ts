@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { slaService } from '../application/sla.service';
 import { createResponse } from '../../../common/types/api.response';
-import { createSLASchema, updateSLASchema } from './sla.schema';
+import { createSLASchema, updateSLASchema } from '../presentation/sla.schema';
 
 
 export class SlaController {

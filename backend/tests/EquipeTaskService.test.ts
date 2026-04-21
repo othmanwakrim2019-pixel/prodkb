@@ -1,7 +1,7 @@
 import { equipeTaskService } from '../src/modules/equipe/application/services/equipe-task.service';
 import { equipeRepository } from '../src/modules/equipe/infrastructure/prisma-equipe.repository';
 import { equipePlanService } from '../src/modules/equipe/application/services/equipe-plan.service';
-import { notificationService } from '../src/modules/notifications/notification.service';
+import { notificationService } from '../src/modules/notifications/application/notification.service';
 import { OperationalTaskStatus } from '../src/constants';
 import { NotFoundError, ForbiddenError } from '../src/common/errors/app.error';
 
@@ -21,7 +21,7 @@ jest.mock('../src/modules/equipe/application/services/equipe-plan.service', () =
     },
 }));
 
-jest.mock('../src/modules/notifications/notification.service', () => ({
+jest.mock('../src/modules/notifications/application/notification.service', () => ({
     notificationService: {
         createForTeam: jest.fn().mockResolvedValue({}),
     },

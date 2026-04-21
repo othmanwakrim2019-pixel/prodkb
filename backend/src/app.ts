@@ -40,14 +40,14 @@ import { prisma } from './common/utils/prisma';
 import { redis } from './common/utils/redis';
 
 // Routes
-import { authRoutes } from './modules/auth/auth.routes';
+import { authRoutes } from './modules/auth/presentation/auth.routes';
 import v1Routes from './modules/v1.routes';
-import { eventRoutes } from './modules/events/events.routes';
-import { statusRoutes } from './modules/status/status.routes';
+import { eventRoutes } from './modules/events/presentation/events.routes';
+import { statusRoutes } from './modules/status/presentation/status.routes';
 
 // Queues
-import { slaQueue } from './modules/sla/sla.queue';
-import { webhookQueue } from './modules/webhooks/webhook.queue';
+import { slaQueue } from './modules/sla/application/sla.queue';
+import { webhookQueue } from './modules/webhooks/application/webhook.queue';
 
 // ── Express app ──
 const app = express();

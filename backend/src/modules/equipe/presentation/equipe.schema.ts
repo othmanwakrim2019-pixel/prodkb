@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { OperationalTaskType, OperationalTaskStatus, OperationalTaskPriority } from '../../constants';
+import { OperationalTaskType, OperationalTaskStatus, OperationalTaskPriority } from '../../../constants';
 
 /**
  * Zod schemas for Equipe module (Daily Plan & Operational Tasks)

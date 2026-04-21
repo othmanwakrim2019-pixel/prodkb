@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import { incidentRoutes as apiRoutes } from '../src/modules/incidents/incident.routes'; // Placeholder or just remove if not needed
+import { incidentRoutes as apiRoutes } from '../src/modules/incidents/presentation/incident.routes'; // Placeholder or just remove if not needed
 // Actually, server.ts starts the server immediately. For testing, it's better to export 'app'.
 // For now, let's create a minimal test that doesn't depend on exporting app to avoid refactoring server.ts too much yet.
 // We'll mock the app for now or just test a simple endpoint logic?

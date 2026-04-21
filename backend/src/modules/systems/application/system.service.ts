@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError, ConflictError } from '../../../common/errors/app.error';
-import { systemRepository, type SystemPaginationParams } from '../infrastructure/prisma-system.repository';
+import { systemRepository } from '../infrastructure/prisma-system.repository';
+import type { SystemPaginationParams } from '../domain/system.repository';
 
 export class SystemService {
     async findAllSystems(pagination: SystemPaginationParams = {}) {

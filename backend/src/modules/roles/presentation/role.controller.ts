@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { roleService } from '../application/role.service';
 import { AuthRequest, clearAuthCache } from '../../../common/middleware/auth.middleware';
 import { createResponse } from '../../../common/types/api.response';
-import { logAudit, generateAuditDiff } from '../../audit/audit.service';
-import { createRoleSchema, updateRoleSchema } from './role.schema';
+import { logAudit, generateAuditDiff } from '../../audit/application/audit.service';
+import { createRoleSchema, updateRoleSchema } from '../presentation/role.schema';
 
 
 export class RoleController {

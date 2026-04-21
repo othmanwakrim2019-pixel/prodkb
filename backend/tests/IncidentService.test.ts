@@ -1,8 +1,8 @@
 import { incidentCrudService } from '../src/modules/incidents/application/services/incident-crud.service';
 import { incidentRepository } from '../src/modules/incidents/infrastructure/prisma-incident.repository';
-import { autoAssignService } from '../src/modules/auto-assign/auto-assign.service';
-import { webhookService } from '../src/modules/webhooks/webhook.service';
-import { eventPublisher } from '../src/modules/events/event.publisher';
+import { autoAssignService } from '../src/modules/auto-assign/application/auto-assign.service';
+import { webhookService } from '../src/modules/webhooks/application/webhook.service';
+import { eventPublisher } from '../src/modules/events/application/event.publisher';
 import { IncidentStatus } from '../src/constants';
 
 jest.mock('../src/modules/incidents/infrastructure/prisma-incident.repository', () => ({
@@ -19,17 +19,17 @@ jest.mock('../src/modules/incidents/infrastructure/prisma-incident.repository', 
         createIncidentLog: jest.fn(),
     },
 }));
-jest.mock('../src/modules/auto-assign/auto-assign.service', () => ({
+jest.mock('../src/modules/auto-assign/application/auto-assign.service', () => ({
     autoAssignService: {
         matchRule: jest.fn(),
     },
 }));
-jest.mock('../src/modules/webhooks/webhook.service', () => ({
+jest.mock('../src/modules/webhooks/application/webhook.service', () => ({
     webhookService: {
         dispatch: jest.fn().mockResolvedValue(undefined),
     },
 }));
-jest.mock('../src/modules/events/event.publisher', () => ({
+jest.mock('../src/modules/events/application/event.publisher', () => ({
     eventPublisher: {
         emit: jest.fn().mockResolvedValue(undefined),
     },

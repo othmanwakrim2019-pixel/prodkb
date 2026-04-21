@@ -1,6 +1,6 @@
 import { logger } from '../../../../common/utils/logger';
 import { emailService } from '../../../../common/services/email.service';
-import { notificationService } from '../../../notifications/notification.service';
+import { notificationService } from '../../../notifications/application/notification.service';
 import { ValidationError } from '../../../../common/errors/app.error';
 import { IncidentStatus } from '../../../../constants';
 

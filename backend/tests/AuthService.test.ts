@@ -1,12 +1,12 @@
 import bcrypt from 'bcryptjs';
-import { authService } from '../src/modules/auth/auth.service';
-import { authRepository } from '../src/modules/auth/repositories/auth.repository';
-import { refreshTokenService } from '../src/modules/auth/refresh-token.service';
+import { authService } from '../src/modules/auth/application/auth.service';
+import { authRepository } from '../src/modules/auth/infrastructure/prisma-auth.repository';
+import { refreshTokenService } from '../src/modules/auth/application/refresh-token.service';
 import { JwtService } from '../src/common/utils/jwt.utils';
 import { clearFailedAttempts, isAccountLocked, recordFailedAttempt } from '../src/common/services/lockout.service';
 
 jest.mock('bcryptjs');
-jest.mock('../src/modules/auth/repositories/auth.repository', () => ({
+jest.mock('../src/modules/auth/infrastructure/prisma-auth.repository', () => ({
     authRepository: {
         findUserByEmail: jest.fn(),
         findRoleByName: jest.fn(),
@@ -15,7 +15,7 @@ jest.mock('../src/modules/auth/repositories/auth.repository', () => ({
         findUserForLogin: jest.fn(),
     },
 }));
-jest.mock('../src/modules/auth/refresh-token.service', () => ({
+jest.mock('../src/modules/auth/application/refresh-token.service', () => ({
     refreshTokenService: {
         generate: jest.fn(),
     },

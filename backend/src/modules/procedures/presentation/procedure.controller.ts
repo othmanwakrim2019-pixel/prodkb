@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { procedureService } from '../application/procedure.service';
 import { AuthRequest } from '../../../common/middleware/auth.middleware';
 import { createResponse } from '../../../common/types/api.response';
-import { logAudit, generateAuditDiff } from '../../audit/audit.service';
-import { createProcedureSchema, updateProcedureSchema } from './procedure.schema';
+import { logAudit, generateAuditDiff } from '../../audit/application/audit.service';
+import { createProcedureSchema, updateProcedureSchema } from '../presentation/procedure.schema';
 
 
 export class ProcedureController {

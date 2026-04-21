@@ -1,7 +1,7 @@
-import { roleService } from '../src/modules/roles/role.service';
-import { roleRepository } from '../src/modules/roles/repositories/role.repository';
+import { roleService } from '../src/modules/roles/application/role.service';
+import { roleRepository } from '../src/modules/roles/infrastructure/prisma-role.repository';
 
-jest.mock('../src/modules/roles/repositories/role.repository', () => ({
+jest.mock('../src/modules/roles/infrastructure/prisma-role.repository', () => ({
     roleRepository: {
         findRoles: jest.fn(),
         findPermissions: jest.fn(),

@@ -11,7 +11,7 @@
 import 'dotenv/config';
 import crypto from 'crypto';
 import { Worker, Job } from 'bullmq';
-import { WEBHOOK_QUEUE_NAME } from '../modules/webhooks/webhook.queue';
+import { WEBHOOK_QUEUE_NAME } from '../modules/webhooks/application/webhook.queue';
 import { logger } from '../common/utils/logger';
 import { prisma } from '../common/utils/prisma';
 import { parseRedisUrl } from '../common/utils/redis';

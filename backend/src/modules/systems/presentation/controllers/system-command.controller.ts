@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from 'express';
-import type { AuthRequest } from '../../../common/middleware/auth.middleware';
-import { createResponse } from '../../../common/types/api.response';
-import { logAudit, generateAuditDiff } from '../../../audit/audit.service';
+import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
+import { createResponse } from '../../../../common/types/api.response';
+import { logAudit, generateAuditDiff } from '../../../audit/application/audit.service';
 import { createJobSchema, createSystemSchema, updateJobSchema, updateSystemSchema } from '../system.schema';
 import { systemService } from '../../application/system.service';
 

@@ -2,7 +2,7 @@ import type { NextFunction, Response } from 'express';
 import type { TaskType } from '@prisma/client';
 import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
 import { createResponse } from '../../../../common/types/api.response';
-import { logAudit } from '../../../audit/audit.service';
+import { logAudit } from '../../../audit/application/audit.service';
 import {
     batchPositionsSchema,
     createPlanningJobSchema,

@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { teamService } from '../application/team.service';
 import { AuthRequest } from '../../../common/middleware/auth.middleware';
 import { createResponse } from '../../../common/types/api.response';
-import { logAudit, generateAuditDiff } from '../../audit/audit.service';
-import { createTeamSchema, updateTeamSchema, addMemberSchema } from './team.schema';
+import { logAudit, generateAuditDiff } from '../../audit/application/audit.service';
+import { createTeamSchema, updateTeamSchema, addMemberSchema } from '../presentation/team.schema';
 
 
 export class TeamController {

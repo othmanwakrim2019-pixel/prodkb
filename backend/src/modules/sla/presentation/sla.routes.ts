@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { SlaController } from './sla.controller';
+import { SlaController } from '../presentation/sla.controller';
 import { authenticate, requirePermission } from '../../../common/middleware/auth.middleware';
 
 const router = Router();

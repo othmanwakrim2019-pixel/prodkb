@@ -5,7 +5,7 @@
 import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/common/utils/prisma';
-import { authService } from '../../src/modules/auth/auth.service';
+import { authService } from '../../src/modules/auth/application/auth.service';
 
 describe('Auth Cookie Integration', () => {
     const testUser = {

@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import type { AuthRequest } from '../../../../common/middleware/auth.middleware';
 import { createResponse } from '../../../../common/types/api.response';
-import { logAudit } from '../../../audit/audit.service';
+import { logAudit } from '../../../audit/application/audit.service';
 import {
     createDailyPlanSchema,
     createOperationalTaskSchema,

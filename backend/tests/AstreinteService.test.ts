@@ -1,8 +1,8 @@
-import { astreinteService } from '../src/modules/astreinte/astreinte.service';
-import { astreinteRepository } from '../src/modules/astreinte/repositories/astreinte.repository';
+import { astreinteService } from '../src/modules/astreinte/application/astreinte.service';
+import { astreinteRepository } from '../src/modules/astreinte/infrastructure/prisma-astreinte.repository';
 import { NotFoundError, ConflictError } from '../src/common/errors/app.error';
 
-jest.mock('../src/modules/astreinte/repositories/astreinte.repository', () => ({
+jest.mock('../src/modules/astreinte/infrastructure/prisma-astreinte.repository', () => ({
     astreinteRepository: {
         findMany: jest.fn(),
         findById: jest.fn(),

@@ -5,7 +5,7 @@ import { createResponse } from '../../../../common/types/api.response';
 import { sanitizeObject } from '../../../../common/utils/sanitize';
 import { UserRole } from '../../../../constants';
 import type { CreateIncidentDTO, UpdateIncidentDTO } from '../../../../types';
-import { logAudit, generateAuditDiff } from '../../../audit/audit.service';
+import { logAudit, generateAuditDiff } from '../../../audit/application/audit.service';
 import { addIncidentLogSchema, createIncidentSchema, updateIncidentSchema } from '../incident.schema';
 import { incidentCrudService } from '../../application/services/incident-crud.service';
 import { incidentFileService } from '../../application/services/incident-file.service';
