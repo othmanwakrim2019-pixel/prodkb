@@ -1,8 +1,8 @@
 import { PlanningStatus, TaskType, InstanceStatus, type PlanningJob } from '@prisma/client';
 import { logger } from '../../../common/utils/logger';
 import { NotFoundError, ValidationError } from '../../../common/errors/app.error';
-import { validatePlanningTransition } from './planning.rules';
-import { planningRepository } from '../repositories/planning.repository';
+import { validatePlanningTransition } from '../domain/planning.rules';
+import { planningRepository } from '../infrastructure/prisma-planning.repository';
 
 export class PlanningJobService {
     async findByInstance(instanceId: string) {
