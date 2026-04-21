@@ -1,4 +1,3 @@
-import type { Incident, Job, SLA, System, Team, Log, Procedure } from '../../../types';
 
 export interface PaginatedResponse<T> {
     data: T[];

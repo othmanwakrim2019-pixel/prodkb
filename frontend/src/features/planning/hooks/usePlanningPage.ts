@@ -118,7 +118,7 @@ export const usePlanningPage = () => {
             console.error('Failed to update planning job status:', error);
             toast.error('Failed to update job status. The transition may not be allowed.');
         }
-    }, [fetchJobs]);
+    }, [fetchJobs, toast]);
 
     const handleDelete = useCallback(async (jobId: string) => {
         if (!await confirm('Remove this job from the plan?', 'This action cannot be undone.', 'danger')) {
@@ -172,6 +172,7 @@ export const usePlanningPage = () => {
             await fetchInstances();
         } catch (error) {
             console.error('Failed to delete planning instance:', error);
+            toast.error('Failed to delete planning instance.');
         }
     }, [confirm, toast, fetchInstances, selectedInstanceId]);
 

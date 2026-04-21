@@ -26,8 +26,7 @@ function buildWeeks(year: number): { weekNumber: number; start: Date; end: Date 
     const mon  = new Date(jan4);
     mon.setDate(jan4.getDate() - (day - 1));
 
-    let w = 1;
-    while (true) {
+    for (let w = 1; w <= 53; w++) {
         const start = new Date(mon);
         const end   = new Date(mon);
         end.setDate(mon.getDate() + 6);
@@ -37,8 +36,6 @@ function buildWeeks(year: number): { weekNumber: number; start: Date; end: Date 
         if (start.getFullYear() > year && w > 1) break;
         weeks.push({ weekNumber: w, start, end });
         mon.setDate(mon.getDate() + 7);
-        w++;
-        if (w > 53) break;
     }
     return weeks;
 }
