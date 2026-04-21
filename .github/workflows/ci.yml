@@ -61,6 +61,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
       - name: Cache Prisma client
         uses: actions/cache@v4
         with:
@@ -152,7 +155,10 @@ jobs:
           NODE_ENV: test
 
       - name: Wait for services
-        run: sleep 15
+        run: |
+          echo "Waiting for backend health check..."
+          timeout 60s bash -c 'until curl -s http://localhost:3000/health; do sleep 2; done'
+          echo "Backend is up and healthy!"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
