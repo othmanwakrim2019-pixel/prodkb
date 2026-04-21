@@ -17,7 +17,7 @@ import { configRoutes } from './config/config.routes';
 import { emailTemplateRoutes } from './email-templates/email-template.routes';
 import { auditRoutes } from './audit/audit.routes';
 import { searchRoutes } from './search/search.routes';
-import { planningRoutes } from './planning/planning.routes';
+import { planningRoutes } from './planning/presentation/planning.routes';
 import { escalationRoutes } from './escalation/escalation.routes';
 import { autoAssignRoutes } from './auto-assign/auto-assign.routes';
 import { webhookRoutes } from './webhooks/webhook.routes';
@@ -30,6 +30,8 @@ import { astreinteRoutes } from './astreinte/astreinte.routes';
 import { equipeRoutes } from './equipe/equipe.routes';
 
 const router = Router();
+console.log('Mounting v1 routes...');
+router.get('/test-ok', (req, res) => res.json({ ok: true }));
 
 // Core modules
 router.use('/incidents', incidentRoutes);
