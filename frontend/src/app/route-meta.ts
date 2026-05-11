@@ -18,6 +18,7 @@ import {
     Settings as SettingsIcon,
     Shield,
     ShieldCheck,
+    ClipboardCheck,
     Users,
     Users2,
     UsersIcon,
@@ -113,6 +114,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         icon: Activity,
         children: [
             { labelKey: 'admin.tabs.health', defaultLabel: 'Service Health', tab: 'health', icon: Activity, permission: 'DASHBOARD_VIEW' },
+            { labelKey: 'admin.tabs.readiness', defaultLabel: 'Operations Readiness', tab: 'readiness', icon: ClipboardCheck, permission: 'CONFIG_MANAGE' },
             { labelKey: 'admin.tabs.auditConfig', defaultLabel: 'Audit Config', tab: 'audit-config', icon: ShieldCheck, permission: 'CONFIG_MANAGE' },
             { labelKey: 'admin.tabs.auditLogs', defaultLabel: 'Audit Logs', tab: 'audit', icon: Activity, permission: 'AUDIT_VIEW' },
         ],

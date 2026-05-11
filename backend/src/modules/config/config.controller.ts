@@ -90,4 +90,13 @@ export class ConfigController {
             next(error);
         }
     }
+
+    static async getOperationsReadiness(req: Request, res: Response, next: NextFunction) {
+        try {
+            const data = await configService.getOperationsReadiness();
+            res.json({ success: true, data });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

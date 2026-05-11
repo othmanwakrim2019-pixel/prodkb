@@ -7,6 +7,7 @@ import { AuditLogsPage } from './AuditLogsPage';
 import { SettingsPage as SmtpSettings } from './SettingsPage';
 import { AuditConfigPage as AuditConfig } from './AuditConfigPage';
 import { HealthDashboardPage } from './HealthDashboardPage';
+import { OperationsReadinessPage } from './OperationsReadinessPage';
 import { EmailTemplatesPage as EmailTemplates } from './EmailTemplatesPage';
 import { UserManagementPage as UserManagement } from './UserManagementPage';
 import { SystemManagementPage as SystemManagement } from './SystemManagementPage';
@@ -63,6 +64,7 @@ export const AdminPage = () => {
         'webhooks': <WebhookManagement />,
         'roles': <RoleManagerPage />,
         'health': <HealthDashboardPage />,
+        'readiness': <OperationsReadinessPage />,
         'audit': <AuditLogsPage />,
         'audit-config': <AuditConfig />,
         'email-templates': <EmailTemplates />,

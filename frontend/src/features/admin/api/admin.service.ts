@@ -274,6 +274,52 @@ export const configService = {
         api.post('/api/v1/config/smtp/test', { email }).then(r => r.data),
 };
 
+export interface ReadinessCheck {
+    id: string;
+    label: string;
+    status: 'ok' | 'warning' | 'critical';
+    detail: string;
+    action: string;
+}
+
+export interface OperationsReadiness {
+    generatedAt: string;
+    score: number;
+    status: 'ok' | 'warning' | 'critical';
+    checks: ReadinessCheck[];
+    metrics: {
+        users: number;
+        activeTeams: number;
+        systems: number;
+        jobs: number;
+        jobsWithoutTeam: number;
+        systemsWithoutJobs: number;
+        activeSlas: number;
+        openCriticalIncidents: number;
+        openHighIncidents: number;
+        blockedTasks: number;
+        activeWebhooks: number;
+        failedWebhookDeliveries: number;
+        maintenanceUpcoming: number;
+        currentAstreintes: number;
+        uncoveredAstreinteSlots: number;
+        dailyPlansToday: number;
+        demoDataPresent: boolean;
+    };
+    gaps: {
+        teamsWithoutEmail: string[];
+        teamsWithoutMembers: string[];
+        missingSlaSeverities: string[];
+        uncoveredAstreinteSlots: Array<{ teamId: string; teamName: string; weekNumber: number; year: number }>;
+    };
+    workers: Array<{ name: string; expected: boolean; signal: string }>;
+}
+
+export const readinessService = {
+    getOperationsReadiness: (): Promise<OperationsReadiness> =>
+        api.get('/api/v1/config/readiness').then(r => unwrapObject<OperationsReadiness>(r.data) as OperationsReadiness),
+};
+
 export interface EmailTemplate {
     id: string;
     name: string;
