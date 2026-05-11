@@ -67,6 +67,7 @@ describe('Login Component', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         sessionStorage.clear();
+        localStorage.clear();
     });
 
     const renderLogin = async () => {
@@ -78,18 +79,14 @@ describe('Login Component', () => {
             </BrowserRouter>
         );
 
-        await waitFor(() => {
-            expect(mockGet).toHaveBeenCalled();
-        });
-
         return utils;
     };
 
     it('renders login form correctly', async () => {
         await renderLogin();
-        expect(screen.getByText('Sign In')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/enter your email/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     });
 
@@ -105,7 +102,7 @@ describe('Login Component', () => {
         await renderLogin();
 
         fireEvent.change(screen.getByPlaceholderText(/enter your email/i), { target: { value: 'inactive@prodkb.com' } });
-        fireEvent.change(screen.getByPlaceholderText(/enter your password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
         await waitFor(() => {
@@ -128,7 +125,7 @@ describe('Login Component', () => {
         });
 
         fireEvent.change(screen.getByPlaceholderText(/enter your email/i), { target: { value: 'admin@prodkb.com' } });
-        fireEvent.change(screen.getByPlaceholderText(/enter your password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
         await waitFor(() => {

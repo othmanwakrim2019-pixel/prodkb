@@ -99,8 +99,12 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
         return;
     }
 
-    // Constant-time comparison to prevent timing attacks
-    if (!crypto.timingSafeEqual(Buffer.from(cookieToken), Buffer.from(headerToken))) {
+    const cookieBuffer = Buffer.from(cookieToken);
+    const headerBuffer = Buffer.from(headerToken);
+
+    // Constant-time comparison to prevent timing attacks. timingSafeEqual
+    // throws when lengths differ, so reject mismatched lengths explicitly.
+    if (cookieBuffer.length !== headerBuffer.length || !crypto.timingSafeEqual(cookieBuffer, headerBuffer)) {
         logger.warn('CSRF validation failed: token mismatch', { path: req.path });
         res.status(403).json({
             success: false,

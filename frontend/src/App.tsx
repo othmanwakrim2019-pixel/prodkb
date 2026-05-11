@@ -40,6 +40,12 @@ function App() {
                                     <Route path={APP_PATHS.login} element={<Login />} />
                                 </Route>
 
+                                <Route path={APP_PATHS.status} element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ErrorBoundary><StatusPage /></ErrorBoundary>
+                                    </Suspense>
+                                } />
+
                                 <Route element={<Layout />}>
                                     <Route path={APP_PATHS.home} element={
                                         <ProtectedRoute permission="DASHBOARD_VIEW">
@@ -130,14 +136,6 @@ function App() {
                                         <ProtectedRoute permission="MAINTENANCE_MANAGE">
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><MaintenanceAdmin /></ErrorBoundary>
-                                            </Suspense>
-                                        </ProtectedRoute>
-                                    } />
-
-                                    <Route path={APP_PATHS.status} element={
-                                        <ProtectedRoute permission="DASHBOARD_VIEW">
-                                            <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><StatusPage /></ErrorBoundary>
                                             </Suspense>
                                         </ProtectedRoute>
                                     } />

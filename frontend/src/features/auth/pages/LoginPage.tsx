@@ -162,13 +162,14 @@ export const LoginPage = () => {
 
                         {/* Email */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <label htmlFor="login-email" className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                 {t('login.emailLabel', 'Adresse e-mail')}
                             </label>
                             <div className="relative group">
                                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#003d82] transition-colors" />
                                 <input
                                     {...register('email', { required: t('login.emailRequired', "L'e-mail est requis") })}
+                                    id="login-email"
                                     type="email"
                                     autoComplete="username email"
                                     placeholder={t('login.emailPlaceholder', 'vous@cihbank.ma')}
@@ -184,13 +185,14 @@ export const LoginPage = () => {
 
                         {/* Password */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <label htmlFor="login-password" className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                 {t('login.passwordLabel', 'Mot de passe')}
                             </label>
                             <div className="relative group">
                                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#003d82] transition-colors" />
                                 <input
                                     {...register('password', { required: t('login.passwordRequired', 'Le mot de passe est requis') })}
+                                    id="login-password"
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="current-password"
                                     placeholder="••••••••••"

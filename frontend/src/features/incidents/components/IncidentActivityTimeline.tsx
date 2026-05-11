@@ -31,9 +31,14 @@ function absoluteTime(iso: string): string {
     });
 }
 
-// Render **bold** markdown in rawLog strings
-function renderMarkdown(text: string): string {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+// Render a tiny safe subset of markdown without injecting HTML.
+function renderMarkdown(text: string): React.ReactNode[] {
+    return text.split(/(\*\*.*?\*\*)/g).filter(Boolean).map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={index}>{part.slice(2, -2)}</strong>;
+        }
+        return <span key={index}>{part}</span>;
+    });
 }
 
 // ── Icon + colour mapping per logType ───────────────────────────────────────
@@ -214,10 +219,9 @@ export const IncidentActivityTimeline = ({ incidentId, refreshToken }: Props) =>
 
                                 {/* Message */}
                                 {entry.rawLog && (
-                                    <p
-                                        className="mt-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
-                                        dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.rawLog) }}
-                                    />
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        {renderMarkdown(entry.rawLog)}
+                                    </p>
                                 )}
                                 {entry.logType === 'file' && entry.fileName && (
                                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1">

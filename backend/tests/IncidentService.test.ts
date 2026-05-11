@@ -12,10 +12,12 @@ jest.mock('../src/modules/incidents/repositories/incident.repository', () => ({
         findSystemById: jest.fn(),
         findJobById: jest.fn(),
         createIncident: jest.fn(),
+        createIncidentLog: jest.fn(),
         updateIncidentWithVersion: jest.fn(),
         updateIncident: jest.fn(),
         deleteIncident: jest.fn(),
         findProcedureById: jest.fn(),
+        findCurrentAstreinteForTeam: jest.fn(),
     },
 }));
 jest.mock('../src/modules/auto-assign/auto-assign.service', () => ({
@@ -90,6 +92,8 @@ describe('IncidentCrudService', () => {
         it('auto-assigns a team when no explicit team is provided', async () => {
             (incidentRepository.findSystemById as jest.Mock).mockResolvedValue({ id: 'system-1' });
             (autoAssignService.matchRule as jest.Mock).mockResolvedValue('team-42');
+            (incidentRepository.findCurrentAstreinteForTeam as jest.Mock).mockResolvedValue(null);
+            (incidentRepository.createIncidentLog as jest.Mock).mockResolvedValue({ id: 'log-1' });
             (incidentRepository.createIncident as jest.Mock).mockResolvedValue({
                 id: 'incident-1',
                 title: 'Incident',
@@ -150,6 +154,7 @@ describe('IncidentCrudService', () => {
                 severity: 'HIGH',
                 system: { name: 'Payments' },
             });
+            (incidentRepository.createIncidentLog as jest.Mock).mockResolvedValue({ id: 'log-1' });
 
             await incidentCrudService.update('incident-1', {
                 status: IncidentStatus.ACKNOWLEDGED,
@@ -184,6 +189,7 @@ describe('IncidentCrudService', () => {
                 severity: 'HIGH',
                 system: { name: 'Payments' },
             });
+            (incidentRepository.createIncidentLog as jest.Mock).mockResolvedValue({ id: 'log-1' });
 
             await incidentCrudService.update('incident-1', {
                 status: IncidentStatus.RESOLVED,
