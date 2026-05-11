@@ -11,6 +11,9 @@ export interface EmailConfig {
     pass: string;
   };
   from: string;
+  replyTo?: string;
+  rejectUnauthorized: boolean;
+  connectionTimeout: number;
 }
 
 interface IncidentEmailData {
@@ -49,8 +52,9 @@ export class EmailService {
       const user = dbConfig?.user || process.env.SMTP_USER;
       const pass = dbConfig?.pass || process.env.SMTP_PASS;
       const from = dbConfig?.from || process.env.SMTP_FROM || 'ProdKB <prodkb@company.com>';
+      const enabled = dbConfig?.enabled ?? process.env.SMTP_ENABLED !== 'false';
 
-      if (!host || !port || !user || !pass) {
+      if (!enabled || !host || !port || !user || !pass) {
         logger.warn('SMTP configuration not complete (DB or ENV). Email notifications disabled.');
         this.enabled = false;
         return;
@@ -62,6 +66,9 @@ export class EmailService {
         secure: dbConfig?.secure !== undefined ? dbConfig.secure : (process.env.SMTP_SECURE === 'true'),
         auth: { user, pass },
         from,
+        replyTo: dbConfig?.replyTo || process.env.SMTP_REPLY_TO || undefined,
+        rejectUnauthorized: dbConfig?.rejectUnauthorized ?? process.env.SMTP_REJECT_UNAUTHORIZED !== 'false',
+        connectionTimeout: Number(dbConfig?.connectionTimeout || process.env.SMTP_CONNECTION_TIMEOUT || 10000),
       };
 
       this.transporter = nodemailer.createTransport({
@@ -69,6 +76,13 @@ export class EmailService {
         port: this.config.port,
         secure: this.config.secure,
         auth: this.config.auth,
+        requireTLS: dbConfig?.tlsMode === 'starttls',
+        ignoreTLS: dbConfig?.tlsMode === 'none',
+        connectionTimeout: this.config.connectionTimeout,
+        greetingTimeout: this.config.connectionTimeout,
+        tls: {
+          rejectUnauthorized: this.config.rejectUnauthorized,
+        },
       });
 
       this.enabled = true;
@@ -93,6 +107,7 @@ export class EmailService {
 
     await this.transporter.sendMail({
       from: this.config.from,
+      replyTo: this.config.replyTo,
       to,
       subject: 'ProdKB — SMTP Test',
       text: 'If you see this message, your SMTP configuration is working correctly.',
@@ -153,6 +168,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -213,6 +229,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -273,6 +290,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -669,6 +687,7 @@ ProdKB Incident Management System
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to,
         subject,
         text: text || this.stripHtml(html),

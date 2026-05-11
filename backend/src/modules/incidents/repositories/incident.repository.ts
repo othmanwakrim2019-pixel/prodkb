@@ -8,6 +8,12 @@ export const incidentDefaultInclude = Prisma.validator<Prisma.IncidentInclude>()
     createdBy: { select: { id: true, name: true, email: true } },
     resolvedBy: { select: { id: true, name: true, email: true } },
     assignedTeam: true,
+    astreinte: {
+        include: {
+            user: { select: { id: true, name: true, email: true } },
+            team: { select: { id: true, name: true } },
+        },
+    },
     sla: true,
     linkedProcedure: { select: { id: true, title: true } },
     logs: {
@@ -67,6 +73,17 @@ export class IncidentRepository {
         return prisma.incident.create({
             data,
             include: incidentDefaultInclude,
+        });
+    }
+
+    async findCurrentAstreinteForTeam(teamId: string, date: Date = new Date()) {
+        return prisma.astreinte.findFirst({
+            where: {
+                teamId,
+                startDate: { lte: date },
+                endDate: { gte: date },
+            },
+            select: { id: true, user: { select: { name: true } } },
         });
     }
 

@@ -25,6 +25,8 @@ const Planning = lazy(() => import('./pages/planning/Planning'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const MaintenanceAdmin = lazy(() => import('./features/admin/pages/MaintenanceAdminPage'));
 const UserProfile = lazy(() => import('./features/auth/pages/UserProfilePage'));
+const EquipePage   = lazy(() => import('./features/equipe/pages/EquipePage'));
+const MesTachesPage = lazy(() => import('./features/equipe/pages/MesTachesPage'));
 
 function App() {
     return (
@@ -145,6 +147,24 @@ function App() {
                                         <ProtectedRoute>
                                             <Suspense fallback={<PageLoader />}>
                                                 <ErrorBoundary><UserProfile /></ErrorBoundary>
+                                            </Suspense>
+                                        </ProtectedRoute>
+                                    } />
+
+                                    {/* Gestion Équipe — manager board */}
+                                    <Route path={APP_PATHS.equipe} element={
+                                        <ProtectedRoute permission="EQUIPE_VIEW">
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><EquipePage /></ErrorBoundary>
+                                            </Suspense>
+                                        </ProtectedRoute>
+                                    } />
+
+                                    {/* Mes Tâches — personal operator view (MES_TACHES_VIEW) */}
+                                    <Route path={APP_PATHS.mesTaches} element={
+                                        <ProtectedRoute permission="MES_TACHES_VIEW">
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><MesTachesPage /></ErrorBoundary>
                                             </Suspense>
                                         </ProtectedRoute>
                                     } />

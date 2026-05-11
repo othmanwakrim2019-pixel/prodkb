@@ -1,16 +1,24 @@
 import { useState, useEffect } from "react";
 import { Save, Send, ShieldCheck, AlertCircle, CheckCircle } from "lucide-react";
-import { configService } from '../api/admin.service';
+import { configService, type SmtpConfig } from '../api/admin.service';
+
+const defaultConfig: SmtpConfig = {
+    enabled: false,
+    host: "",
+    port: 587,
+    user: "",
+    pass: "",
+    passwordConfigured: false,
+    from: "",
+    secure: false,
+    tlsMode: 'starttls',
+    rejectUnauthorized: true,
+    replyTo: "",
+    connectionTimeout: 10000,
+};
 
 export const SettingsPage = () => {
-    const [config, setConfig] = useState({
-        host: "",
-        port: 587,
-        user: "",
-        pass: "",
-        from: "",
-        secure: false,
-    });
+    const [config, setConfig] = useState<SmtpConfig>(defaultConfig);
     const [testEmail, setTestEmail] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -25,25 +33,30 @@ export const SettingsPage = () => {
         try {
             const data = await configService.getSmtp();
             setConfig({
-                host: data.host ?? '',
-                port: data.port ?? 587,
-                user: data.user ?? '',
-                pass: (data as unknown as { pass?: string }).pass ?? '',
-                from: data.from ?? '',
-                secure: data.secure ?? false,
+                ...defaultConfig,
+                ...data,
+                pass: '',
+                secure: data.secure ?? data.tlsMode === 'ssl',
+                tlsMode: data.tlsMode ?? (data.secure ? 'ssl' : 'starttls'),
+                rejectUnauthorized: data.rejectUnauthorized ?? true,
+                connectionTimeout: data.connectionTimeout ?? 10000,
             });
         } catch (error) {
             console.error("Failed to fetch SMTP config", error);
+            setMessage({ type: 'error', text: 'Failed to load SMTP configuration' });
         } finally {
             setLoading(false);
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : false;
+
         setConfig(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : (name === 'port' ? parseInt(value) : value)
+            [name]: type === 'checkbox' ? checked : (name === 'port' || name === 'connectionTimeout' ? Number(value) : value),
+            ...(name === 'tlsMode' ? { secure: value === 'ssl' } : {}),
         }));
     };
 
@@ -52,7 +65,16 @@ export const SettingsPage = () => {
         setSaving(true);
         setMessage(null);
         try {
-            await configService.updateSmtp(config);
+            const saved = await configService.updateSmtp({
+                ...config,
+                pass: config.pass.trim(),
+            });
+            setConfig(prev => ({
+                ...prev,
+                ...saved,
+                pass: '',
+                passwordConfigured: saved.passwordConfigured ?? (prev.passwordConfigured || Boolean(config.pass.trim())),
+            }));
             setMessage({ type: 'success', text: 'Settings saved successfully' });
         } catch (error) {
             console.error("Failed to save settings", error);
@@ -70,12 +92,11 @@ export const SettingsPage = () => {
         setTesting(true);
         setMessage(null);
         try {
-            await configService.testSmtp(testEmail);
-            setMessage({ type: 'success', text: 'Test email sent successfully! Check your inbox.' });
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result = await configService.testSmtp(testEmail);
+            setMessage({ type: 'success', text: result.message || 'Test email sent successfully' });
         } catch (error: any) {
             console.error("Test email failed", error);
-            const errorMsg = error.response?.data?.message || 'Failed to send test email. Check server logs.';
+            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to send test email. Check server logs.';
             setMessage({ type: 'error', text: errorMsg });
         } finally {
             setTesting(false);
@@ -93,7 +114,7 @@ export const SettingsPage = () => {
 
             <div className="bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 p-6">
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                    Configure the email server settings for sending incident notifications.
+                    Configure the email server settings for incident, task, and operational notifications.
                 </p>
 
                 {message && (
@@ -103,7 +124,16 @@ export const SettingsPage = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSave} className="space-y-4">
+                <form onSubmit={handleSave} className="space-y-5">
+                    <div className="flex items-center justify-between p-4 rounded-md bg-slate-50 dark:bg-slate-700/50">
+                        <div>
+                            <div className="font-medium text-slate-900 dark:text-white">Email Sending</div>
+                            <p className="text-xs text-slate-500">Disable this to keep SMTP settings saved without sending emails.</p>
+                        </div>
+                        <input type="checkbox" name="enabled" checked={config.enabled} onChange={handleChange}
+                            className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded" />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">SMTP Host</label>
@@ -125,24 +155,43 @@ export const SettingsPage = () => {
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
                             <input type="password" name="pass" value={config.pass} onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm" />
+                                className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                                placeholder={config.passwordConfigured ? 'Password saved. Leave blank to keep it.' : ''} />
                         </div>
-                        <div className="md:col-span-2">
+                        <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">From Address</label>
                             <input type="text" name="from" value={config.from} onChange={handleChange}
                                 className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                                 placeholder="CIH Bank <notifications@cih.co.ma>" />
                         </div>
-                        <div className="flex items-center">
-                            <input type="checkbox" name="secure" checked={config.secure} onChange={handleChange}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Reply-To</label>
+                            <input type="email" name="replyTo" value={config.replyTo || ''} onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                                placeholder="support@cih.co.ma" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">TLS Mode</label>
+                            <select name="tlsMode" value={config.tlsMode || 'starttls'} onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <option value="starttls">STARTTLS / Port 587</option>
+                                <option value="ssl">SSL / Port 465</option>
+                                <option value="none">No TLS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Connection Timeout ms</label>
+                            <input type="number" name="connectionTimeout" value={config.connectionTimeout || 10000} onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input type="checkbox" name="rejectUnauthorized" checked={config.rejectUnauthorized !== false} onChange={handleChange}
                                 className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded" />
-                            <label className="ml-2 block text-sm text-slate-900 dark:text-slate-300">
-                                Use Secure Connection (TLS/SSL)
-                            </label>
+                            <label className="block text-sm text-slate-900 dark:text-slate-300">Reject invalid TLS certificates</label>
                         </div>
                     </div>
 
-                    <div className="flex justify-end pt-4">
+                    <div className="flex justify-end pt-2">
                         <button type="submit" disabled={saving}
                             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50">
                             <Save className="w-4 h-4 mr-2" />
@@ -160,7 +209,7 @@ export const SettingsPage = () => {
                                 className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                                 placeholder="your-email@example.com" />
                         </div>
-                        <button onClick={handleTest} disabled={testing || !config.host}
+                        <button onClick={handleTest} disabled={testing || !config.host || !config.enabled}
                             className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50">
                             <Send className="w-4 h-4 mr-2" />
                             {testing ? 'Sending...' : 'Send Test Email'}

@@ -312,3 +312,58 @@ export interface PaginatedResult<T> {
     limit: number;
     totalPages: number;
 }
+
+export interface IAstreinte {
+    id: string;
+    weekNumber: number;
+    year: number;
+    startDate: Date;
+    endDate: Date;
+    phone: string | null;
+    notes: string | null;
+    teamId: string;
+    userId: string;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+    team?: ITeam;
+    user?: IUserPublic;
+    createdBy?: IUserPublic;
+}
+
+export interface IOperationalTask {
+    id: string;
+    planId: string;
+    title: string;
+    description: string | null;
+    taskType: string;
+    priority: string;
+    status: string;
+    startTime: Date | null;
+    endTime: Date | null;
+    systemId: string | null;
+    chainLabel: string | null;
+    assignedToId: string;
+    note: string | null;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+    assignedTo?: IUserPublic;
+    system?: ISystem | null;
+}
+
+export interface IDailyPlan {
+    id: string;
+    date: Date;
+    label: string | null;
+    isWeekend: boolean;
+    teamId: string;
+    createdById: string;
+    createdAt: Date;
+    updatedAt: Date;
+    team?: ITeam;
+    createdBy?: IUserPublic;
+    tasks?: IOperationalTask[];
+}

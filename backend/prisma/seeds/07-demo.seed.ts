@@ -110,6 +110,58 @@ export async function seedDemo(): Promise<void> {
     }
     logSeed('Teams', '20 teams with members', true);
 
+    const isoWeek = (date: Date) => {
+        const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+        const dayNumber = target.getUTCDay() || 7;
+        target.setUTCDate(target.getUTCDate() + 4 - dayNumber);
+        const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+        return Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    };
+    const today = new Date();
+    const day = today.getUTCDay() || 7;
+    const weekStart = new Date(today);
+    weekStart.setUTCDate(today.getUTCDate() - (day - 1));
+    weekStart.setUTCHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+    weekEnd.setUTCHours(23, 59, 59, 999);
+    const currentWeek = isoWeek(today);
+
+    console.log('  Creating current astreinte coverage...');
+    const astreintes: Array<{ id: string; teamId: string }> = [];
+    for (const team of teams.slice(0, Math.min(teams.length, 8))) {
+        const user = faker.helpers.arrayElement(safeExperts);
+        const astreinte = await prisma.astreinte.upsert({
+            where: {
+                teamId_weekNumber_year: {
+                    teamId: team.id,
+                    weekNumber: currentWeek,
+                    year: today.getUTCFullYear(),
+                },
+            },
+            update: {
+                userId: user.id,
+                startDate: weekStart,
+                endDate: weekEnd,
+                phone: faker.phone.number(),
+                notes: 'Current demo astreinte coverage',
+            },
+            create: {
+                teamId: team.id,
+                userId: user.id,
+                createdById: users[0].id,
+                weekNumber: currentWeek,
+                year: today.getUTCFullYear(),
+                startDate: weekStart,
+                endDate: weekEnd,
+                phone: faker.phone.number(),
+                notes: 'Current demo astreinte coverage',
+            },
+        });
+        astreintes.push({ id: astreinte.id, teamId: astreinte.teamId });
+    }
+    logSeed('Astreinte', 'current week coverage for demo teams', true);
+
     // ── 50 Jobs (5 per system) ──
     console.log('  Creating 50 jobs...');
     const jobs: Array<{ id: string; systemId: string }> = [];
@@ -133,6 +185,57 @@ export async function seedDemo(): Promise<void> {
         }
     }
     logSeed('Jobs', '50 jobs across 10 systems', true);
+
+    console.log('  Creating daily plans and operational tasks...');
+    for (const team of teams.slice(0, Math.min(teams.length, 6))) {
+        const planDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+        const plan = await prisma.dailyPlan.upsert({
+            where: { teamId_date: { teamId: team.id, date: planDate } },
+            update: {
+                label: 'Demo daily operations plan',
+                isWeekend: [0, 6].includes(today.getUTCDay()),
+            },
+            create: {
+                teamId: team.id,
+                date: planDate,
+                label: 'Demo daily operations plan',
+                isWeekend: [0, 6].includes(today.getUTCDay()),
+                createdById: users[0].id,
+            },
+        });
+
+        const taskTemplates = [
+            { title: 'Check morning batch chain', taskType: 'CONTROLE_CHAINE', priority: 'NORMAL', status: 'IN_PROGRESS' },
+            { title: 'Review open critical incidents', taskType: 'REPRISE_INCIDENT', priority: 'HIGH', status: 'TODO' },
+            { title: 'Prepare operations dashboard', taskType: 'TABLEAU_BORD', priority: 'NORMAL', status: 'TODO' },
+            { title: 'Blocked dependency follow-up', taskType: 'CUSTOM', priority: 'CRITICAL', status: 'BLOCKED' },
+        ] as const;
+
+        for (const template of taskTemplates) {
+            const existing = await prisma.operationalTask.findFirst({
+                where: { planId: plan.id, title: template.title },
+            });
+            if (existing) continue;
+            const assignedTo = faker.helpers.arrayElement(safeOperators);
+            const system = faker.helpers.arrayElement(allSystems);
+            await prisma.operationalTask.create({
+                data: {
+                    planId: plan.id,
+                    title: template.title,
+                    description: `${template.title} for ${system.name}`,
+                    taskType: template.taskType,
+                    priority: template.priority,
+                    status: template.status,
+                    assignedToId: assignedTo.id,
+                    systemId: system.id,
+                    chainLabel: template.taskType === 'CONTROLE_CHAINE' ? 'Nightly batch chain' : null,
+                    note: template.status === 'BLOCKED' ? 'Waiting for upstream confirmation.' : null,
+                    createdById: users[0].id,
+                },
+            });
+        }
+    }
+    logSeed('Equipe', 'daily plans and operational tasks', true);
 
     // ── 55 Procedures ──
     console.log('  Creating 55 procedures...');
@@ -169,6 +272,8 @@ export async function seedDemo(): Promise<void> {
         const job = systemJobs.length > 0 ? faker.helpers.arrayElement(systemJobs) : null;
         const sla = allSLAs.find(s => s.severity === severity);
         const creator = faker.helpers.arrayElement(safeOperators);
+        const assignedTeam = faker.helpers.arrayElement(teams);
+        const astreinte = astreintes.find((item) => item.teamId === assignedTeam.id);
         const createdAt = faker.date.recent({ days: 90 });
 
         let resolvedAt: Date | null = null;
@@ -190,7 +295,8 @@ export async function seedDemo(): Promise<void> {
                 systemId: system.id,
                 jobId: job?.id,
                 slaId: sla?.id,
-                assignedTeamId: faker.helpers.arrayElement(teams).id,
+                assignedTeamId: assignedTeam.id,
+                astreinteId: astreinte?.id ?? null,
                 createdById: creator.id,
                 createdAt,
                 resolvedById,

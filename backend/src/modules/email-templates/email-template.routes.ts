@@ -13,8 +13,10 @@ router.use(authenticate);
 // Assuming SYSTEM_MANAGE is safe for editing.
 
 router.get('/', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getAllTemplates);
+router.post('/', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.createTemplate);
 router.post('/preview', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.previewTemplate);
 router.get('/:id', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.getTemplate);
 router.put('/:id', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.updateTemplate);
+router.delete('/:id', requirePermission('EMAIL_TEMPLATE_MANAGE'), EmailTemplateController.deleteTemplate);
 
 export const emailTemplateRoutes = router;

@@ -79,6 +79,11 @@ export class IncidentCrudService {
             if (!job) throw new ValidationError('Invalid job ID');
         }
 
+        const assignedTeamId = data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null;
+        const currentAstreinte = assignedTeamId
+            ? await incidentRepository.findCurrentAstreinteForTeam(assignedTeamId, data.startDatetime || new Date())
+            : null;
+
         const incident = await incidentRepository.createIncident({
             title: data.title,
             description: data.description,
@@ -88,7 +93,8 @@ export class IncidentCrudService {
             systemId: data.systemId,
             jobId: data.jobId || null,
             createdById: userId,
-            assignedTeamId: data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null,
+            assignedTeamId,
+            astreinteId: currentAstreinte?.id || null,
             slaId: data.slaId || null,
             impact: data.impact || null,
             detectionSource: data.detectionSource || null,
@@ -124,7 +130,7 @@ export class IncidentCrudService {
         await incidentRepository.createIncidentLog({
             incidentId: incident.id,
             logType: 'activity',
-            rawLog: `Incident created with severity **${data.severity}** on system **${incident.system?.name ?? data.systemId}**`,
+            rawLog: `Incident created with severity **${data.severity}** on system **${incident.system?.name ?? data.systemId}**${currentAstreinte ? ` and linked to astreinte **${currentAstreinte.user.name}**` : ''}`,
             createdById: userId,
         });
 

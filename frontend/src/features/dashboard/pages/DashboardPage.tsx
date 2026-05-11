@@ -13,6 +13,7 @@ import { CanAccess } from '../../../components/CanAccess';
 import { APP_PATHS } from '../../../app/route-meta';
 import { incidentService } from '../../incidents/api/incident.service';
 import { systemService, teamService } from '../../admin/api/admin.service';
+import { AstreinteWidget } from '../../equipe/components/AstreinteWidget';
 
 interface DashboardStats {
     createdToday: number;
@@ -259,6 +260,12 @@ const DashboardPage = () => {
                     <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                         {t('dashboard.myWorkspace')}
                     </h3>
+
+                    <CanAccess permission="EQUIPE_VIEW">
+                        <div className="mb-4">
+                            <AstreinteWidget teamId={selectedTeam || undefined} />
+                        </div>
+                    </CanAccess>
 
                     {/* Team stats */}
                     {stats.myWork && (

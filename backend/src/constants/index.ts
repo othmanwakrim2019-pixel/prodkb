@@ -62,6 +62,36 @@ export const TeamMemberRole = {
 
 export type TeamMemberRoleType = typeof TeamMemberRole[keyof typeof TeamMemberRole];
 
+export const OperationalTaskType = {
+    MEP: 'MEP',
+    SUPERVISION: 'SUPERVISION',
+    TABLEAU_BORD: 'TABLEAU_BORD',
+    REPRISE_INCIDENT: 'REPRISE_INCIDENT',
+    CONTROLE_CHAINE: 'CONTROLE_CHAINE',
+    RAPPORT: 'RAPPORT',
+    CUSTOM: 'CUSTOM',
+} as const;
+
+export type OperationalTaskTypeType = typeof OperationalTaskType[keyof typeof OperationalTaskType];
+
+export const OperationalTaskStatus = {
+    TODO: 'TODO',
+    IN_PROGRESS: 'IN_PROGRESS',
+    DONE: 'DONE',
+    BLOCKED: 'BLOCKED',
+} as const;
+
+export type OperationalTaskStatusType = typeof OperationalTaskStatus[keyof typeof OperationalTaskStatus];
+
+export const OperationalTaskPriority = {
+    LOW: 'LOW',
+    NORMAL: 'NORMAL',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL',
+} as const;
+
+export type OperationalTaskPriorityType = typeof OperationalTaskPriority[keyof typeof OperationalTaskPriority];
+
 /**
  * Audit log action types
  */
@@ -133,6 +163,9 @@ export const Permission = {
 
     // Dashboard
     DASHBOARD_VIEW: 'DASHBOARD_VIEW',
+    EQUIPE_VIEW: 'EQUIPE_VIEW',
+    EQUIPE_MANAGE: 'EQUIPE_MANAGE',
+    MES_TACHES_VIEW: 'MES_TACHES_VIEW',
 } as const;
 
 export type PermissionType = typeof Permission[keyof typeof Permission];

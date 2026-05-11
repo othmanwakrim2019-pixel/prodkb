@@ -6,7 +6,7 @@
   "scripts": {
     "── Development ──": "",
     "dev": "tsx watch src/server.ts",
-    "build": "npx prisma generate && tsc && cp src/config/openapi.yaml dist/src/config/openapi.yaml 2>/dev/null || true",
+    "build": "npx prisma generate && tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/src/config',{recursive:true});if(fs.existsSync('src/config/openapi.yaml'))fs.copyFileSync('src/config/openapi.yaml','dist/src/config/openapi.yaml');\"",
     "start": "chmod +x ./start.sh && ./start.sh",
     "── Testing ──": "",
     "test": "jest --forceExit --coverage",
@@ -20,6 +20,7 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seeds/index.ts",
     "seed:demo": "tsx prisma/seeds/index.ts --demo",
+    "smoke:business": "node scripts/smoke-business-routes.js",
     "── Workers ──": "",
     "worker:sla": "tsx src/workers/sla.worker.ts",
     "worker:webhook": "tsx src/workers/webhook.worker.ts",
@@ -46,6 +47,7 @@
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@aws-sdk/client-s3": "^3.994.0",
     "@aws-sdk/s3-request-presigner": "^3.994.0",
+    "@faker-js/faker": "^9.9.0",
     "@bull-board/api": "^6.19.0",
     "@bull-board/express": "^6.19.0",
     "@prisma/client": "^6.19.0",
@@ -79,7 +81,6 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.9.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
