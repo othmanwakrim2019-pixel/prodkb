@@ -1,7 +1,7 @@
 
 import { prisma } from '../../common/utils/prisma';
 import { emailService } from '../../common/services/email.service';
-import { addWeeks, getISOWeek, getYear, startOfISOWeek } from 'date-fns';
+import { addWeeks, getISOWeek, getISOWeekYear, startOfISOWeek } from 'date-fns';
 
 interface SmtpConfigInput {
     enabled?: boolean;
@@ -113,7 +113,7 @@ export class ConfigService {
             const weekStart = startOfISOWeek(addWeeks(now, index));
             return {
                 weekNumber: getISOWeek(weekStart),
-                year: getYear(weekStart),
+                year: getISOWeekYear(weekStart),
             };
         });
 
