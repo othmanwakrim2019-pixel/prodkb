@@ -37,6 +37,7 @@ services:
     restart: unless-stopped
 
   # PgBouncer Connection Pooler
+
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: prodkb-pgbouncer
@@ -456,5 +457,4 @@ networks:
 volumes:
   postgres-data:
   minio-data:
-
 

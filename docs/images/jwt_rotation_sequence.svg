@@ -1,0 +1,145 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720" width="800" height="720">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B5563" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="800" height="720" fill="#F9FAFB" rx="8" />
+  
+  <!-- Vertical Lifelines -->
+  <g stroke="#374151" stroke-width="1" stroke-dasharray="4">
+    <line x1="80" y1="80" x2="80" y2="700" />
+    <line x1="240" y1="80" x2="240" y2="700" />
+    <line x1="400" y1="80" x2="400" y2="700" />
+    <line x1="560" y1="80" x2="560" y2="700" />
+    <line x1="720" y1="80" x2="720" y2="700" />
+  </g>
+
+  <!-- Lifeline Headers -->
+  <g filter="url(#shadow)" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#374151" text-anchor="middle">
+    <rect x="30" y="30" width="100" height="40" rx="4" fill="#E5E7EB" stroke="#374151" />
+    <text x="80" y="55">Client (Browser)</text>
+
+    <rect x="190" y="30" width="100" height="40" rx="4" fill="#DBEAFE" stroke="#2563EB" />
+    <text x="240" y="55" fill="#1E40AF">API Gateway</text>
+
+    <rect x="310" y="30" width="100" height="40" rx="4" fill="#ECFDF5" stroke="#047857" />
+    <text x="400" y="55" fill="#047857">Database (DB)</text>
+
+    <rect x="510" y="30" width="100" height="40" rx="4" fill="#FEF3C7" stroke="#D97706" />
+    <text x="560" y="55" fill="#B45309">JWT Service</text>
+
+    <rect x="670" y="30" width="100" height="40" rx="4" fill="#FEE2E2" stroke="#EF4444" />
+    <text x="720" y="55" fill="#EF4444">Pirate (Attacker)</text>
+  </g>
+
+  <!-- Activation Bars -->
+  <g fill="#F3F4F6" stroke="#374151" stroke-width="1">
+    <!-- Client -->
+    <rect x="76" y="100" width="8" height="410" />
+    
+    <!-- API Gateway -->
+    <rect x="236" y="110" width="8" height="115" />
+    <rect x="236" y="265" width="8" height="40" />
+    <rect x="236" y="345" width="8" height="165" />
+    <rect x="236" y="555" width="8" height="115" />
+    
+    <!-- DB -->
+    <rect x="396" y="130" width="8" height="20" />
+    <rect x="396" y="370" width="8" height="40" />
+    <rect x="396" y="470" width="8" height="20" />
+    <rect x="396" y="580" width="8" height="65" />
+    
+    <!-- JWT -->
+    <rect x="556" y="155" width="8" height="40" />
+    <rect x="556" y="420" width="8" height="40" />
+    
+    <!-- Pirate -->
+    <rect x="716" y="555" width="8" height="115" />
+  </g>
+
+  <!-- Phase 1: Login & Token Issuance -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#374151">
+    <path d="M 84 115 L 236 115" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="160" y="107" text-anchor="middle">1. POST /login</text>
+
+    <path d="M 244 135 L 396 135" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="320" y="127" text-anchor="middle">2. saveRefreshToken(RT1)</text>
+
+    <path d="M 244 160 L 556 160" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="400" y="152" text-anchor="middle">3. signTokens()</text>
+
+    <path d="M 556 185 L 244 185" stroke="#4B5563" stroke-width="1" stroke-dasharray="2" marker-end="url(#arrow)" />
+    <text x="400" y="177" text-anchor="middle">4. AT1 (15m) + RT1 (7d)</text>
+
+    <path d="M 236 210 L 84 210" stroke="#4B5563" stroke-width="1" stroke-dasharray="2" marker-end="url(#arrow)" />
+    <text x="160" y="202" text-anchor="middle">5. Set RT1 in HttpOnly Cookie</text>
+  </g>
+
+  <!-- Divider: Token Expiry -->
+  <line x1="40" y1="240" x2="760" y2="240" stroke="#9CA3AF" stroke-dasharray="4" />
+  <text x="400" y="235" font-family="Arial, sans-serif" font-size="9" fill="#9CA3AF" text-anchor="middle">[ Temps s'écoule : AT1 expire ]</text>
+
+  <!-- Phase 2.1: Expiration & HTTP 401 -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#374151">
+    <path d="M 84 275 L 236 275" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="160" y="267" text-anchor="middle">6. GET /api/protected (with AT1)</text>
+
+    <path d="M 236 300 L 84 300" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="2" marker-end="url(#arrow-red)" />
+    <text x="160" y="292" fill="#EF4444" text-anchor="middle">7. HTTP 401 Unauthorized (Expired)</text>
+  </g>
+
+  <!-- Phase 2.2: Silent Refresh & Token Rotation -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#374151">
+    <path d="M 84 355 L 236 355" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="160" y="347" text-anchor="middle">8. POST /refresh (Cookie RT1)</text>
+
+    <path d="M 244 375 L 396 375" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="320" y="367" text-anchor="middle">9. verifyAndRevoke(RT1)</text>
+
+    <path d="M 396 405 L 244 405" stroke="#4B5563" stroke-width="1" stroke-dasharray="2" marker-end="url(#arrow)" />
+    <text x="320" y="397" text-anchor="middle">10. RT1 is valid (Revoked &amp; rotated)</text>
+
+    <path d="M 244 430 L 556 430" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="400" y="422" text-anchor="middle">11. signNewTokens()</text>
+
+    <path d="M 556 455 L 244 455" stroke="#4B5563" stroke-width="1" stroke-dasharray="2" marker-end="url(#arrow)" />
+    <text x="400" y="447" text-anchor="middle">12. Return AT2 + RT2</text>
+
+    <path d="M 244 475 L 396 475" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="320" y="467" text-anchor="middle">13. saveRefreshToken(RT2)</text>
+
+    <path d="M 236 500 L 84 500" stroke="#4B5563" stroke-width="1" stroke-dasharray="2" marker-end="url(#arrow)" />
+    <text x="160" y="492" text-anchor="middle">14. Set RT2 in Cookie (AT2 returned)</text>
+  </g>
+
+  <!-- Divider: Replay Attack -->
+  <line x1="40" y1="530" x2="760" y2="530" stroke="#9CA3AF" stroke-dasharray="4" />
+  <text x="400" y="525" font-family="Arial, sans-serif" font-size="9" fill="#EF4444" font-weight="bold" text-anchor="middle">[ Phase 3 : Détection du rejeu du Refresh Token RT1 par un pirate ]</text>
+
+  <!-- Phase 3: Protection against Replay Attack -->
+  <g font-family="Arial, sans-serif" font-size="10" fill="#374151">
+    <path d="M 716 565 L 244 565" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrow-red)" />
+    <text x="480" y="557" fill="#EF4444" font-weight="bold" text-anchor="middle">15. POST /refresh (Intercepted Cookie RT1)</text>
+
+    <path d="M 244 585 L 396 585" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="320" y="577" text-anchor="middle">16. verifyAndRevoke(RT1)</text>
+
+    <path d="M 396 610 L 244 610" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="2" marker-end="url(#arrow-red)" />
+    <text x="320" y="602" fill="#EF4444" font-weight="bold" text-anchor="middle">17. RT1 has already been used!</text>
+
+    <path d="M 244 635 L 396 635" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrow-red)" />
+    <text x="320" y="627" fill="#EF4444" font-weight="bold" text-anchor="middle">18. revokeAllTokensForUser()</text>
+
+    <path d="M 244 665 L 716 665" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="2" marker-end="url(#arrow-red)" />
+    <text x="480" y="657" fill="#EF4444" font-weight="bold" text-anchor="middle">19. HTTP 403 Forbidden</text>
+  </g>
+  
+</svg>

@@ -1,0 +1,97 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="900" height="360">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B5563" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="900" height="360" fill="#F9FAFB" rx="8" />
+  
+  <!-- User Table -->
+  <g filter="url(#shadow)" transform="translate(40, 40)" font-family="Arial, sans-serif" font-size="10">
+    <rect x="0" y="0" width="160" height="150" rx="4" fill="#FFFFFF" stroke="#2563EB" stroke-width="2" />
+    <rect x="0" y="0" width="160" height="30" fill="#2563EB" rx="4" />
+    <text x="80" y="20" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">User</text>
+    
+    <text x="10" y="50" font-weight="bold">id : String [PK]</text>
+    <text x="10" y="70">name : String</text>
+    <text x="10" y="90">email : String [Unique]</text>
+    <text x="10" y="110">password : String</text>
+    <text x="10" y="130">roleId : String [FK]</text>
+  </g>
+
+  <!-- Role Table -->
+  <g filter="url(#shadow)" transform="translate(260, 40)" font-family="Arial, sans-serif" font-size="10">
+    <rect x="0" y="0" width="150" height="90" rx="4" fill="#FFFFFF" stroke="#374151" stroke-width="2" />
+    <rect x="0" y="0" width="150" height="30" fill="#4B5563" rx="4" />
+    <text x="75" y="20" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">Role</text>
+    
+    <text x="10" y="50" font-weight="bold">id : String [PK]</text>
+    <text x="10" y="70">name : String [Unique]</text>
+  </g>
+
+  <!-- User -> Role Relation -->
+  <path d="M 200 85 L 260 85" stroke="#4B5563" stroke-width="1.5" />
+  <circle cx="205" cy="85" r="3" fill="#4B5563" />
+  <line x1="250" y1="80" x2="250" y2="90" stroke="#4B5563" stroke-width="1.5" />
+
+  <!-- Incident Table -->
+  <g filter="url(#shadow)" transform="translate(470, 40)" font-family="Arial, sans-serif" font-size="10">
+    <rect x="0" y="0" width="180" height="230" rx="4" fill="#FFFFFF" stroke="#EF4444" stroke-width="2" />
+    <rect x="0" y="0" width="180" height="30" fill="#EF4444" rx="4" />
+    <text x="90" y="20" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">Incident</text>
+    
+    <text x="10" y="55" font-weight="bold">id : String [PK]</text>
+    <text x="10" y="75">title : String</text>
+    <text x="10" y="95">status : String</text>
+    <text x="10" y="115">severity : String</text>
+    <text x="10" y="135">systemId : String [FK]</text>
+    <text x="10" y="155">teamId : String [FK]</text>
+    <text x="10" y="175">userId : String [FK]</text>
+    <text x="10" y="195">slaId : String [FK]</text>
+    <text x="10" y="215">astreinteId : String [FK]</text>
+  </g>
+
+  <!-- User -> Incident Relation -->
+  <path d="M 120 190 L 120 310 L 560 310 L 560 270" stroke="#4B5563" stroke-width="1.5" fill="none" />
+  <circle cx="120" cy="195" r="3" fill="#4B5563" />
+  <line x1="555" y1="280" x2="565" y2="280" stroke="#4B5563" stroke-width="1.5" />
+
+  <!-- System Table -->
+  <g filter="url(#shadow)" transform="translate(710, 40)" font-family="Arial, sans-serif" font-size="10">
+    <rect x="0" y="0" width="140" height="90" rx="4" fill="#FFFFFF" stroke="#047857" stroke-width="2" />
+    <rect x="0" y="0" width="140" height="30" fill="#047857" rx="4" />
+    <text x="70" y="20" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">System</text>
+    
+    <text x="10" y="50" font-weight="bold">id : String [PK]</text>
+    <text x="10" y="70">name : String [Unique]</text>
+  </g>
+
+  <!-- System -> Incident Relation -->
+  <path d="M 710 85 L 650 85" stroke="#4B5563" stroke-width="1.5" />
+  <circle cx="655" cy="85" r="3" fill="#4B5563" />
+  <line x1="700" y1="80" x2="700" y2="90" stroke="#4B5563" stroke-width="1.5" />
+
+  <!-- SLA Table -->
+  <g filter="url(#shadow)" transform="translate(710, 160)" font-family="Arial, sans-serif" font-size="10">
+    <rect x="0" y="0" width="140" height="110" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="2" />
+    <rect x="0" y="0" width="140" height="30" fill="#D97706" rx="4" />
+    <text x="70" y="20" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">SLA</text>
+    
+    <text x="10" y="50" font-weight="bold">id : String [PK]</text>
+    <text x="10" y="70">mttaLimit : Int</text>
+    <text x="10" y="90">mttrLimit : Int</text>
+  </g>
+
+  <!-- SLA -> Incident Relation -->
+  <path d="M 710 205 L 650 205" stroke="#4B5563" stroke-width="1.5" />
+  <circle cx="655" cy="205" r="3" fill="#4B5563" />
+  <line x1="700" y1="200" x2="700" y2="210" stroke="#4B5563" stroke-width="1.5" />
+  
+</svg>

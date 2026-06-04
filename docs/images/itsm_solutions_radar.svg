@@ -1,0 +1,71 @@
+
+  <rect width="800" height="500" fill="#0B0F19" rx="8" />
+  
+  <text x="400" y="40" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#FFFFFF" text-anchor="middle">Comparaison Fonctionnelle des Solutions ITSM</text>
+  
+  <!-- Outer boundary and axis -->
+  <circle cx="400" cy="270" r="180" fill="none" stroke="#334155" stroke-dasharray="4" stroke-width="1" />
+  <circle cx="400" cy="270" r="144" fill="none" stroke="#1E293B" stroke-width="1" />
+  <circle cx="400" cy="270" r="108" fill="none" stroke="#1E293B" stroke-width="1" />
+  <circle cx="400" cy="270" r="72" fill="none" stroke="#1E293B" stroke-width="1" />
+  <circle cx="400" cy="270" r="36" fill="none" stroke="#1E293B" stroke-width="1" />
+  
+  <!-- Axis Labels (8 criteria) -->
+  <!-- 1. Incidents -->
+  <line x1="400" y1="270" x2="400" y2="90" stroke="#475569" stroke-width="1" />
+  <text x="400" y="80" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="middle">Gestion Incidents</text>
+  
+  <!-- 2. SLA Engine -->
+  <line x1="400" y1="270" x2="527" y2="143" stroke="#475569" stroke-width="1" />
+  <text x="537" y="138" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="start">Moteur SLA</text>
+  
+  <!-- 3. War Room -->
+  <line x1="400" y1="270" x2="580" y2="270" stroke="#475569" stroke-width="1" />
+  <text x="590" y="274" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="start">War Room</text>
+  
+  <!-- 4. KB -->
+  <line x1="400" y1="270" x2="527" y2="397" stroke="#475569" stroke-width="1" />
+  <text x="537" y="410" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="start">Base de Connaissances</text>
+  
+  <!-- 5. Batch Planning -->
+  <line x1="400" y1="270" x2="400" y2="450" stroke="#475569" stroke-width="1" />
+  <text x="400" y="465" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="middle">Planning Batchs</text>
+  
+  <!-- 6. Astreintes -->
+  <line x1="400" y1="270" x2="273" y2="397" stroke="#475569" stroke-width="1" />
+  <text x="263" y="410" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="end">Gestion Astreintes</text>
+  
+  <!-- 7. Observability -->
+  <line x1="400" y1="270" x2="220" y2="270" stroke="#475569" stroke-width="1" />
+  <text x="210" y="274" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="end">Observabilité</text>
+  
+  <!-- 8. Performance/Cost -->
+  <line x1="400" y1="270" x2="273" y2="143" stroke="#475569" stroke-width="1" />
+  <text x="263" y="138" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94A3B8" text-anchor="end">Performance/Coût</text>
+
+  <!-- Plotting Data: ProdKB (Maximum everywhere, 5/5) -->
+  <polygon points="400,90 527,143 580,270 527,397 400,450 273,397 220,270 273,143" 
+           fill="none" stroke="#22C55E" stroke-width="3" />
+  <polygon points="400,90 527,143 580,270 527,397 400,450 273,397 220,270 273,143" 
+           fill="#22C55E" fill-opacity="0.25" />
+           
+  <!-- Plotting Data: ServiceNow (Good incidents/SLA/KB, bad cost) -->
+  <polygon points="400,90 527,143 508,270 527,397 436,306 273,397 310,270 425,243" 
+           fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="2" />
+
+  <!-- Plotting Data: PagerDuty (On-call focus) -->
+  <polygon points="490,202 463,222 508,270 410,280 410,280 273,397 310,270 336,206" 
+           fill="none" stroke="#F97316" stroke-width="1.5" />
+
+  <!-- Legend -->
+  <g transform="translate(100, 480)">
+    <rect x="0" y="-12" width="12" height="12" fill="#22C55E" />
+    <text x="20" y="0" font-family="Arial, sans-serif" font-size="11" fill="#FFFFFF">ProdKB</text>
+    
+    <rect x="180" y="-12" width="12" height="12" fill="#3B82F6" />
+    <text x="200" y="0" font-family="Arial, sans-serif" font-size="11" fill="#FFFFFF">ServiceNow</text>
+    
+    <rect x="360" y="-12" width="12" height="12" fill="#F97316" />
+    <text x="380" y="0" font-family="Arial, sans-serif" font-size="11" fill="#FFFFFF">PagerDuty</text>
+  </g>
+  

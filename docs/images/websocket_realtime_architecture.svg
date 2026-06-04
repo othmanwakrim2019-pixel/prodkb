@@ -1,0 +1,59 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" width="700" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B5563" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="700" height="300" fill="#F9FAFB" rx="8" />
+  
+  <!-- Clients (React) -->
+  <g filter="url(#shadow)" transform="translate(40, 50)" font-family="Arial, sans-serif" font-size="11">
+    <rect x="0" y="0" width="160" height="200" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2" />
+    <text x="80" y="25" font-weight="bold" fill="#1E40AF" text-anchor="middle">Clients Web (React)</text>
+    
+    <rect x="15" y="50" width="130" height="30" rx="4" fill="#DBEAFE" stroke="#93C5FD" />
+    <text x="25" y="68">Opérateur N1</text>
+
+    <rect x="15" y="95" width="130" height="30" rx="4" fill="#DBEAFE" stroke="#93C5FD" />
+    <text x="25" y="113">Astreinte IT</text>
+
+    <rect x="15" y="140" width="130" height="30" rx="4" fill="#DBEAFE" stroke="#93C5FD" />
+    <text x="25" y="158">Manager DSI</text>
+  </g>
+
+  <!-- Connection Lines (WebSockets) -->
+  <g stroke="#374151" stroke-width="2">
+    <path d="M 200 100 L 360 100" marker-end="url(#arrow)" />
+    <path d="M 200 150 L 360 150" marker-end="url(#arrow)" />
+  </g>
+  <text x="280" y="85" font-family="Arial, sans-serif" font-size="9" fill="#4B5563" text-anchor="middle">Connexion WS persistante</text>
+  <text x="280" y="135" font-family="Arial, sans-serif" font-size="9" fill="#4B5563" text-anchor="middle">Authentification JWT</text>
+
+  <!-- Socket.IO Server Rooms -->
+  <g filter="url(#shadow)" transform="translate(380, 50)" font-family="Arial, sans-serif" font-size="11">
+    <rect x="0" y="0" width="280" height="200" rx="6" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" />
+    <text x="140" y="25" font-weight="bold" fill="#6D28D9" text-anchor="middle">Instance Socket.IO (Backend)</text>
+    
+    <!-- Room global -->
+    <g transform="translate(20, 50)">
+      <rect x="0" y="0" width="240" height="50" rx="4" fill="#F3E8FF" stroke="#C084FC" />
+      <text x="120" y="20" font-weight="bold" fill="#6B21A8" text-anchor="middle">Room "global"</text>
+      <text x="120" y="38" font-size="9" fill="#7E22CE" text-anchor="middle">Evénements: incident:created, alert:sla</text>
+    </g>
+
+    <!-- Room warroom -->
+    <g transform="translate(20, 120)">
+      <rect x="0" y="0" width="240" height="60" rx="4" fill="#F3E8FF" stroke="#C084FC" />
+      <text x="120" y="20" font-weight="bold" fill="#6B21A8" text-anchor="middle">Room "incident:uuid" (War Room)</text>
+      <text x="120" y="38" font-size="9" fill="#7E22CE" text-anchor="middle">Evénements: chat:message, system:event</text>
+    </g>
+  </g>
+  
+</svg>

@@ -52,3 +52,13 @@ frontend/vite.config.d.ts
 
 # Superpowers extension data
 .superpowers/
+
+.gemini/
+gha-creds-*.json
+
+*.md
+*.pptx
+*.docx
+*.csv
+*.xlsx
+*.pdf
