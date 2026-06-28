@@ -3,11 +3,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
+# Some restricted production networks/proxies block Prisma checksum files while
+# still allowing engine downloads. This keeps Docker builds reproducible there.
+ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
 RUN npm ci
 
 COPY . .
@@ -18,8 +24,6 @@ RUN npx tsc prisma/seeds/index.ts --outDir dist/prisma/seeds --esModuleInterop -
 
 # Generate Prisma Client
 # We need a dummy DATABASE_URL for prisma generate to work if it's referenced in schema
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
 
 # Production Stage
@@ -31,11 +35,13 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
+ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+
 # Copy package files and install production dependencies
 COPY package*.json ./
 COPY prisma ./prisma/
 
-ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
 RUN npm ci --only=production && \
     npm cache clean --force
 
@@ -43,7 +49,6 @@ RUN npm ci --only=production && \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY scripts ./scripts
 COPY start.sh ./
 
 # Install OpenSSL (required for Prisma on Alpine 3.23+)

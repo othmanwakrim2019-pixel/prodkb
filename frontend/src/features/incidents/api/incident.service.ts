@@ -173,7 +173,7 @@ export const incidentService = {
         return response.data;
     },
 
-    getStats: async (params?: { systemId?: string; teamId?: string }): Promise<DashboardStats> => {
+    getStats: async (params?: { startDate?: string; endDate?: string; systemId?: string; teamId?: string; timezoneOffsetMinutes?: string }): Promise<DashboardStats> => {
         const response = await api.get('/api/v1/incidents/stats', { params });
         return unwrapObject<DashboardStats>(response.data) as DashboardStats;
     },

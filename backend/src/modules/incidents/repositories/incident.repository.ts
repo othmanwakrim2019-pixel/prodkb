@@ -25,7 +25,7 @@ export const incidentDefaultInclude = Prisma.validator<Prisma.IncidentInclude>()
 });
 
 export interface IncidentTrendRow {
-    day: Date;
+    day: string;
     count: bigint;
 }
 
@@ -157,18 +157,18 @@ export class IncidentRepository {
         });
     }
 
-    async queryCreatedTrend(start: Date, end: Date) {
+    async queryCreatedTrend(start: Date, end: Date, timezoneOffsetMinutes = 0) {
         return prisma.$queryRaw<IncidentTrendRow[]>`
-            SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*)::bigint AS count
+            SELECT DATE(("createdAt" - (${timezoneOffsetMinutes}::int * INTERVAL '1 minute')))::text AS day, COUNT(*)::bigint AS count
             FROM "Incident"
             WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
             GROUP BY day ORDER BY day
         `;
     }
 
-    async queryResolvedTrend(start: Date, end: Date) {
+    async queryResolvedTrend(start: Date, end: Date, timezoneOffsetMinutes = 0) {
         return prisma.$queryRaw<IncidentTrendRow[]>`
-            SELECT DATE_TRUNC('day', "resolvedAt") AS day, COUNT(*)::bigint AS count
+            SELECT DATE(("resolvedAt" - (${timezoneOffsetMinutes}::int * INTERVAL '1 minute')))::text AS day, COUNT(*)::bigint AS count
             FROM "Incident"
             WHERE "resolvedAt" IS NOT NULL AND "resolvedAt" >= ${start} AND "resolvedAt" <= ${end}
             GROUP BY day ORDER BY day

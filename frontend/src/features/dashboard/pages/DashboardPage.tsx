@@ -77,6 +77,7 @@ const DashboardPage = () => {
                 const params: Record<string, string> = {
                     startDate: startDate.toISOString(),
                     endDate: endDate.toISOString(),
+                    timezoneOffsetMinutes: String(now.getTimezoneOffset()),
                 };
                 if (selectedSystem) params.systemId = selectedSystem;
                 if (selectedTeam) params.teamId = selectedTeam;

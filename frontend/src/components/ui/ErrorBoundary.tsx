@@ -27,6 +27,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('[ErrorBoundary] Caught error:', error, errorInfo);
+
+        // Auto-reload on Vite chunk load failures (stale cache after rebuild)
+        const isChunkError =
+            error?.message?.includes('Failed to fetch dynamically imported module') ||
+            error?.message?.includes('Importing a module script failed') ||
+            error?.message?.includes('error loading dynamically imported module');
+
+        if (isChunkError) {
+            console.warn('[ErrorBoundary] Chunk load failure detected — reloading page...');
+            window.location.reload();
+        }
     }
 
     handleRetry = () => {

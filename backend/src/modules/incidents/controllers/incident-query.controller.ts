@@ -11,6 +11,7 @@ import { incidentRepository } from '../repositories/incident.repository';
 export class IncidentQueryController {
     static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
         try {
+            const timezoneOffset = Number(req.query.timezoneOffsetMinutes);
             const filters = {
                 startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
                 endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
@@ -20,6 +21,7 @@ export class IncidentQueryController {
                 userRole: req.user?.role,
                 userPermissions: req.user?.permissions || [],
                 userTeamIds: req.user?.teamIds || [],
+                timezoneOffsetMinutes: Number.isFinite(timezoneOffset) ? timezoneOffset : undefined,
             };
 
             const stats = await incidentAnalyticsService.getStats(filters);
