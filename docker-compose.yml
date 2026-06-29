@@ -85,8 +85,8 @@ services:
     volumes:
       - minio-data:/data
     ports:
-      - "127.0.0.1:9001:9001" # console — tunnel only
-      - "127.0.0.1:9002:9000" # S3 API — tunnel only
+      - "9001:9001" # console — tunnel only
+      - "9002:9000" # S3 API — tunnel only
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]
       interval: 15s
@@ -165,7 +165,7 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://16.171.224.220:3000/health" ]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -465,11 +465,11 @@ services:
     <<: *default-restart
     logging: *default-logging
     ports:
-      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+      - "${GRAFANA_PORT:-3001}:3000" # was "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://localhost:${GRAFANA_PORT:-3001}
+      - GF_SERVER_ROOT_URL=http://16.171.224.220:${GRAFANA_PORT:-3001} # public IP
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
