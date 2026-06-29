@@ -40,6 +40,7 @@ export function useIncidentStream({ onEvent, autoReconnect = true, incidentId }:
     const [isConnected, setIsConnected] = useState(false);
     const [lastEvent, setLastEvent] = useState<IncidentEvent | null>(null);
     const eventSourceRef = useRef<EventSource | null>(null);
+    const reconnectTimeoutRef = useRef<number | null>(null);
     const onEventRef = useRef(onEvent);
 
     // Keep callback ref fresh without triggering reconnect
@@ -49,6 +50,11 @@ export function useIncidentStream({ onEvent, autoReconnect = true, incidentId }:
 
     const connect = useCallback(() => {
         // Close existing connection
+        if (reconnectTimeoutRef.current) {
+            window.clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+        }
+
         if (eventSourceRef.current) {
             eventSourceRef.current.close();
         }
@@ -83,7 +89,7 @@ export function useIncidentStream({ onEvent, autoReconnect = true, incidentId }:
 
             if (autoReconnect) {
                 // Reconnect after 5 seconds
-                setTimeout(() => {
+                reconnectTimeoutRef.current = window.setTimeout(() => {
                     connect();
                 }, 5000);
             }
@@ -97,6 +103,10 @@ export function useIncidentStream({ onEvent, autoReconnect = true, incidentId }:
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
                 eventSourceRef.current = null;
+            }
+            if (reconnectTimeoutRef.current) {
+                window.clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
             }
         };
     }, [connect]);

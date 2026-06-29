@@ -6,10 +6,12 @@ import { incidentAnalyticsService } from '../services/incident-analytics.service
 import { incidentCrudService, type FindAllFilters } from '../services/incident-crud.service';
 import { canAccessIncidentTeam, getScopedIncidentTeamIds } from '../services/incident-visibility.service';
 import { incidentSuggestionService } from '../services/suggestion.service';
+import { incidentRepository } from '../repositories/incident.repository';
 
 export class IncidentQueryController {
     static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
         try {
+            const timezoneOffset = Number(req.query.timezoneOffsetMinutes);
             const filters = {
                 startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
                 endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
@@ -19,6 +21,7 @@ export class IncidentQueryController {
                 userRole: req.user?.role,
                 userPermissions: req.user?.permissions || [],
                 userTeamIds: req.user?.teamIds || [],
+                timezoneOffsetMinutes: Number.isFinite(timezoneOffset) ? timezoneOffset : undefined,
             };
 
             const stats = await incidentAnalyticsService.getStats(filters);
@@ -116,6 +119,16 @@ export class IncidentQueryController {
             }
 
             res.json(createResponse(true, incident));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getActivity(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const logs = await incidentRepository.findActivityLogs(id);
+            res.json(createResponse(true, logs));
         } catch (error) {
             next(error);
         }

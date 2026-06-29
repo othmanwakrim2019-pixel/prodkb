@@ -115,6 +115,8 @@ export interface SLA {
     severity: Severity;
     acknowledgeTimeMinutes: number;
     resolveTimeMinutes: number;
+    responseTimeHours?: number;
+    resolutionTimeHours?: number;
 }
 
 export interface Log {
@@ -148,12 +150,16 @@ export interface Incident {
     updatedBy?: { id: string; name: string };
     resolvedBy?: User;
     resolvedAt?: string;
+    acknowledgedAt?: string | null;
     createdAt: string;
     startDatetime: string;
     endDatetime?: string;
     updatedAt: string;
     logs?: Log[];
     linkedProcedure?: Procedure;
+    sla?: SLA | null;
+    slaBreached?: boolean;
+    escalationLevel?: number;
 }
 
 export interface Procedure {

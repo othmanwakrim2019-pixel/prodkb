@@ -1,4 +1,5 @@
 
+import type { RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import Redis from 'ioredis';
@@ -23,6 +24,11 @@ try {
  * Create a rate limiter with Redis store (falls back to in-memory if Redis unavailable)
  */
 function createLimiter(opts: { windowMs: number; max: number; message: string | object; skipSuccessfulRequests?: boolean; prefix: string }) {
+    if (process.env.NODE_ENV === 'test') {
+        const testLimiter: RequestHandler = (_req, _res, next) => next();
+        return testLimiter;
+    }
+
     const storeOpts = redisClient ? {
         store: new RedisStore({
             // @ts-expect-error — type mismatch between ioredis and rate-limit-redis
@@ -77,4 +83,3 @@ export const uploadLimiter = createLimiter({
     message: 'Too many file uploads, please try again later.',
     prefix: 'upload',
 });
-

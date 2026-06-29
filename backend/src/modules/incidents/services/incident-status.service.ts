@@ -32,8 +32,8 @@ export class IncidentStatusService {
 
         await incidentRepository.createIncidentLog({
             incidentId: id,
-            logType: 'note',
-            rawLog: `Incident acknowledged. Time to acknowledge: ${timeToAcknowledge} minutes.`,
+            logType: 'activity',
+            rawLog: `Incident **acknowledged**. Time to acknowledge: ${timeToAcknowledge} minutes.`,
             createdById: userId,
         });
 

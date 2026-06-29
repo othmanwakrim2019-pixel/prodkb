@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { emailTemplateService } from './email-template.service';
 import { createResponse } from '../../common/types/api.response';
-import { updateEmailTemplateSchema, previewEmailTemplateSchema } from './email-template.schema';
+import { createEmailTemplateSchema, updateEmailTemplateSchema, previewEmailTemplateSchema } from './email-template.schema';
 
 export class EmailTemplateController {
     static async getAllTemplates(req: Request, res: Response, next: NextFunction) {
@@ -24,12 +24,32 @@ export class EmailTemplateController {
         }
     }
 
+    static async createTemplate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const data = createEmailTemplateSchema.parse(req.body);
+            const template = await emailTemplateService.create(data);
+            res.status(201).json(createResponse(true, template, 'Template created successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async updateTemplate(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             const data = updateEmailTemplateSchema.parse(req.body);
             const template = await emailTemplateService.update(id, data);
             res.json(createResponse(true, template, 'Template updated successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async deleteTemplate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await emailTemplateService.delete(id);
+            res.json(createResponse(true, null, 'Template deleted successfully'));
         } catch (error) {
             next(error);
         }

@@ -1,6 +1,7 @@
 
 import { prisma } from '../../common/utils/prisma';
-import { NotFoundError } from '../../common/errors/app.error';
+import { ConflictError, NotFoundError } from '../../common/errors/app.error';
+import type { CreateEmailTemplateInput, UpdateEmailTemplateInput } from './email-template.schema';
 
 export class EmailTemplateService {
     async findAll() {
@@ -17,11 +18,47 @@ export class EmailTemplateService {
         return template;
     }
 
-    async update(id: string, data: Partial<{ subject: string; body: string; enabled: boolean; cc: string | null; variables: string }>) {
+    async create(data: CreateEmailTemplateInput) {
+        const existing = await prisma.emailTemplate.findUnique({
+            where: { name: data.name }
+        });
+        if (existing) throw new ConflictError('Template name already exists');
+
+        return prisma.emailTemplate.create({
+            data: {
+                name: data.name,
+                subject: data.subject,
+                body: data.body,
+                variables: data.variables?.trim() || null,
+                enabled: data.enabled ?? true,
+                cc: data.cc?.trim() || null,
+            }
+        });
+    }
+
+    async update(id: string, data: UpdateEmailTemplateInput) {
+        await this.findById(id);
+
+        if (data.name) {
+            const existing = await prisma.emailTemplate.findUnique({
+                where: { name: data.name }
+            });
+            if (existing && existing.id !== id) throw new ConflictError('Template name already exists');
+        }
+
         return prisma.emailTemplate.update({
             where: { id },
-            data
+            data: {
+                ...data,
+                variables: data.variables === undefined ? undefined : data.variables?.trim() || null,
+                cc: data.cc === undefined ? undefined : data.cc?.trim() || null,
+            }
         });
+    }
+
+    async delete(id: string) {
+        await this.findById(id);
+        await prisma.emailTemplate.delete({ where: { id } });
     }
 
     // Preview logic

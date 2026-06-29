@@ -45,44 +45,33 @@ const ResetPasswordModal = ({ target, loading, onCancel, onConfirm }: ResetPassw
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-                <h3 className="text-lg font-semibold text-slate-900">Reset Password</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                    Set a new password for <span className="font-medium text-slate-800">{target.name}</span>.
-                </p>
-
-                <div className="mt-4">
-                    <label htmlFor="reset-password-input" className="mb-2 block text-sm font-medium text-slate-700">
-                        New password
-                    </label>
-                    <input
-                        id="reset-password-input"
-                        type="password"
-                        autoFocus
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                        placeholder="Minimum 8 characters"
-                    />
-                    {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="mx-4 w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-lg animate-scale-in">
+                <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Reset Password</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Set a new password for <span className="font-medium text-slate-700 dark:text-slate-200">{target.name}</span>.
+                    </p>
                 </div>
-
-                <div className="mt-6 flex justify-end gap-3">
-                    <button
-                        onClick={onCancel}
-                        disabled={loading}
-                        className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => void handleSubmit()}
-                        disabled={loading}
-                        className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {loading ? 'Resetting...' : 'Reset Password'}
-                    </button>
+                <div className="p-5 space-y-4">
+                    <div>
+                        <label htmlFor="reset-password-input" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">New password</label>
+                        <input
+                            id="reset-password-input"
+                            type="password"
+                            autoFocus
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            className="ent-input"
+                            placeholder="Minimum 8 characters"
+                        />
+                        {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button onClick={onCancel} disabled={loading} className="ent-btn-secondary">Cancel</button>
+                        <button onClick={() => void handleSubmit()} disabled={loading} className="ent-btn-primary">                            {loading ? 'Resetting...' : 'Reset Password'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,65 +144,66 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
 
     return (
         <>
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Email</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Team</th>
-                            {canManageUsers && (
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 bg-white">
-                        {paginatedUsers.map((user) => {
-                            const roleName = typeof user.role === 'object' ? user.role.name : user.role;
-                            const isActive = user.isActive !== false;
+            <div className="ent-card overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                        <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                            <tr>
+                                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Name</th>
+                                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email</th>
+                                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Role</th>
+                                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+                                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Team</th>
+                                {canManageUsers && (
+                                    <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
+                            {paginatedUsers.map((user) => {
+                                const roleName = typeof user.role === 'object' ? user.role.name : user.role;
+                                const isActive = user.isActive !== false;
 
-                            return (
-                                <tr key={user.id}>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">{user.name}</td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">{user.email}</td>
-                                    <td className="whitespace-nowrap px-6 py-4">
-                                        <span
-                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                                roleName === 'ADMIN'
-                                                    ? 'bg-purple-100 text-purple-800'
-                                                    : roleName === 'EXPERT'
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-slate-100 text-slate-800'
-                                            }`}
-                                        >
-                                            {roleName || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4">
-                                        <span
-                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
-                                                isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}
-                                        >
-                                            {isActive ? '✓ Active' : '✗ Inactive'}
-                                        </span>
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
-                                        {user.teamMemberships && user.teamMemberships.length > 0
-                                            ? user.teamMemberships
-                                                .map((membership: TeamMembership) => `${membership.team.name} (${membership.role})`)
-                                                .join(', ')
-                                            : '-'}
-                                    </td>
+                                return (
+                                    <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-none">
+                                        <td className="whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-200">{user.name}</td>
+                                        <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-500 dark:text-slate-400">{user.email}</td>
+                                        <td className="whitespace-nowrap px-4 py-2">
+                                            <span
+                                                className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
+                                                    roleName === 'ADMIN'
+                                                        ? 'bg-purple-600 text-white dark:bg-purple-900/40 dark:text-purple-400'
+                                                        : roleName === 'EXPERT'
+                                                            ? 'bg-blue-600 text-white dark:bg-blue-900/40 dark:text-blue-400'
+                                                            : 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
+                                                }`}
+                                            >
+                                                {roleName || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-2">
+                                            <span
+                                                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
+                                                    isActive ? 'bg-emerald-600 text-white dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-red-700 text-white dark:bg-red-900/40 dark:text-red-400'
+                                                }`}
+                                            >
+                                                {isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-500 dark:text-slate-400">
+                                            {user.teamMemberships && user.teamMemberships.length > 0
+                                                ? user.teamMemberships
+                                                    .map((membership: TeamMembership) => `${membership.team.name} (${membership.role})`)
+                                                    .join(', ')
+                                                : '-'}
+                                        </td>
                                     {canManageUsers && (
-                                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                                        <td className="whitespace-nowrap px-4 py-2 text-right text-sm font-medium">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => void handleUnlock(user.email, user.name)}
                                                     disabled={actionLoading === user.email}
-                                                    className="rounded p-1.5 text-green-600 transition-colors hover:bg-green-50 hover:text-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    className="rounded p-1.5 text-slate-400 hover:text-green-600 dark:hover:text-emerald-400 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                                                     title="Unlock account"
                                                 >
                                                     <Unlock className="h-4 w-4" />
@@ -221,21 +211,21 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                                                 <button
                                                     onClick={() => setResetTarget({ id: user.id, name: user.name })}
                                                     disabled={actionLoading === user.id}
-                                                    className="rounded p-1.5 text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    className="rounded p-1.5 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                                                     title="Reset password"
                                                 >
                                                     <KeyRound className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => onEdit({ ...user, isActive: user.isActive ?? true })}
-                                                    className="rounded p-1.5 text-accent transition-colors hover:bg-blue-50 hover:text-blue-900"
+                                                    className="rounded p-1.5 text-slate-400 hover:text-primary dark:hover:text-indigo-400 transition-colors"
                                                     title="Edit user"
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => onDelete(user.id, user.name)}
-                                                    className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 hover:text-red-900"
+                                                    className="rounded p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                                     title="Delete user"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -248,6 +238,7 @@ export const UserTable = ({ users, searchTerm, canManageUsers, onEdit, onDelete 
                         })}
                     </tbody>
                 </table>
+                </div>
 
                 {filteredUsers.length > ITEMS_PER_PAGE && (
                     <Pagination

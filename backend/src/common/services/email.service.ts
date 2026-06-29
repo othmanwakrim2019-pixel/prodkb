@@ -11,6 +11,9 @@ export interface EmailConfig {
     pass: string;
   };
   from: string;
+  replyTo?: string;
+  rejectUnauthorized: boolean;
+  connectionTimeout: number;
 }
 
 interface IncidentEmailData {
@@ -49,8 +52,9 @@ export class EmailService {
       const user = dbConfig?.user || process.env.SMTP_USER;
       const pass = dbConfig?.pass || process.env.SMTP_PASS;
       const from = dbConfig?.from || process.env.SMTP_FROM || 'ProdKB <prodkb@company.com>';
+      const enabled = dbConfig?.enabled ?? process.env.SMTP_ENABLED !== 'false';
 
-      if (!host || !port || !user || !pass) {
+      if (!enabled || !host || !port || !user || !pass) {
         logger.warn('SMTP configuration not complete (DB or ENV). Email notifications disabled.');
         this.enabled = false;
         return;
@@ -62,6 +66,9 @@ export class EmailService {
         secure: dbConfig?.secure !== undefined ? dbConfig.secure : (process.env.SMTP_SECURE === 'true'),
         auth: { user, pass },
         from,
+        replyTo: dbConfig?.replyTo || process.env.SMTP_REPLY_TO || undefined,
+        rejectUnauthorized: dbConfig?.rejectUnauthorized ?? process.env.SMTP_REJECT_UNAUTHORIZED !== 'false',
+        connectionTimeout: Number(dbConfig?.connectionTimeout || process.env.SMTP_CONNECTION_TIMEOUT || 10000),
       };
 
       this.transporter = nodemailer.createTransport({
@@ -69,6 +76,13 @@ export class EmailService {
         port: this.config.port,
         secure: this.config.secure,
         auth: this.config.auth,
+        requireTLS: dbConfig?.tlsMode === 'starttls',
+        ignoreTLS: dbConfig?.tlsMode === 'none',
+        connectionTimeout: this.config.connectionTimeout,
+        greetingTimeout: this.config.connectionTimeout,
+        tls: {
+          rejectUnauthorized: this.config.rejectUnauthorized,
+        },
       });
 
       this.enabled = true;
@@ -93,6 +107,7 @@ export class EmailService {
 
     await this.transporter.sendMail({
       from: this.config.from,
+      replyTo: this.config.replyTo,
       to,
       subject: 'ProdKB — SMTP Test',
       text: 'If you see this message, your SMTP configuration is working correctly.',
@@ -153,6 +168,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -213,6 +229,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -273,6 +290,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to: recipients,
         cc,
         subject,
@@ -333,89 +351,123 @@ export class EmailService {
     return html.replace(/<[^>]*>?/gm, '');
   }
 
-  // Fallback methods (keep existing ones below)
   private generateIncidentCreatedEmail(data: IncidentEmailData): string {
     const { incident } = data;
     const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const incRef = `#${incident.id.substring(0, 8).toUpperCase()}`;
+    const sevColor = { Critical: '#dc2626', High: '#ea580c', Medium: '#ca8a04', Low: '#16a34a', Info: '#2563eb' }[incident.severity as string] || '#64748b';
 
-    return `
-<!DOCTYPE html>
-<html>
+    return `<!DOCTYPE html>
+<html lang="fr">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nouvel Incident - CIH Bank ProdKB</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .header { background-color: #d32f2f; color: white; padding: 20px; }
-    .content { padding: 20px; }
-    .field { margin-bottom: 10px; }
-    .label { font-weight: bold; color: #666; }
-    .value { color: #000; }
-    .button { background-color: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 15px; }
-    .footer { background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; }
+    a { color: inherit; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🚨 New Incident Created</h1>
-  </div>
-  <div class="content">
-    <div class="field">
-      <span class="label">Incident ID:</span>
-      <span class="value">#${incident.id.substring(0, 8)}</span>
-    </div>
-    <div class="field">
-      <span class="label">Title:</span>
-      <span class="value">${incident.title}</span>
-    </div>
-    <div class="field">
-      <span class="label">Severity:</span>
-      <span class="value">${incident.severity}</span>
-    </div>
-    <div class="field">
-      <span class="label">Environment:</span>
-      <span class="value">${incident.environment}</span>
-    </div>
-    <div class="field">
-      <span class="label">System:</span>
-      <span class="value">${incident.system?.name || 'N/A'}</span>
-    </div>
-    <div class="field">
-      <span class="label">Job:</span>
-      <span class="value">${incident.job?.code || 'N/A'} - ${incident.job?.name || 'N/A'}</span>
-    </div>
-    <div class="field">
-      <span class="label">Status:</span>
-      <span class="value">${incident.status}</span>
-    </div>
-    <div class="field">
-      <span class="label">Description:</span>
-      <div class="value">${incident.description}</div>
-    </div>
-    <div class="field">
-      <span class="label">Assigned To:</span>
-      <span class="value">${incident.assignedTeam?.name || 'Unassigned'}</span>
-    </div>
-    <div class="field">
-      <span class="label">SLA:</span>
-      <span class="value">${incident.sla?.name || 'No SLA'}</span>
-    </div>
-    <div class="field">
-      <span class="label">Created By:</span>
-      <span class="value">${incident.createdBy.name} (${incident.createdBy.email})</span>
-    </div>
-    <div class="field">
-      <span class="label">Created At:</span>
-      <span class="value">${new Date(incident.createdAt).toLocaleString()}</span>
-    </div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9; padding: 32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; border-radius:8px; overflow:hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
 
-    <a href="${appUrl}/incidents/${incident.id}" class="button">View Incident</a>
-    <a href="${appUrl}/procedures" class="button">Search Procedures</a>
-  </div>
-  <div class="footer">
-    Dollar Universe Production - ProdKB Incident Management System
-  </div>
+        <!-- HEADER -->
+        <tr>
+          <td style="background:#003d82; padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:#ff6b35; width:6px; min-height:80px;"> </td>
+                <td style="padding: 24px 28px;">
+                  <p style="color:#93c5fd; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">CIH Bank — ProdKB</p>
+                  <h1 style="color:#ffffff; font-size:20px; font-weight:700; line-height:1.3; margin:0;">🚨 Nouvel Incident Déclaré</h1>
+                  <p style="color:#bfdbfe; font-size:13px; margin-top:6px;">${incRef} &nbsp;·&nbsp; ${incident.severity} &nbsp;·&nbsp; ${incident.environment}</p>
+                </td>
+                <td style="padding:24px 28px; text-align:right; vertical-align:top;">
+                  <span style="display:inline-block; background:${sevColor}; color:#fff; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; padding:5px 12px; border-radius:4px;">SEV: ${incident.severity}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- BODY -->
+        <tr>
+          <td style="background:#ffffff; padding: 28px 32px;">
+
+            <p style="font-size:15px; color:#334155; margin-bottom:24px; line-height:1.6;">
+              Un nouvel incident a été déclaré et nécessite votre attention immédiate.
+            </p>
+
+            <!-- Data Grid -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:24px;">
+              <tr style="background:#f8fafc;">
+                <td style="padding:8px 16px; border-bottom:1px solid #e2e8f0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#64748b; width:40%;">Champ</td>
+                <td style="padding:8px 16px; border-bottom:1px solid #e2e8f0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#64748b;">Valeur</td>
+              </tr>
+              ${[
+                ['Titre', incident.title],
+                ['Statut', incident.status],
+                ['Système', incident.system?.name || 'N/A'],
+                ['Application', `${incident.job?.code || 'N/A'} — ${incident.job?.name || 'N/A'}`],
+                ['Équipe assignée', incident.assignedTeam?.name || 'Non assigné'],
+                ['SLA', incident.sla?.name || 'Aucun'],
+                ['Déclaré par', `${incident.createdBy?.name} (${incident.createdBy?.email})`],
+                ['Date', new Date(incident.createdAt).toLocaleString('fr-MA', { dateStyle: 'medium', timeStyle: 'short' })],
+              ].map(([k, v], i) => `<tr style="background:${i % 2 === 0 ? '#fff' : '#f8fafc'};">
+                <td style="padding:10px 16px; font-size:13px; font-weight:600; color:#64748b; border-bottom:1px solid #f1f5f9;">${k}</td>
+                <td style="padding:10px 16px; font-size:13px; color:#1e293b; border-bottom:1px solid #f1f5f9;">${v}</td>
+              </tr>`).join('')}
+            </table>
+
+            <!-- Description -->
+            ${incident.description ? `<div style="background:#fef9f0; border-left:4px solid #ff6b35; border-radius:0 6px 6px 0; padding:14px 18px; margin-bottom:24px;">
+              <p style="font-size:12px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Description</p>
+              <p style="font-size:14px; color:#78350f; line-height:1.6;">${incident.description}</p>
+            </div>` : ''}
+
+            <!-- CTA Buttons -->
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding-right:12px;">
+                  <a href="${appUrl}/incidents/${incident.id}" style="display:inline-block; background:linear-gradient(90deg,#ff6b35,#e85d2b); color:#fff; font-size:14px; font-weight:700; padding:12px 28px; border-radius:6px; text-decoration:none; box-shadow:0 4px 12px rgba(255,107,53,0.35);">Voir l'incident →</a>
+                </td>
+                <td>
+                  <a href="${appUrl}/procedures" style="display:inline-block; background:#003d82; color:#fff; font-size:14px; font-weight:700; padding:12px 28px; border-radius:6px; text-decoration:none;">Rechercher une procédure</a>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#1e293b; padding:20px 32px; border-top:3px solid #ff6b35;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <p style="color:#94a3b8; font-size:11px; line-height:1.7;">
+                    <strong style="color:#e2e8f0;">CIH Bank — Plateforme ProdKB</strong><br />
+                    Gestion des Incidents de Production<br />
+                    Ce message est automatique, merci de ne pas y répondre.
+                  </p>
+                </td>
+                <td align="right" style="vertical-align:top;">
+                  <p style="color:#64748b; font-size:10px;">${new Date().getFullYear()} © CIH Bank</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
 </body>
-</html>
-    `;
+</html>`;
   }
 
   private generateIncidentCreatedEmailText(data: IncidentEmailData): string {
@@ -452,48 +504,60 @@ Dollar Universe Production - ProdKB
   private generateIncidentUpdatedEmail(data: IncidentEmailData): string {
     const { incident } = data;
     const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const incRef = `#${incident.id.substring(0, 8).toUpperCase()}`;
+    const statusColor: Record<string, string> = { 'Open': '#dc2626', 'In Progress': '#d97706', 'Acknowledged': '#2563eb', 'Resolved': '#16a34a', 'Closed': '#64748b' };
+    const sColor = statusColor[incident.status as string] || '#64748b';
 
-    return `
-<!DOCTYPE html>
-<html>
+    return `<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .header { background-color: #1976d2; color: white; padding: 20px; }
-    .content { padding: 20px; }
-    .field { margin-bottom: 10px; }
-    .label { font-weight: bold; color: #666; }
-    .value { color: #000; }
-    .button { background-color: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 15px; }
-    .footer { background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Incident Mis à Jour - CIH Bank ProdKB</title>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif; }</style>
 </head>
 <body>
-  <div class="header">
-    <h1>ℹ️ Incident Updated</h1>
-  </div>
-  <div class="content">
-    <p>Incident <strong>#${incident.id.substring(0, 8)}</strong> has been updated.</p>
-    <div class="field">
-      <span class="label">Title:</span>
-      <span class="value">${incident.title}</span>
-    </div>
-    <div class="field">
-      <span class="label">Current Status:</span>
-      <span class="value">${incident.status}</span>
-    </div>
-    <div class="field">
-      <span class="label">Severity:</span>
-      <span class="value">${incident.severity}</span>
-    </div>
-    <a href="${appUrl}/incidents/${incident.id}" class="button">View Details</a>
-  </div>
-  <div class="footer">
-    ProdKB Incident Management System
-  </div>
-</body>
-</html>
-    `;
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9; padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; border-radius:8px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#003d82; padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:#ff6b35; width:6px;"> </td>
+                <td style="padding:24px 28px;">
+                  <p style="color:#93c5fd; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">CIH Bank — ProdKB</p>
+                  <h1 style="color:#ffffff; font-size:20px; font-weight:700; margin:0;">🔄 Incident Mis à Jour</h1>
+                  <p style="color:#bfdbfe; font-size:13px; margin-top:6px;">${incRef} &nbsp;·&nbsp; ${incident.title}</p>
+                </td>
+                <td style="padding:24px 28px; text-align:right; vertical-align:top;">
+                  <span style="display:inline-block; background:${sColor}; color:#fff; font-size:11px; font-weight:800; padding:5px 12px; border-radius:4px;">${incident.status}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff; padding:28px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:24px;">
+              ${[
+                ['Référence', incRef],
+                ['Titre', incident.title],
+                ['Statut actuel', incident.status],
+                ['Sévérité', incident.severity],
+                ['Équipe', incident.assignedTeam?.name || 'N/A'],
+              ].map(([k, v], i) => `<tr style="background:${i % 2 === 0 ? '#fff' : '#f8fafc'};"><td style="padding:10px 16px; font-size:13px; font-weight:600; color:#64748b; width:40%; border-bottom:1px solid #f1f5f9;">${k}</td><td style="padding:10px 16px; font-size:13px; color:#1e293b; border-bottom:1px solid #f1f5f9;">${v}</td></tr>`).join('')}
+            </table>
+            <a href="${appUrl}/incidents/${incident.id}" style="display:inline-block; background:linear-gradient(90deg,#ff6b35,#e85d2b); color:#fff; font-size:14px; font-weight:700; padding:12px 28px; border-radius:6px; text-decoration:none;">Voir les détails →</a>
+          </td>
+        </tr>
+        <tr><td style="background:#1e293b; padding:20px 32px; border-top:3px solid #ff6b35;">
+          <p style="color:#94a3b8; font-size:11px;"><strong style="color:#e2e8f0;">CIH Bank — Plateforme ProdKB</strong><br />Ce message est automatique, merci de ne pas y répondre. © ${new Date().getFullYear()} CIH Bank</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
   }
 
   private generateIncidentUpdatedEmailText(data: IncidentEmailData): string {
@@ -519,44 +583,78 @@ ProdKB Incident Management System
   private generateIncidentResolvedEmail(data: IncidentEmailData): string {
     const { incident } = data;
     const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const incRef = `#${incident.id.substring(0, 8).toUpperCase()}`;
+    const resolutionMins = incident.timeToResolve || 0;
+    const resolutionStr = resolutionMins >= 60
+      ? `${Math.floor(resolutionMins / 60)}h ${resolutionMins % 60}m`
+      : `${resolutionMins} min`;
 
-    return `
-<!DOCTYPE html>
-<html>
+    return `<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .header { background-color: #388e3c; color: white; padding: 20px; }
-    .content { padding: 20px; }
-    .field { margin-bottom: 10px; }
-    .label { font-weight: bold; color: #666; }
-    .value { color: #000; }
-    .button { background-color: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 15px; }
-    .footer { background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Incident Résolu - CIH Bank ProdKB</title>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background-color: #f0fdf4; font-family: 'Segoe UI', Arial, sans-serif; }</style>
 </head>
 <body>
-  <div class="header">
-    <h1>✅ Incident Resolved</h1>
-  </div>
-  <div class="content">
-    <p>Incident <strong>#${incident.id.substring(0, 8)}</strong> has been resolved!</p>
-    <div class="field">
-      <span class="label">Title:</span>
-      <span class="value">${incident.title}</span>
-    </div>
-    <div class="field">
-      <span class="label">Time to Resolve:</span>
-      <span class="value">${incident.timeToResolve ? `${incident.timeToResolve} minutes` : 'N/A'}</span>
-    </div>
-    <a href="${appUrl}/incidents/${incident.id}" class="button">View Details</a>
-  </div>
-  <div class="footer">
-    ProdKB Incident Management System
-  </div>
-</body>
-</html>
-    `;
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; border-radius:8px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#003d82; padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:#16a34a; width:6px;"> </td>
+                <td style="padding:24px 28px;">
+                  <p style="color:#93c5fd; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">CIH Bank — ProdKB</p>
+                  <h1 style="color:#ffffff; font-size:20px; font-weight:700; margin:0;">✅ Incident Résolu</h1>
+                  <p style="color:#bfdbfe; font-size:13px; margin-top:6px;">${incRef} &nbsp;·&nbsp; ${incident.title}</p>
+                </td>
+                <td style="padding:24px 28px; text-align:right; vertical-align:top;">
+                  <span style="display:inline-block; background:#16a34a; color:#fff; font-size:11px; font-weight:800; padding:5px 12px; border-radius:4px;">RÉSOLU</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff; padding:28px 32px;">
+            <p style="font-size:15px; color:#334155; margin-bottom:24px; line-height:1.6;">L'incident <strong>${incRef}</strong> a été résolu avec succès.</p>
+
+            <!-- Resolution summary card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dcfce7; border-radius:6px; background:#f0fdf4; margin-bottom:24px;">
+              <tr>
+                <td style="padding:16px 20px; text-align:center; border-right:1px solid #dcfce7;">
+                  <p style="font-size:28px; font-weight:800; color:#15803d;">${resolutionStr}</p>
+                  <p style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#16a34a; margin-top:4px;">Temps de Résolution</p>
+                </td>
+                <td style="padding:16px 20px; text-align:center;">
+                  <p style="font-size:28px; font-weight:800; color:#003d82;">${incident.severity}</p>
+                  <p style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#1e40af; margin-top:4px;">Sévérité</p>
+                </td>
+              </tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:24px;">
+              ${[
+                ['Titre', incident.title],
+                ['Système', incident.system?.name || 'N/A'],
+                ['Équipe', incident.assignedTeam?.name || 'N/A'],
+                ['Résolu le', new Date().toLocaleString('fr-MA', { dateStyle: 'medium', timeStyle: 'short' })],
+              ].map(([k, v], i) => `<tr style="background:${i % 2 === 0 ? '#fff' : '#f8fafc'};"><td style="padding:10px 16px; font-size:13px; font-weight:600; color:#64748b; width:40%; border-bottom:1px solid #f1f5f9;">${k}</td><td style="padding:10px 16px; font-size:13px; color:#1e293b; border-bottom:1px solid #f1f5f9;">${v}</td></tr>`).join('')}
+            </table>
+
+            <a href="${appUrl}/incidents/${incident.id}" style="display:inline-block; background:linear-gradient(90deg,#ff6b35,#e85d2b); color:#fff; font-size:14px; font-weight:700; padding:12px 28px; border-radius:6px; text-decoration:none;">Voir le rapport complet →</a>
+          </td>
+        </tr>
+        <tr><td style="background:#1e293b; padding:20px 32px; border-top:3px solid #16a34a;">
+          <p style="color:#94a3b8; font-size:11px;"><strong style="color:#e2e8f0;">CIH Bank — Plateforme ProdKB</strong><br />Ce message est automatique, merci de ne pas y répondre. © ${new Date().getFullYear()} CIH Bank</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
   }
 
   private generateIncidentResolvedEmailText(data: IncidentEmailData): string {
@@ -589,6 +687,7 @@ ProdKB Incident Management System
     try {
       await this.transporter.sendMail({
         from: this.config.from,
+        replyTo: this.config.replyTo,
         to,
         subject,
         text: text || this.stripHtml(html),

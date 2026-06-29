@@ -44,9 +44,14 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 # Prisma migrations cannot run through PGBouncer transaction mode.
-# We use a direct connection to postgres (bypassing pgbouncer) for migrations.
-DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
-echo "Using direct connection for migrations..."
+# If DIRECT_DATABASE_URL is set, use it for migrations. Otherwise, derive a
+# direct URL for the default Docker PgBouncer topology.
+if [ -n "$DIRECT_DATABASE_URL" ]; then
+    DIRECT_URL="$DIRECT_DATABASE_URL"
+else
+    DIRECT_URL=$(echo "$DATABASE_URL" | sed 's/@pgbouncer:5432/@postgres:5432/')
+fi
+echo "Using direct database connection for migrations..."
 
 # Check if there are any pending migrations first (avoid advisory lock if nothing to do)
 MIGRATE_STATUS=$(DATABASE_URL="$DIRECT_URL" npx prisma migrate status 2>&1 || true)

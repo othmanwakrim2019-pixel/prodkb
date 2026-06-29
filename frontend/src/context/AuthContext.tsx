@@ -42,11 +42,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const initAuth = async () => {
+            // Prevent useless 401 network errors if we know the user is not logged in
+            if (localStorage.getItem('prodkb_auth_status') !== 'true') {
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 const currentUser = await authService.getMe();
                 setUser(currentUser);
             } catch {
                 setUser(null);
+                localStorage.removeItem('prodkb_auth_status');
             } finally {
                 setIsLoading(false);
             }
@@ -60,11 +67,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             if (nextUser) {
                 setUser(nextUser);
+                localStorage.setItem('prodkb_auth_status', 'true');
                 return;
             }
 
             const currentUser = await authService.getMe();
             setUser(currentUser);
+            localStorage.setItem('prodkb_auth_status', 'true');
         } finally {
             setIsLoading(false);
         }
@@ -76,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.error('Logout API call failed', error);
         }
+        localStorage.removeItem('prodkb_auth_status');
         setUser(null);
     };
 

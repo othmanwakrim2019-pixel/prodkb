@@ -49,6 +49,17 @@ const getActionLabel = (code: string) => {
 
 const equalSets = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((value) => b.has(value));
 
+const ACCESS_PREVIEW = [
+    { label: 'Dashboard', permissions: ['DASHBOARD_VIEW'] },
+    { label: 'Incidents', permissions: ['INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT', 'INCIDENT_DELETE'] },
+    { label: 'Procedures', permissions: ['PROCEDURE_VIEW', 'PROCEDURE_CREATE', 'PROCEDURE_EDIT', 'PROCEDURE_DELETE'] },
+    { label: 'Planning', permissions: ['PLANNING_VIEW', 'PLANNING_MANAGE'] },
+    { label: 'Equipe / Astreinte', permissions: ['EQUIPE_VIEW', 'EQUIPE_MANAGE', 'MES_TACHES_VIEW'] },
+    { label: 'Admin setup', permissions: ['USER_MANAGE', 'ROLE_MANAGE', 'SYSTEM_MANAGE', 'TEAM_MANAGE', 'SLA_MANAGE'] },
+    { label: 'Automation', permissions: ['ESCALATION_MANAGE', 'AUTO_ASSIGN_MANAGE', 'WEBHOOK_MANAGE'] },
+    { label: 'Audit', permissions: ['AUDIT_VIEW', 'CONFIG_MANAGE', 'EMAIL_TEMPLATE_MANAGE'] },
+];
+
 const makeEditor = (role: Partial<Role> & { permissions?: Permission[]; _count?: { users: number } }, options?: Partial<EditorState>): EditorState => ({
     id: role.id,
     name: role.name || '',
@@ -119,6 +130,13 @@ export const RoleManagerPage = () => {
         || editor.description !== editor.originalDescription
         || !equalSets(editor.permissions, editor.originalPermissions)
     ), [editor]);
+
+    const selectedPermissionCodes = useMemo(() => {
+        if (!editor) return new Set<string>();
+        return new Set(allPermissions
+            .filter((permission) => editor.permissions.has(permission.id))
+            .map((permission) => permission.code));
+    }, [allPermissions, editor]);
 
     const saveDisabled = !editor
         || editor.isProtected
@@ -398,6 +416,33 @@ export const RoleManagerPage = () => {
                                 </div>
                             </div>
                             <div className="space-y-5 px-6 py-6">
+                                <section className="rounded-xl border border-slate-200 bg-white">
+                                    <div className="border-b border-slate-200 px-4 py-3">
+                                        <h3 className="text-base font-bold text-slate-900">Access Preview</h3>
+                                        <p className="text-xs text-slate-500">A quick matrix for debugging what this role can see or do.</p>
+                                    </div>
+                                    <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+                                        {ACCESS_PREVIEW.map((item) => {
+                                            const granted = item.permissions.filter((permission) => selectedPermissionCodes.has(permission));
+                                            const full = granted.length === item.permissions.length;
+                                            const partial = granted.length > 0 && !full;
+                                            return (
+                                                <div key={item.label} className={`rounded-lg border p-3 ${full ? 'border-emerald-200 bg-emerald-50' : partial ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${full ? 'bg-emerald-100 text-emerald-700' : partial ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                                                            {full ? 'Full' : partial ? 'Partial' : 'None'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-2 text-xs text-slate-500">{granted.length}/{item.permissions.length} permissions granted</p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+                                        To test a role, assign it to a user in the Users tab, then sign in as that user.
+                                    </div>
+                                </section>
                                 {groups.map((group) => {
                                     const ids = group.permissions.map((permission) => permission.id);
                                     const allSelected = ids.every((id) => editor.permissions.has(id));

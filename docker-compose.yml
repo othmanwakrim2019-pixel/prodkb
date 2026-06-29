@@ -1,60 +1,48 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ProdKB — Production Docker Compose (External PostgreSQL) — HARDENED
+# ═══════════════════════════════════════════════════════════════════════════════
+# Security model: SINGLE PUBLIC ENTRY POINT.
+#   • Public (open in AWS Security Group):  22 (SSH), 8080 (app frontend)
+#   • Everything else binds to 127.0.0.1 only → reachable on the server itself
+#     and via SSH tunnel, NEVER from the internet.
+#
+# Reach a private tool from your laptop, e.g. Grafana:
+#   ssh -i key.pem -L 3001:127.0.0.1:3001 ubuntu@16.171.224.220
+#   then open http://localhost:3001
+#
+# Deploy:
+#   docker compose --env-file .env up -d --build
+# ═══════════════════════════════════════════════════════════════════════════════
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: prodkb-postgres
-    ports:
-      - "5434:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-prodkb}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prodkb_password}
-      POSTGRES_DB: ${POSTGRES_DB:-prodkb}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-prodkb} -d ${POSTGRES_DB:-prodkb}" ]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-    networks:
-      - prodkb-network
-    restart: unless-stopped
 
-  # Adminer Database GUI
-  adminer:
-    image: adminer:latest
-    container_name: prodkb-adminer
-    ports:
-      - "8081:8080"
-    environment:
-      - ADMINER_DEFAULT_SERVER=postgres
-    networks:
-      - prodkb-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # PgBouncer Connection Pooler
+  # ── PgBouncer — Connection Pooler (connects to host PostgreSQL) ─────────────
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: prodkb-pgbouncer
+    <<: *default-restart
+    logging: *default-logging
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - DB_USER=${POSTGRES_USER:-prodkb}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-prodkb_password}
-      - DB_HOST=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - DB_HOST=${EXTERNAL_POSTGRES_HOST:-host.docker.internal}
       - DB_NAME=${POSTGRES_DB:-prodkb}
       - POOL_MODE=transaction
-      - MAX_CLIENT_CONN=1000
-      - DEFAULT_POOL_SIZE=20
+      - MAX_CLIENT_CONN=${PGBOUNCER_MAX_CLIENT_CONN:-1000}
+      - DEFAULT_POOL_SIZE=${PGBOUNCER_DEFAULT_POOL_SIZE:-20}
       - ADMIN_USERS=${POSTGRES_USER:-prodkb}
       - AUTH_TYPE=scram-sha-256
-    ports:
-      - "6432:5432"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "nc -z 127.0.0.1 5432 || exit 1" ]
       interval: 15s
@@ -63,36 +51,42 @@ services:
       start_period: 30s
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Redis Cache
+  # ── Redis Cache ─────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: prodkb-redis
-    ports:
-      - "6379:6379"
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command: >
+      sh -c 'redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"'
+    volumes:
+      - redis-data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # MinIO — S3-compatible object storage for file uploads
+  # ── MinIO — S3-compatible object storage (PRIVATE: 127.0.0.1 only) ──────────
   minio:
     image: minio/minio:latest
     container_name: prodkb-minio
-    ports:
-      - "9002:9000"
-      - "9001:9001" # MinIO Console
+    <<: *default-restart
+    logging: *default-logging
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    ports:
+      - "9001:9001" # console — tunnel only
+      - "9002:9000" # S3 API — tunnel only
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]
       interval: 15s
@@ -101,66 +95,67 @@ services:
       start_period: 30s
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Auto-create the default bucket on first startup
+  # ── Auto-create default bucket on first startup (one-shot) ──────────────────
   minio-init:
     image: minio/mc:latest
     container_name: prodkb-minio-init
+    restart: "no"
+    logging: *default-logging
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-        mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin};
+        mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
         mc mb --ignore-existing local/$${S3_BUCKET:-prodkb-uploads};
         exit 0;
       "
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
       S3_BUCKET: ${S3_BUCKET:-prodkb-uploads}
     networks:
       - prodkb-network
 
-  # Backend API
+  # ── Backend API (PRIVATE: reached only through the frontend proxy) ──────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: prodkb-backend
+    <<: *default-restart
+    logging: *default-logging
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # No public port. Frontend nginx proxies /api to backend:3000 over the
+    # internal network. For direct local debugging, tunnel 127.0.0.1:3000.
     ports:
-      - "3000:3000"
-      - "3002:3002"
+      - "127.0.0.1:3000:3000"
     environment:
       - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173}
-      - NODE_ENV=${NODE_ENV:-production}
-      - SEED=${SEED:-false}
-      - REDIS_URL=redis://redis:6379
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      # ── Security Mode ──────────────────────────────────────────────────────
-      # Leave blank (or remove) for plain HTTP deployments (no SSL/domain).
-      # Set to 'strict' when you have a domain + SSL certificate (HTTPS).
-      # When strict: enables HSTS, CSP, Secure cookies (browser won't store
-      #              cookies over plain HTTP — login will break without HTTPS).
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - DIRECT_DATABASE_URL=${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - FRONTEND_URL=${FRONTEND_URL:?FRONTEND_URL is required}
+      - CORS_ORIGINS=${CORS_ORIGINS:?CORS_ORIGINS is required}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required}
       - SECURITY_MODE=${SECURITY_MODE:-}
-      # ───────────────────────────────────────────────────────────────────────
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - SEED=${SEED:-false}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_SECURE=${SMTP_SECURE:-true}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
-      # S3 / MinIO
       - S3_BUCKET=${S3_BUCKET:-prodkb-uploads}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_ENDPOINT=http://minio:9000
-      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-minioadmin}
-      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-minioadmin}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
       - S3_FORCE_PATH_STYLE=true
     depends_on:
       pgbouncer:
@@ -182,22 +177,27 @@ services:
         limits:
           memory: 512M
           cpus: '1.0'
-    restart: unless-stopped
 
-  # SLA Enforcement Worker (BullMQ — separate process)
+  # ── SLA Enforcement Worker ──────────────────────────────────────────────────
   sla-worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: prodkb-sla-worker
+    <<: *default-restart
+    logging: *default-logging
     command: [ "node", "dist/src/workers/sla.worker.js" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET environment variable is required}
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=${NODE_ENV:-production}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - DIRECT_DATABASE_URL=${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required}
+      - NODE_ENV=production
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -205,12 +205,11 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
-      # S3 / MinIO
       - S3_BUCKET=${S3_BUCKET:-prodkb-uploads}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_ENDPOINT=http://minio:9000
-      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-minioadmin}
-      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-minioadmin}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
       - S3_FORCE_PATH_STYLE=true
     depends_on:
       pgbouncer:
@@ -224,21 +223,26 @@ services:
           cpus: '0.5'
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Webhook Delivery Worker (BullMQ — separate process)
+  # ── Webhook Delivery Worker ─────────────────────────────────────────────────
   webhook-worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: prodkb-webhook-worker
+    <<: *default-restart
+    logging: *default-logging
     command: [ "node", "dist/src/workers/webhook.worker.js" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=${NODE_ENV:-production}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - DIRECT_DATABASE_URL=${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required}
+      - NODE_ENV=production
       - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       pgbouncer:
@@ -252,21 +256,26 @@ services:
           cpus: '0.5'
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Cleanup Worker (Token/Log rotation — separate process)
+  # ── Cleanup Worker (Token/Log rotation) ─────────────────────────────────────
   cleanup-worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: prodkb-cleanup-worker
+    <<: *default-restart
+    logging: *default-logging
     command: [ "node", "dist/src/workers/cleanup.worker.js" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-prodkb}:${POSTGRES_PASSWORD:-prodkb_password}@pgbouncer:5432/${POSTGRES_DB:-prodkb}?schema=public&pgbouncer=true
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=${NODE_ENV:-production}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - DIRECT_DATABASE_URL=${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required}
+      - NODE_ENV=production
       - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       pgbouncer:
@@ -280,80 +289,134 @@ services:
           cpus: '0.5'
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Frontend Nginx
+  # ── Astreinte Notification Worker ───────────────────────────────────────────
+  astreinte-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: prodkb-astreinte-worker
+    <<: *default-restart
+    logging: *default-logging
+    command: [ "node", "dist/src/workers/astreinte.worker.js" ]
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      disable: true
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - DIRECT_DATABASE_URL=${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required}
+      - FRONTEND_URL=${FRONTEND_URL:?FRONTEND_URL is required}
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - prodkb-network
+
+  # ── Frontend (Nginx) — THE ONLY PUBLIC SERVICE ─────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      network: host
       args:
         VITE_API_URL: ${VITE_API_URL:-}
     container_name: prodkb-frontend
+    <<: *default-restart
+    logging: *default-logging
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Loki — Log aggregation backend (receives logs from Promtail, queried by Grafana)
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Monitoring Stack — ALL PRIVATE (127.0.0.1, tunnel only)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ── Loki — Log aggregation ─────────────────────────────────────────────────
   loki:
     image: grafana/loki:3.4.2
     container_name: prodkb-loki
-    ports:
-      - "3100:3100"
+    <<: *default-restart
+    logging: *default-logging
     command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Promtail — Docker log collector (scrapes container stdout/stderr → ships to Loki)
+  # ── Promtail — Docker log collector → Loki ─────────────────────────────────
   promtail:
     image: grafana/promtail:3.4.2
     container_name: prodkb-promtail
+    <<: *default-restart
+    logging: *default-logging
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # PostgreSQL Exporter — scrapes pg_stat internal metrics for Prometheus
+  # ── PostgreSQL Exporter ──────────────────────────────────────────────────────
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: prodkb-postgres-exporter
+    <<: *default-restart
+    logging: *default-logging
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      DATA_SOURCE_NAME: "postgresql://prodkb:prodkb_password@postgres:5432/prodkb?sslmode=disable"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      DATA_SOURCE_NAME: ${POSTGRES_EXPORTER_DATA_SOURCE_NAME:-${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL is required}}
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Redis Exporter — scrapes Redis INFO metrics for Prometheus
+  # ── Redis Exporter ───────────────────────────────────────────────────────────
   redis-exporter:
     image: oliver006/redis_exporter:latest
     container_name: prodkb-redis-exporter
+    <<: *default-restart
+    logging: *default-logging
     environment:
-      REDIS_ADDR: "redis://redis:6379"
+      REDIS_ADDR: ${REDIS_URL:?REDIS_URL is required}
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Node Exporter — scrapes EC2 server hardware metrics (CPU, RAM, Disk)
+  # ── Node Exporter — server hardware metrics ─────────────────────────────────
   node-exporter:
     image: prom/node-exporter:latest
     container_name: prodkb-node-exporter
+    <<: *default-restart
+    logging: *default-logging
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -363,58 +426,65 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    ports:
-      - "9100:9100"
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Prometheus
+  # ── Prometheus (PRIVATE: 127.0.0.1 only) ───────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
     container_name: prodkb-prometheus
+    <<: *default-restart
+    logging: *default-logging
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/rules.yml:/etc/prometheus/rules.yml
+      - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Alertmanager
+  # ── Alertmanager (PRIVATE: 127.0.0.1 only) ─────────────────────────────────
   alertmanager:
     image: prom/alertmanager:latest
     container_name: prodkb-alertmanager
+    <<: *default-restart
+    logging: *default-logging
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     networks:
       - prodkb-network
-    restart: unless-stopped
 
-  # Grafana
+  # ── Grafana (PRIVATE: 127.0.0.1 only) ───────────────────────────────────────
   grafana:
     image: grafana/grafana:latest
     container_name: prodkb-grafana
+    <<: *default-restart
+    logging: *default-logging
     ports:
-      - "3001:3000"
+      - "${GRAFANA_PORT:-3001}:3000" # was "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-secretadmin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://16.171.224.220:${GRAFANA_PORT:-3001} # public IP
     volumes:
+      - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - prodkb-network
-    restart: unless-stopped
 
 networks:
   prodkb-network:
     driver: bridge
 
 volumes:
-  postgres-data:
   minio-data:
-
-
+  redis-data:
+  loki-data:
+  prometheus-data:
+  alertmanager-data:
+  grafana-data:

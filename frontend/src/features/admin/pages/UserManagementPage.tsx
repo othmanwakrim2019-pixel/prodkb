@@ -139,77 +139,76 @@ export const UserManagementPage = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900">{t('admin.users.title')}</h2>
-                <div className="flex items-center gap-4">
-                    <div className="relative">
-                        <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-white self-start">{t('admin.users.title')}</h2>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-none">
+                        <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Search users..."
                             value={userSearch}
                             onChange={(e) => setUserSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-slate-300 rounded-md focus:border-accent focus:ring-accent sm:text-sm"
+                            className="ent-input pl-8 md:w-56"
                         />
                     </div>
                     {canManageUsers() && (
                         <button
                             onClick={() => setShowUserForm(!showUserForm)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                            className="ent-btn-primary whitespace-nowrap"
                         >
-                            <Plus className="h-4 w-4 mr-2" />
+                            <Plus className="h-4 w-4" />
                             Create User
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Create User Form (inline) */}
             {showUserForm && (
-                <form onSubmit={handleCreateUser} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
-                    <h3 className="font-medium text-slate-900">Create New User</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleCreateUser} className="ent-card p-4 space-y-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">New User</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                            <input type="text" required value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" />
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Name *</label>
+                            <input type="text" required value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="ent-input" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <input type="email" required value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" />
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Email *</label>
+                            <input type="email" required value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="ent-input" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <input type="password" required value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" />
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Password *</label>
+                            <input type="password" required value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="ent-input" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-                            <select required value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Role *</label>
+                            <select required value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="ent-input">
                                 <option value="">Select a role...</option>
                                 {roles.map((role) => (<option key={role.id} value={role.name}>{role.name}</option>))}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Team *</label>
-                            <select required value={newUser.teamId} onChange={(e) => setNewUser({ ...newUser, teamId: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Team *</label>
+                            <select required value={newUser.teamId} onChange={(e) => setNewUser({ ...newUser, teamId: e.target.value })} className="ent-input">
                                 <option value="">Select a team...</option>
                                 {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Team Role</label>
-                            <input type="text" placeholder="e.g., Developer, Lead, CTO..." value={newUser.teamRole} onChange={(e) => setNewUser({ ...newUser, teamRole: e.target.value })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border" />
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Team Role</label>
+                            <input type="text" placeholder="e.g., Developer, Lead" value={newUser.teamRole} onChange={(e) => setNewUser({ ...newUser, teamRole: e.target.value })} className="ent-input" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                            <select value={newUser.isActive ? 'active' : 'inactive'} onChange={(e) => setNewUser({ ...newUser, isActive: e.target.value === 'active' })} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                            <select value={newUser.isActive ? 'active' : 'inactive'} onChange={(e) => setNewUser({ ...newUser, isActive: e.target.value === 'active' })} className="ent-input">
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
                         </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                        <button type="button" onClick={() => setShowUserForm(false)} className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
-                        <button type="submit" className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800">Create User</button>
+                        <button type="button" onClick={() => setShowUserForm(false)} className="ent-btn-secondary">Cancel</button>
+                        <button type="submit" className="ent-btn-primary">Create User</button>
                     </div>
                 </form>
             )}

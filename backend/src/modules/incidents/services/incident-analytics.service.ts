@@ -12,11 +12,23 @@ export interface StatsFilters {
     userRole?: string;
     userPermissions?: string[];
     userTeamIds?: string[];
+    timezoneOffsetMinutes?: number;
 }
+
+const toLocalDateKey = (date: Date, timezoneOffsetMinutes = 0) => {
+    const localDate = new Date(date.getTime() - timezoneOffsetMinutes * 60_000);
+    return localDate.toISOString().split('T')[0];
+};
+
+const addDaysToDateKey = (dateKey: string, days: number) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const next = new Date(Date.UTC(year, month - 1, day + days));
+    return next.toISOString().split('T')[0];
+};
 
 export class IncidentAnalyticsService {
     async getStats(filters: StatsFilters): Promise<IncidentStats> {
-        const { startDate, endDate, systemId, teamId, userRole, userPermissions, userTeamIds } = filters;
+        const { startDate, endDate, systemId, teamId, userRole, userPermissions, userTeamIds, timezoneOffsetMinutes = 0 } = filters;
         const now = new Date();
         const start = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         const end = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -79,24 +91,22 @@ export class IncidentAnalyticsService {
         const statusCounts = await incidentRepository.groupIncidentsByStatus(where);
         const statusBreakdown = statusCounts.map(s => ({ status: s.status, count: s._count.status }));
 
-        const createdByDay = await incidentRepository.queryCreatedTrend(start, end);
-        const resolvedByDay = await incidentRepository.queryResolvedTrend(start, end);
+        const createdByDay = await incidentRepository.queryCreatedTrend(start, end, timezoneOffsetMinutes);
+        const resolvedByDay = await incidentRepository.queryResolvedTrend(start, end, timezoneOffsetMinutes);
 
         const trendMap = new Map<string, { created: number; resolved: number }>();
-        const cursor = new Date(start);
-        while (cursor <= end) {
-            const key = cursor.toISOString().split('T')[0];
+        const endKey = toLocalDateKey(end, timezoneOffsetMinutes);
+        let key = toLocalDateKey(start, timezoneOffsetMinutes);
+        while (key <= endKey) {
             trendMap.set(key, { created: 0, resolved: 0 });
-            cursor.setDate(cursor.getDate() + 1);
+            key = addDaysToDateKey(key, 1);
         }
         for (const row of createdByDay) {
-            const key = new Date(row.day).toISOString().split('T')[0];
-            const entry = trendMap.get(key);
+            const entry = trendMap.get(row.day);
             if (entry) entry.created = Number(row.count);
         }
         for (const row of resolvedByDay) {
-            const key = new Date(row.day).toISOString().split('T')[0];
-            const entry = trendMap.get(key);
+            const entry = trendMap.get(row.day);
             if (entry) entry.resolved = Number(row.count);
         }
         const trends = Array.from(trendMap.entries()).map(([date, data]) => ({ date, created: data.created, resolved: data.resolved }));

@@ -9,7 +9,6 @@ import { ToastProvider } from '../components/ui/Toast';
 import { ConfirmProvider } from '../components/ui/ConfirmDialog';
 import type { User } from '../types';
 
-// Wrap with required context providers
 const renderWithProviders = (ui: React.ReactElement) =>
     render(
         <ToastProvider>
@@ -73,8 +72,8 @@ describe('UserTable', () => {
     it('displays active/inactive status badges', () => {
         renderWithProviders(<UserTable {...defaultProps} />);
 
-        expect(screen.getByText('✓ Active')).toBeInTheDocument();
-        expect(screen.getByText('✗ Inactive')).toBeInTheDocument();
+        expect(screen.getByText('Active')).toBeInTheDocument();
+        expect(screen.getByText('Inactive')).toBeInTheDocument();
     });
 
     it('displays role badges', () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { SLA, Severity } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import { slaService } from '../api/admin.service';
@@ -17,8 +17,9 @@ export const SLAManagementPage = () => {
     const [showSlaForm, setShowSlaForm] = useState(false);
     const [newSla, setNewSla] = useState({ name: '', description: '', severity: 'Medium', acknowledgeTimeMinutes: 60, resolveTimeMinutes: 480 });
     const [editingSla, setEditingSla] = useState<SLA | null>(null);
+    const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
+    const [limit, setLimit] = useState(10);
 
     useEffect(() => {
         fetchSlas();
@@ -81,50 +82,55 @@ export const SLAManagementPage = () => {
         }
     };
 
+    const filtered = slas.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
+    const totalPages = Math.ceil(filtered.length / limit);
+
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900">{t('admin.slas.title')}</h2>
-                {canManageSLAs() && (
-                    <button
-                        onClick={() => setShowSlaForm(!showSlaForm)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {t('admin.slas.addSla')}
-                    </button>
-                )}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-white self-start">{t('admin.slas.title')}</h2>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-none">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input type="text" placeholder="Search SLAs..." value={search} onChange={e => setSearch(e.target.value)} className="ent-input pl-8 md:w-56" />
+                    </div>
+                    {canManageSLAs() && (
+                        <button onClick={() => setShowSlaForm(!showSlaForm)} className="ent-btn-primary whitespace-nowrap">
+                            <Plus className="h-4 w-4" />{t('admin.slas.addSla')}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {showSlaForm && (
-                <form onSubmit={handleCreateSla} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
-                    <h3 className="font-medium text-slate-900">{t('admin.slas.addSla')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleCreateSla} className="ent-card p-4 space-y-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('admin.slas.addSla')}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Policy Name</label>
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Policy Name</label>
                             <input
                                 type="text"
                                 required
                                 value={newSla.name}
                                 onChange={(e) => setNewSla({ ...newSla, name: e.target.value })}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                className="ent-input"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
                             <textarea
                                 value={newSla.description}
                                 onChange={(e) => setNewSla({ ...newSla, description: e.target.value })}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                className="ent-input"
                                 rows={2}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Severity Level</label>
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Severity Level</label>
                             <select
                                 value={newSla.severity}
                                 onChange={(e) => setNewSla({ ...newSla, severity: e.target.value as Severity })}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
+                                className="ent-input"
                             >
                                 <option value="Critical">Critical</option>
                                 <option value="High">High</option>
@@ -132,28 +138,18 @@ export const SLAManagementPage = () => {
                                 <option value="Low">Low</option>
                             </select>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Ack Time (min)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="1"
-                                    value={newSla.acknowledgeTimeMinutes}
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ack Time (min)</label>
+                                <input type="number" required min="1" value={newSla.acknowledgeTimeMinutes}
                                     onChange={(e) => setNewSla({ ...newSla, acknowledgeTimeMinutes: parseInt(e.target.value) || 0 })}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                />
+                                    className="ent-input" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Resolve Time (min)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="1"
-                                    value={newSla.resolveTimeMinutes}
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Resolve Time (min)</label>
+                                <input type="number" required min="1" value={newSla.resolveTimeMinutes}
                                     onChange={(e) => setNewSla({ ...newSla, resolveTimeMinutes: parseInt(e.target.value) || 0 })}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                />
+                                    className="ent-input" />
                             </div>
                         </div>
                     </div>
@@ -161,13 +157,13 @@ export const SLAManagementPage = () => {
                         <button
                             type="button"
                             onClick={() => setShowSlaForm(false)}
-                            className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            className="ent-btn-secondary"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
+                            className="ent-btn-primary"
                         >
                             Create Policy
                         </button>
@@ -175,47 +171,47 @@ export const SLAManagementPage = () => {
                 </form>
             )}
 
-            <div className="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
+            <div className="ent-card overflow-hidden">
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Severity</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ack Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Resolve Time</th>
-                            {canManageSLAs() && <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>}
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Severity</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Name</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ack Time</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Resolve Time</th>
+                            {canManageSLAs() && <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>}
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-slate-200">
-                        {slas.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map((sla) => (
-                            <tr key={sla.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sla.severity === 'Critical' ? 'bg-red-100 text-red-800' :
-                                        sla.severity === 'High' ? 'bg-orange-100 text-orange-800' :
-                                            sla.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-blue-100 text-blue-800'
+                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
+                        {filtered.slice((page - 1) * limit, page * limit).map((sla) => (
+                            <tr key={sla.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-none">
+                                <td className="px-4 py-2 whitespace-nowrap">
+                                    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${sla.severity === 'Critical' ? 'bg-red-600 text-white dark:bg-red-900/40 dark:text-red-400' :
+                                        sla.severity === 'High' ? 'bg-orange-600 text-white dark:bg-orange-900/40 dark:text-orange-400' :
+                                            sla.severity === 'Medium' ? 'bg-yellow-600 text-white dark:bg-yellow-900/40 dark:text-yellow-400' :
+                                                'bg-blue-600 text-white dark:bg-blue-900/40 dark:text-blue-400'
                                         }`}>
                                         {sla.severity}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-200">
                                     {sla.name}
-                                    <div className="text-xs text-slate-500 font-normal">{sla.description}</div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">{sla.description}</div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{sla.acknowledgeTimeMinutes} min</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{sla.resolveTimeMinutes} min</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{sla.acknowledgeTimeMinutes} min</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{sla.resolveTimeMinutes} min</td>
                                 {canManageSLAs() && (
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => setEditingSla(sla)}
-                                            className="text-accent hover:text-blue-900 mr-3"
+                                            className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 mr-3"
                                             title="Edit SLA"
                                         >
                                             <Pencil className="h-4 w-4 inline" />
                                         </button>
                                         <button
                                             onClick={() => handleDeleteSla(sla.id)}
-                                            className="text-red-600 hover:text-red-900"
+                                            className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"
                                             title="Delete SLA"
                                         >
                                             <Trash2 className="h-4 w-4 inline" />
@@ -226,92 +222,64 @@ export const SLAManagementPage = () => {
                         ))}
                     </tbody>
                 </table>
+                <Pagination
+                    meta={{ total: filtered.length, page, limit, totalPages }}
+                    onPageChange={setPage}
+                    onLimitChange={lim => { setLimit(lim); setPage(1); }}
+                    limitOptions={[10, 20, 50]}
+                />
             </div>
 
-            {slas.length > ITEMS_PER_PAGE && (
-                <Pagination
-                    meta={{
-                        total: slas.length,
-                        page,
-                        limit: ITEMS_PER_PAGE,
-                        totalPages: Math.ceil(slas.length / ITEMS_PER_PAGE),
-                    }}
-                    onPageChange={setPage}
-                />
-            )}
-
             {editingSla && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full m-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Edit SLA Policy</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Policy Name</label>
-                                <input
-                                    type="text"
-                                    value={editingSla.name}
-                                    onChange={(e) => setEditingSla({ ...editingSla, name: e.target.value })}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                                <textarea
-                                    value={editingSla.description}
-                                    onChange={(e) => setEditingSla({ ...editingSla, description: e.target.value })}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                    rows={2}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Severity Level</label>
-                                <select
-                                    value={editingSla.severity}
-                                    onChange={(e) => setEditingSla({ ...editingSla, severity: e.target.value as Severity })}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                >
-                                    <option value="Critical">Critical</option>
-                                    <option value="High">High</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Low">Low</option>
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ack Time (min)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={editingSla.acknowledgeTimeMinutes}
-                                        onChange={(e) => setEditingSla({ ...editingSla, acknowledgeTimeMinutes: parseInt(e.target.value) || 0 })}
-                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                    />
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-lg max-w-xl w-full mx-4">
+                        <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Edit SLA Policy</h3>
+                        </div>
+                        <div className="p-5 space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Policy Name</label>
+                                    <input type="text" value={editingSla.name}
+                                        onChange={(e) => setEditingSla({ ...editingSla, name: e.target.value })}
+                                        className="ent-input" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                                    <textarea value={editingSla.description}
+                                        onChange={(e) => setEditingSla({ ...editingSla, description: e.target.value })}
+                                        className="ent-input" rows={2} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Resolve Time (min)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={editingSla.resolveTimeMinutes}
-                                        onChange={(e) => setEditingSla({ ...editingSla, resolveTimeMinutes: parseInt(e.target.value) || 0 })}
-                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                                    />
+                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Severity Level</label>
+                                    <select value={editingSla.severity}
+                                        onChange={(e) => setEditingSla({ ...editingSla, severity: e.target.value as Severity })}
+                                        className="ent-input">
+                                        <option value="Critical">Critical</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ack Time (min)</label>
+                                        <input type="number" min="1" value={editingSla.acknowledgeTimeMinutes}
+                                            onChange={(e) => setEditingSla({ ...editingSla, acknowledgeTimeMinutes: parseInt(e.target.value) || 0 })}
+                                            className="ent-input" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Resolve Time (min)</label>
+                                        <input type="number" min="1" value={editingSla.resolveTimeMinutes}
+                                            onChange={(e) => setEditingSla({ ...editingSla, resolveTimeMinutes: parseInt(e.target.value) || 0 })}
+                                            className="ent-input" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setEditingSla(null)}
-                                className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUpdateSla}
-                                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-slate-800"
-                            >
-                                Save Changes
-                            </button>
+                        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+                            <button onClick={() => setEditingSla(null)} className="ent-btn-secondary">Cancel</button>
+                            <button onClick={handleUpdateSla} className="ent-btn-primary">Save Changes</button>
                         </div>
                     </div>
                 </div>

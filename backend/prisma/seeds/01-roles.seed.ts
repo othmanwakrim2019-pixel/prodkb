@@ -41,6 +41,10 @@ const PERMISSIONS: Array<{ code: string; description: string }> = [
     // Planning
     { code: 'PLANNING_VIEW', description: 'View planning instances and jobs' },
     { code: 'PLANNING_MANAGE', description: 'Create, edit, archive planning instances and manage planning jobs' },
+    // Team operations
+    { code: 'EQUIPE_VIEW', description: 'View team daily plans and astreinte planning' },
+    { code: 'EQUIPE_MANAGE', description: 'Manage team daily plans, tasks, and astreinte assignments' },
+    { code: 'MES_TACHES_VIEW', description: 'View and update personal operational tasks' },
     // Analytics
     { code: 'ANALYTICS_VIEW', description: 'View analytics dashboards (MTTR, SLA compliance, team performance)' },
     // Webhooks
@@ -69,6 +73,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'INCIDENT_VIEW', 'INCIDENT_EDIT',
             'PROCEDURE_VIEW', 'PROCEDURE_CREATE', 'PROCEDURE_EDIT',
             'PLANNING_VIEW', 'PLANNING_MANAGE',
+            'EQUIPE_VIEW', 'EQUIPE_MANAGE', 'MES_TACHES_VIEW',
             'ANALYTICS_VIEW',
             'JOB_VIEW',
         ],
@@ -81,6 +86,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'INCIDENT_VIEW', 'INCIDENT_CREATE', 'INCIDENT_EDIT',
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
+            'EQUIPE_VIEW', 'MES_TACHES_VIEW',
             'JOB_VIEW',
         ],
     },
@@ -92,6 +98,7 @@ const ROLES: Array<{ name: string; description: string; permissions: string[] }>
             'INCIDENT_VIEW',
             'PROCEDURE_VIEW',
             'PLANNING_VIEW',
+            'EQUIPE_VIEW',
         ],
     },
 ];

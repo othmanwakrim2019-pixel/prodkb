@@ -79,6 +79,11 @@ export class IncidentCrudService {
             if (!job) throw new ValidationError('Invalid job ID');
         }
 
+        const assignedTeamId = data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null;
+        const currentAstreinte = assignedTeamId
+            ? await incidentRepository.findCurrentAstreinteForTeam(assignedTeamId, data.startDatetime || new Date())
+            : null;
+
         const incident = await incidentRepository.createIncident({
             title: data.title,
             description: data.description,
@@ -88,7 +93,8 @@ export class IncidentCrudService {
             systemId: data.systemId,
             jobId: data.jobId || null,
             createdById: userId,
-            assignedTeamId: data.assignedTeamId || await autoAssignService.matchRule(data.systemId, data.severity) || null,
+            assignedTeamId,
+            astreinteId: currentAstreinte?.id || null,
             slaId: data.slaId || null,
             impact: data.impact || null,
             detectionSource: data.detectionSource || null,
@@ -119,6 +125,14 @@ export class IncidentCrudService {
             },
             timestamp: new Date().toISOString(),
         }).catch(() => { });
+
+        // Auto-log activity entry so the timeline always has a first entry
+        await incidentRepository.createIncidentLog({
+            incidentId: incident.id,
+            logType: 'activity',
+            rawLog: `Incident created with severity **${data.severity}** on system **${incident.system?.name ?? data.systemId}**${currentAstreinte ? ` and linked to astreinte **${currentAstreinte.user.name}**` : ''}`,
+            createdById: userId,
+        });
 
         return incident as unknown as IIncident;
     }
@@ -167,6 +181,40 @@ export class IncidentCrudService {
 
         logger.info('Incident updated', { incidentId: id, userId, changes: Object.keys(data) });
 
+        // Auto-log meaningful field changes
+        const TRACKED: Record<string, string> = {
+            status: 'Status',
+            severity: 'Severity',
+            assignedTeamId: 'Assigned team',
+            slaId: 'SLA policy',
+            title: 'Title',
+            description: 'Description',
+        };
+        const activityParts: string[] = [];
+        for (const [field, label] of Object.entries(TRACKED)) {
+            const oldVal = (existing as unknown as Record<string, unknown>)[field];
+            const newVal = (data as Record<string, unknown>)[field];
+            if (newVal !== undefined && String(oldVal ?? '') !== String(newVal ?? '')) {
+                if (field === 'assignedTeamId') {
+                    activityParts.push(`${label} changed`);
+                } else if (field === 'slaId') {
+                    activityParts.push(`${label} updated`);
+                } else if (field === 'description') {
+                    activityParts.push(`${label} updated`);
+                } else {
+                    activityParts.push(`${label} changed from **${oldVal ?? 'none'}** to **${newVal}**`);
+                }
+            }
+        }
+        if (activityParts.length > 0) {
+            await incidentRepository.createIncidentLog({
+                incidentId: id,
+                logType: 'activity',
+                rawLog: activityParts.join(' · '),
+                createdById: userId,
+            });
+        }
+
         if (!wasResolved && isNowResolved) {
             sendNotification(incident, 'resolved').catch((err) => { logger.error('Failed to send resolution notification', { error: err }); });
         } else {
@@ -209,6 +257,14 @@ export class IncidentCrudService {
         if (!procedure) throw new NotFoundError('Procedure not found');
 
         const incident = await incidentRepository.updateIncident(incidentId, { linkedProcedureId: procedureId });
+
+        // Auto-log procedure link
+        await incidentRepository.createIncidentLog({
+            incidentId,
+            logType: 'activity',
+            rawLog: `Linked resolution procedure: **${procedure.title}**`,
+            createdById: undefined,
+        });
 
         return incident as unknown as IIncident;
     }

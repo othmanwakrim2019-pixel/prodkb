@@ -2,16 +2,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { configService } from './config.service';
-import { createResponse } from '../../common/types/api.response';
-import { logger } from '../../common/utils/logger';
 
 const smtpConfigSchema = z.object({
-    host: z.string().min(1),
-    port: z.number().int().positive(),
-    user: z.string().min(1),
-    pass: z.string().min(1),
-    from: z.string().email(),
+    enabled: z.boolean().optional(),
+    host: z.string().trim().optional().default(''),
+    port: z.coerce.number().int().positive().optional().default(587),
+    user: z.string().trim().optional().default(''),
+    pass: z.string().optional(),
+    from: z.string().trim().optional().default(''),
     secure: z.boolean().optional(),
+    tlsMode: z.enum(['starttls', 'ssl', 'none']).optional(),
+    rejectUnauthorized: z.boolean().optional(),
+    replyTo: z.string().trim().email().optional().or(z.literal('')),
+    connectionTimeout: z.coerce.number().int().positive().optional(),
 });
 
 export class ConfigController {
@@ -35,7 +38,8 @@ export class ConfigController {
         try {
             const data = smtpConfigSchema.parse(req.body);
             await configService.updateSmtpConfig(data);
-            res.json({ message: 'SMTP config updated successfully' });
+            const config = await configService.getSmtpConfig();
+            res.json({ success: true, data: config, message: 'SMTP config updated successfully' });
         } catch (error) {
             next(error);
         }
@@ -49,10 +53,10 @@ export class ConfigController {
             }
 
             await configService.sendTestEmail(email);
-            res.json({ message: 'Test email sent successfully' });
+            res.json({ success: true, message: 'Test email sent successfully' });
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : 'Unknown error';
-            res.status(400).json({ error: `Failed to send test email: ${msg}` });
+            res.status(400).json({ success: false, message: `Failed to send test email: ${msg}` });
         }
     }
 
@@ -66,7 +70,7 @@ export class ConfigController {
             }
 
             const result = await configService.updateConfig(key, String(value));
-            res.json({ message: 'Config updated successfully', ...result });
+            res.json({ success: true, data: result, message: 'Config updated successfully' });
         } catch (error) {
             next(error);
         }
@@ -82,6 +86,15 @@ export class ConfigController {
             const keyList = (keys as string).split(',');
             const result = await configService.getConfigs(keyList);
             res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getOperationsReadiness(req: Request, res: Response, next: NextFunction) {
+        try {
+            const data = await configService.getOperationsReadiness();
+            res.json({ success: true, data });
         } catch (error) {
             next(error);
         }

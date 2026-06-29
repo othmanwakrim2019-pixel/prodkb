@@ -8,6 +8,12 @@ export const incidentDefaultInclude = Prisma.validator<Prisma.IncidentInclude>()
     createdBy: { select: { id: true, name: true, email: true } },
     resolvedBy: { select: { id: true, name: true, email: true } },
     assignedTeam: true,
+    astreinte: {
+        include: {
+            user: { select: { id: true, name: true, email: true } },
+            team: { select: { id: true, name: true } },
+        },
+    },
     sla: true,
     linkedProcedure: { select: { id: true, title: true } },
     logs: {
@@ -19,7 +25,7 @@ export const incidentDefaultInclude = Prisma.validator<Prisma.IncidentInclude>()
 });
 
 export interface IncidentTrendRow {
-    day: Date;
+    day: string;
     count: bigint;
 }
 
@@ -70,6 +76,17 @@ export class IncidentRepository {
         });
     }
 
+    async findCurrentAstreinteForTeam(teamId: string, date: Date = new Date()) {
+        return prisma.astreinte.findFirst({
+            where: {
+                teamId,
+                startDate: { lte: date },
+                endDate: { gte: date },
+            },
+            select: { id: true, user: { select: { name: true } } },
+        });
+    }
+
     async updateIncident(id: string, data: Prisma.IncidentUpdateArgs['data']) {
         return prisma.incident.update({
             where: { id },
@@ -108,6 +125,19 @@ export class IncidentRepository {
         return prisma.incidentLog.delete({ where: { id } });
     }
 
+    async findActivityLogs(incidentId: string) {
+        return prisma.incidentLog.findMany({
+            where: {
+                incidentId,
+                logType: { in: ['activity', 'note', 'investigation', 'resolution', 'analysis', 'communication', 'other', 'file'] },
+            },
+            include: {
+                createdBy: { select: { id: true, name: true, email: true } },
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+    }
+
     async countIncidents(where: Record<string, unknown>) {
         return prisma.incident.count({ where });
     }
@@ -127,18 +157,18 @@ export class IncidentRepository {
         });
     }
 
-    async queryCreatedTrend(start: Date, end: Date) {
+    async queryCreatedTrend(start: Date, end: Date, timezoneOffsetMinutes = 0) {
         return prisma.$queryRaw<IncidentTrendRow[]>`
-            SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*)::bigint AS count
+            SELECT DATE(("createdAt" - (${timezoneOffsetMinutes}::int * INTERVAL '1 minute')))::text AS day, COUNT(*)::bigint AS count
             FROM "Incident"
             WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
             GROUP BY day ORDER BY day
         `;
     }
 
-    async queryResolvedTrend(start: Date, end: Date) {
+    async queryResolvedTrend(start: Date, end: Date, timezoneOffsetMinutes = 0) {
         return prisma.$queryRaw<IncidentTrendRow[]>`
-            SELECT DATE_TRUNC('day', "resolvedAt") AS day, COUNT(*)::bigint AS count
+            SELECT DATE(("resolvedAt" - (${timezoneOffsetMinutes}::int * INTERVAL '1 minute')))::text AS day, COUNT(*)::bigint AS count
             FROM "Incident"
             WHERE "resolvedAt" IS NOT NULL AND "resolvedAt" >= ${start} AND "resolvedAt" <= ${end}
             GROUP BY day ORDER BY day

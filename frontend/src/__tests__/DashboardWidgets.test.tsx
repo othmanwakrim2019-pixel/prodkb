@@ -35,7 +35,6 @@ describe('KPICard', () => {
         title: 'Test Title',
         value: 42,
         subtitle: 'Test Subtitle',
-        gradient: 'bg-blue-500',
         icon: <span data-testid="test-icon">🔥</span>,
     };
 
@@ -47,16 +46,17 @@ describe('KPICard', () => {
         expect(screen.getByTestId('test-icon')).toBeInTheDocument();
     });
 
-    it('applies gradient class', () => {
+    it('renders as a neutral enterprise card', () => {
         const { container } = render(<KPICard {...defaultProps} />);
         const card = container.firstChild as HTMLElement;
-        expect(card.className).toContain('bg-blue-500');
+        expect(card.className).toContain('bg-white');
+        expect(card.className).toContain('border-slate-200');
     });
 
-    it('applies animation delay', () => {
+    it('accepts delay without changing the card layout', () => {
         const { container } = render(<KPICard {...defaultProps} delay="0.2s" />);
         const card = container.firstChild as HTMLElement;
-        expect(card.style.animationDelay).toBe('0.2s');
+        expect(card).toHaveTextContent('Test Title');
     });
 });
 
@@ -75,7 +75,7 @@ describe('PeriodPill', () => {
     it('applies inactive styles when not active', () => {
         render(<PeriodPill label="Today" active={false} onClick={() => { }} />);
         const button = screen.getByText('Today');
-        expect(button.className).toContain('bg-white');
+        expect(button.className).toContain('bg-slate-50');
     });
 
     it('calls onClick when clicked', () => {

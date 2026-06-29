@@ -7,7 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -87,6 +88,12 @@ model User {
   postMortems           PostMortem[]
   maintenanceCreated    MaintenanceWindow[] @relation("MaintenanceCreatedBy")
   warRoomMessages       WarRoomMessage[]    @relation("WarRoomMessages")
+  // Gestion Équipe relations
+  astreintes            Astreinte[]         @relation("AstreinteUser")
+  createdAstreintes     Astreinte[]         @relation("AstreinteCreatedBy")
+  createdDailyPlans     DailyPlan[]         @relation("PlanCreatedBy")
+  assignedTasks         OperationalTask[]   @relation("AssignedOpTasks")
+  createdTasks          OperationalTask[]   @relation("CreatedOpTasks")
 
   @@index([roleId])
 }
@@ -173,6 +180,9 @@ model Team {
   incidents       Incident[]
   escalationRules EscalationRule[]      @relation("EscalationTeam")
   autoAssignRules AutoAssignmentRule[]  @relation("AutoAssignTeam")
+  // Gestion Équipe relations
+  astreintes      Astreinte[]
+  dailyPlans      DailyPlan[]
 
   @@index([name])
   @@index([updatedById])
@@ -192,6 +202,136 @@ model TeamMember {
   @@unique([teamId, userId])
   @@index([teamId])
   @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GESTION ÉQUIPE — Astreinte, Daily Plans, Operational Tasks
+// ═══════════════════════════════════════════════════════════════
+
+/// Weekly on-call rotation — one person per week is responsible for any production incident
+model Astreinte {
+  id          String   @id @default(uuid())
+  weekNumber  Int                             // ISO week number (1-52)
+  year        Int
+  startDate   DateTime                        // Monday 00:00
+  endDate     DateTime                        // Sunday 23:59
+  phone       String?                         // direct contact for this week
+  notes       String?                         // any special instructions
+
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+  userId      String                          // who is on astreinte
+  user        User     @relation("AstreinteUser", fields: [userId], references: [id])
+
+  createdById String
+  createdBy   User     @relation("AstreinteCreatedBy", fields: [createdById], references: [id])
+
+  // ── Relations ──
+  incidents      Incident[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([teamId, weekNumber, year])        // one person per team per week
+  @@index([teamId])
+  @@index([userId])
+  @@index([startDate, endDate])
+  @@index([createdById])
+}
+
+/// A single day's operational plan for a team — groups all tasks for that day
+model DailyPlan {
+  id        String    @id @default(uuid())
+  date      DateTime                          // the day this plan covers (midnight UTC)
+  label     String?                           // e.g. "Journée lundi", "Weekend 26-27 Avr"
+  isWeekend Boolean   @default(false)
+
+  teamId    String
+  team      Team      @relation(fields: [teamId], references: [id])
+
+  createdById String
+  createdBy   User    @relation("PlanCreatedBy", fields: [createdById], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tasks     OperationalTask[]
+
+  @@unique([teamId, date])                    // one plan per team per day
+  @@index([teamId])
+  @@index([date])
+  @@index([createdById])
+}
+
+/// One operational task assigned to one person within a DailyPlan
+model OperationalTask {
+  id          String                  @id @default(uuid())
+  planId      String
+  plan        DailyPlan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  title       String                          // short label on the board
+  description String?                         // detailed instructions
+  taskType    OperationalTaskType     @default(CUSTOM)
+  priority    OperationalTaskPriority @default(NORMAL)
+  status      OperationalTaskStatus   @default(TODO)
+
+  startTime   DateTime?                       // scheduled start within the day
+  endTime     DateTime?                       // scheduled end
+
+  // What server / chain this task concerns
+  systemId    String?
+  system      System?                 @relation(fields: [systemId], references: [id])
+  chainLabel  String?                         // free-text: "Chaîne compta", "Chaîne virements"
+
+  // Who is responsible
+  assignedToId String
+  assignedTo   User                   @relation("AssignedOpTasks", fields: [assignedToId], references: [id])
+
+  // Completion tracking
+  note        String?                         // operator note on completion or blocker reason
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdById String
+  createdBy   User                    @relation("CreatedOpTasks", fields: [createdById], references: [id])
+
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([planId])
+  @@index([assignedToId])
+  @@index([systemId])
+  @@index([status])
+  @@index([taskType])
+  @@index([priority])
+  @@index([createdById])
+}
+
+/// Task type — what kind of operational duty this is
+enum OperationalTaskType {
+  MEP               // Mise En Production (deployment)
+  SUPERVISION       // Supervise a system or chain
+  TABLEAU_BORD      // Create / maintain daily dashboard
+  REPRISE_INCIDENT  // Take over ongoing incident recovery
+  CONTROLE_CHAINE   // Verify a processing chain
+  RAPPORT           // Write a report
+  CUSTOM            // Free-text task
+}
+
+/// Status of an operational task — operator updates this
+enum OperationalTaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED         // Triggers notification to manager
+}
+
+/// Priority of an operational task
+enum OperationalTaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -216,6 +356,7 @@ model System {
   autoAssignRules    AutoAssignmentRule[]
   healthSnapshots    SystemHealthSnapshot[]
   maintenanceWindows MaintenanceWindow[]
+  operationalTasks   OperationalTask[]
 
   @@index([name])
   @@index([updatedById])
@@ -316,6 +457,10 @@ model Incident {
   // Linked resolution procedure
   linkedProcedureId String?
   linkedProcedure   Procedure? @relation(fields: [linkedProcedureId], references: [id])
+
+  // Astreinte auto-link (Phase 2 integration)
+  astreinteId    String?
+  astreinte      Astreinte? @relation(fields: [astreinteId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

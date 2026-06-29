@@ -24,6 +24,9 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Planning = lazy(() => import('./pages/planning/Planning'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const MaintenanceAdmin = lazy(() => import('./features/admin/pages/MaintenanceAdminPage'));
+const UserProfile = lazy(() => import('./features/auth/pages/UserProfilePage'));
+const EquipePage   = lazy(() => import('./features/equipe/pages/EquipePage'));
+const MesTachesPage = lazy(() => import('./features/equipe/pages/MesTachesPage'));
 
 function App() {
     return (
@@ -36,6 +39,12 @@ function App() {
                                 <Route element={<GuestRoute />}>
                                     <Route path={APP_PATHS.login} element={<Login />} />
                                 </Route>
+
+                                <Route path={APP_PATHS.status} element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ErrorBoundary><StatusPage /></ErrorBoundary>
+                                    </Suspense>
+                                } />
 
                                 <Route element={<Layout />}>
                                     <Route path={APP_PATHS.home} element={
@@ -131,10 +140,29 @@ function App() {
                                         </ProtectedRoute>
                                     } />
 
-                                    <Route path={APP_PATHS.status} element={
-                                        <ProtectedRoute permission="DASHBOARD_VIEW">
+                                    {/* User profile — accessible to all authenticated users */}
+                                    <Route path="/profile" element={
+                                        <ProtectedRoute>
                                             <Suspense fallback={<PageLoader />}>
-                                                <ErrorBoundary><StatusPage /></ErrorBoundary>
+                                                <ErrorBoundary><UserProfile /></ErrorBoundary>
+                                            </Suspense>
+                                        </ProtectedRoute>
+                                    } />
+
+                                    {/* Gestion Équipe — manager board */}
+                                    <Route path={APP_PATHS.equipe} element={
+                                        <ProtectedRoute permission="EQUIPE_VIEW">
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><EquipePage /></ErrorBoundary>
+                                            </Suspense>
+                                        </ProtectedRoute>
+                                    } />
+
+                                    {/* Mes Tâches — personal operator view (MES_TACHES_VIEW) */}
+                                    <Route path={APP_PATHS.mesTaches} element={
+                                        <ProtectedRoute permission="MES_TACHES_VIEW">
+                                            <Suspense fallback={<PageLoader />}>
+                                                <ErrorBoundary><MesTachesPage /></ErrorBoundary>
                                             </Suspense>
                                         </ProtectedRoute>
                                     } />

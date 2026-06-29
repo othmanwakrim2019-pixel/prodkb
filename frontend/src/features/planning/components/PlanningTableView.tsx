@@ -151,8 +151,8 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
     const isEditable = instanceStatus === 'active';
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+        <div className="bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
                 <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-600">
                         {totalDone} / {jobs.length} taches terminees
@@ -175,21 +175,21 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/50">
-                            <th className="w-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">#</th>
-                            <th className="w-28 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Date / Heure</th>
-                            <th className="w-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tache</th>
-                            <th className="w-36 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Responsable</th>
-                            <th className="w-28 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</th>
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                    <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">#</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Date / Heure</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Type</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tache</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Responsable</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Statut</th>
                             {isEditable && (
-                                <th className="w-56 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                                <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
                             )}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
                         {sortedJobs.map((job, index) => {
                             const statusConfig = STATUS_CONFIG[job.status];
                             const isBlocked = job.status === 'blocked';
@@ -203,7 +203,7 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                             return (
                                 <tr
                                     key={job.id}
-                                    className={`transition-colors ${
+                                    className={`transition-none ${
                                         isDone
                                             ? 'bg-emerald-50/30'
                                             : isFailed
@@ -212,12 +212,12 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                                                     ? 'bg-blue-50/30'
                                                     : isBlocked
                                                         ? 'bg-amber-50/20 opacity-70'
-                                                        : 'hover:bg-slate-50/60'
+                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                     }`}
                                 >
-                                    <td className="px-4 py-3 font-mono text-xs text-slate-400">{index + 1}</td>
+                                    <td className="px-4 py-2 font-mono text-xs text-slate-400 whitespace-nowrap">{index + 1}</td>
 
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-2 whitespace-nowrap">
                                         <div className="text-xs font-medium text-slate-700">
                                             {new Date(job.scheduledTime).toLocaleDateString('fr-FR', {
                                                 day: '2-digit',
@@ -235,7 +235,7 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                                         </div>
                                     </td>
 
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-2 whitespace-nowrap">
                                         <span title={isBatch ? 'Traitement automatique (Batch)' : 'Action manuelle'}>
                                             {isBatch ? (
                                                 <Cpu className="h-4 w-4 text-blue-400" />
@@ -245,7 +245,7 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                                         </span>
                                     </td>
 
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-2">
                                         <div className={`font-medium ${isDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                                             {job.customTaskName || job.job?.name || 'Sans titre'}
                                         </div>
@@ -298,7 +298,7 @@ export const PlanningTableView = ({ jobs, instanceStatus, onRefresh, onCreateInc
                                     </td>
 
                                     {isEditable && (
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-2 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 {isLoading && (
                                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />

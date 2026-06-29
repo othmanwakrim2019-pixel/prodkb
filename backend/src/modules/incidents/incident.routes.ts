@@ -47,6 +47,7 @@ router.get('/suggest-procedures', authenticate, requirePermission('INCIDENT_VIEW
 router.get('/', authenticate, requirePermission('INCIDENT_VIEW'), paginationMiddleware, IncidentQueryController.getIncidents);
 router.post('/', authenticate, requirePermission('INCIDENT_CREATE'), IncidentCommandController.createIncident);
 router.get('/:id', authenticate, requirePermission('INCIDENT_VIEW'), IncidentQueryController.getIncidentById);
+router.get('/:id/activity', authenticate, requirePermission('INCIDENT_VIEW'), IncidentQueryController.getActivity);
 router.put('/:id', authenticate, requirePermission('INCIDENT_EDIT'), IncidentCommandController.updateIncident);
 router.delete('/:id', authenticate, requirePermission('INCIDENT_DELETE'), IncidentCommandController.deleteIncident);
 

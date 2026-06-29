@@ -8,6 +8,13 @@ export class NotificationRepository {
         });
     }
 
+    async findTeamLeadIds(teamId: string) {
+        return prisma.teamMember.findMany({
+            where: { teamId, role: 'LEAD' },
+            select: { userId: true },
+        });
+    }
+
     async createNotifications(data: Array<{
         userId: string;
         type: string;

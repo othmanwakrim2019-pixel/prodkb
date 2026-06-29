@@ -185,10 +185,15 @@ export const CreateProcedurePage = () => {
 
             navigate(APP_PATHS.procedures);
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { error?: string } } };
+            const error = err as { response?: { data?: { message?: string; error?: { code?: string } } }; message?: string };
             console.error('Failed to create procedure', err);
             const responseData = error.response?.data;
-            toast.error(responseData?.error || 'Failed to create procedure');
+            const errorMsg = (typeof responseData?.message === 'string' ? responseData.message : null)
+                || (typeof responseData?.error === 'string' ? responseData.error : null)
+                || responseData?.error?.code
+                || (typeof error.message === 'string' ? error.message : null)
+                || 'Failed to create procedure';
+            toast.error(errorMsg);
         }
     };
 

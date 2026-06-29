@@ -20,7 +20,6 @@ export const ThemeToggle = () => {
         }
     }, [dark]);
 
-    // On mount, check saved preference
     useEffect(() => {
         const saved = localStorage.getItem('theme');
         if (saved === 'dark') {
@@ -32,10 +31,10 @@ export const ThemeToggle = () => {
     return (
         <button
             onClick={() => setDark(!dark)}
-            className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title={dark ? 'Light Mode' : 'Dark Mode'}
+            className="p-1.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
     );
 };

@@ -233,29 +233,91 @@ export interface ConfigParam {
 }
 
 export interface SmtpConfig {
+    enabled: boolean;
     host: string;
     port: number;
     secure: boolean;
     user: string;
-    password: string;
+    pass: string;
+    passwordConfigured?: boolean;
     from: string;
+    tlsMode?: 'starttls' | 'ssl' | 'none';
+    rejectUnauthorized?: boolean;
+    replyTo?: string;
+    connectionTimeout?: number;
 }
 
 export const configService = {
     getParams: (keys: string[]): Promise<ConfigParam[]> =>
-        api.get(`/api/v1/config/params?keys=${keys.join(',')}`).then(r => unwrapArray<ConfigParam>(r.data, ['data', 'items', 'params'])),
+        api.get(`/api/v1/config/params?keys=${keys.join(',')}`).then(r => {
+            const payload = r.data;
+            const params = unwrapArray<ConfigParam>(payload, ['data', 'items', 'params']);
+            if (params.length) return params;
+
+            if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+                return Object.entries(payload as Record<string, string>).map(([key, value]) => ({ key, value: String(value) }));
+            }
+
+            return [];
+        }),
 
     updateParam: (key: string, value: string): Promise<ConfigParam> =>
-        api.put(`/api/v1/config/${key}`, { value }).then(r => r.data),
+        api.put(`/api/v1/config/${key}`, { value }).then(r => unwrapObject<ConfigParam>(r.data) ?? r.data),
 
     getSmtp: (): Promise<SmtpConfig> =>
         api.get('/api/v1/config/smtp').then(r => r.data),
 
     updateSmtp: (data: Partial<SmtpConfig>): Promise<SmtpConfig> =>
-        api.put('/api/v1/config/smtp', data).then(r => r.data),
+        api.put('/api/v1/config/smtp', data).then(r => unwrapObject<SmtpConfig>(r.data) ?? r.data),
 
     testSmtp: (email: string): Promise<{ success: boolean; message: string }> =>
         api.post('/api/v1/config/smtp/test', { email }).then(r => r.data),
+};
+
+export interface ReadinessCheck {
+    id: string;
+    label: string;
+    status: 'ok' | 'warning' | 'critical';
+    detail: string;
+    action: string;
+}
+
+export interface OperationsReadiness {
+    generatedAt: string;
+    score: number;
+    status: 'ok' | 'warning' | 'critical';
+    checks: ReadinessCheck[];
+    metrics: {
+        users: number;
+        activeTeams: number;
+        systems: number;
+        jobs: number;
+        jobsWithoutTeam: number;
+        systemsWithoutJobs: number;
+        activeSlas: number;
+        openCriticalIncidents: number;
+        openHighIncidents: number;
+        blockedTasks: number;
+        activeWebhooks: number;
+        failedWebhookDeliveries: number;
+        maintenanceUpcoming: number;
+        currentAstreintes: number;
+        uncoveredAstreinteSlots: number;
+        dailyPlansToday: number;
+        demoDataPresent: boolean;
+    };
+    gaps: {
+        teamsWithoutEmail: string[];
+        teamsWithoutMembers: string[];
+        missingSlaSeverities: string[];
+        uncoveredAstreinteSlots: Array<{ teamId: string; teamName: string; weekNumber: number; year: number }>;
+    };
+    workers: Array<{ name: string; expected: boolean; signal: string }>;
+}
+
+export const readinessService = {
+    getOperationsReadiness: (): Promise<OperationsReadiness> =>
+        api.get('/api/v1/config/readiness').then(r => unwrapObject<OperationsReadiness>(r.data) as OperationsReadiness),
 };
 
 export interface EmailTemplate {
@@ -269,15 +331,30 @@ export interface EmailTemplate {
     updatedAt: string;
 }
 
+export type EmailTemplateInput = {
+    name: string;
+    subject: string;
+    body: string;
+    variables: string | null;
+    enabled: boolean;
+    cc: string | null;
+};
+
 export const emailTemplateService = {
     getAll: (): Promise<EmailTemplate[]> =>
         api.get('/api/v1/email-templates').then(r => unwrapArray<EmailTemplate>(r.data, ['data', 'items', 'templates'])),
 
-    update: (id: string, data: { subject: string; body: string; enabled: boolean; cc: string | null }): Promise<EmailTemplate> =>
-        api.put(`/api/v1/email-templates/${id}`, data).then(r => r.data),
+    create: (data: EmailTemplateInput): Promise<EmailTemplate> =>
+        api.post('/api/v1/email-templates', data).then(r => unwrapObject<EmailTemplate>(r.data) as EmailTemplate),
+
+    update: (id: string, data: EmailTemplateInput): Promise<EmailTemplate> =>
+        api.put(`/api/v1/email-templates/${id}`, data).then(r => unwrapObject<EmailTemplate>(r.data) as EmailTemplate),
+
+    delete: (id: string): Promise<void> =>
+        api.delete(`/api/v1/email-templates/${id}`).then(() => undefined),
 
     preview: (data: { subject: string; body: string; enabled: boolean; cc: string }): Promise<{ subject: string; body: string }> =>
-        api.post('/api/v1/email-templates/preview', data).then(r => r.data),
+        api.post('/api/v1/email-templates/preview', data).then(r => unwrapObject<{ subject: string; body: string }>(r.data) as { subject: string; body: string }),
 };
 
 export interface AdminSelectOption {
@@ -400,4 +477,3 @@ export const maintenanceService = {
     delete: (id: string): Promise<void> =>
         api.delete(`/api/v1/maintenance/${id}`).then(() => undefined),
 };
-

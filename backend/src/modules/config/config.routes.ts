@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/smtp', requirePermission('CONFIG_MANAGE'), ConfigController.getSmtpConfig);
 router.put('/smtp', requirePermission('CONFIG_MANAGE'), ConfigController.updateSmtpConfig);
 router.post('/smtp/test', requirePermission('CONFIG_MANAGE'), ConfigController.testSmtpConfig);
+router.get('/readiness', requirePermission('CONFIG_MANAGE'), ConfigController.getOperationsReadiness);
 router.get('/params', requirePermission('CONFIG_MANAGE'), ConfigController.getConfigs);
 router.put('/:key', requirePermission('CONFIG_MANAGE'), ConfigController.updateConfig);
 

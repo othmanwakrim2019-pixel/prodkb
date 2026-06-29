@@ -7,7 +7,7 @@ const envSchema = z.object({
   // ── Required ──
   DATABASE_URL: z.string({ message: 'DATABASE_URL is required. Example: postgresql://user:password@localhost:5432/prodkb' }),
   JWT_SECRET: z.string({ message: 'JWT_SECRET is required. Use a strong random string in production.' })
-    .min(16, 'JWT_SECRET must be at least 16 characters for security'),
+    .min(32, 'JWT_SECRET must be at least 32 characters for security'),
 
   // ── Server ──
   PORT: z.string().default('3000'),
@@ -57,7 +57,7 @@ if (env.NODE_ENV === 'production') {
     process.exit(1);
   }
   if (env.JWT_SECRET.length < 32) {
-    console.error('\n🚨 FATAL: JWT_SECRET must be at least 32 characters in production.\n');
+    console.error('\n FATAL: JWT_SECRET must be at least 32 characters in production.\n');
     process.exit(1);
   }
 }

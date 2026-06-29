@@ -26,6 +26,8 @@ import { notificationRoutes } from './notifications/notification.routes';
 import { postMortemRoutes } from './postmortem/postmortem.routes';
 import { maintenanceRoutes } from './maintenance/maintenance.routes';
 import { warRoomRoutes } from './warroom/warroom.routes';
+import { astreinteRoutes } from './astreinte/presentation/astreinte.routes';
+import { equipeRoutes } from './equipe/presentation/equipe.routes';
 
 const router = Router();
 
@@ -54,5 +56,7 @@ router.use('/incidents', postMortemRoutes);
 // Phase 4 modules (Maintenance, War Room)
 router.use('/maintenance', maintenanceRoutes);
 router.use('/warroom', warRoomRoutes);
+router.use('/astreintes', astreinteRoutes);
+router.use('/equipe', equipeRoutes);
 
 export default router;

@@ -49,3 +49,16 @@ frontend/vite.config.js
 frontend/vite.config.d.ts
 
 # Operational data files — never commit these
+
+# Superpowers extension data
+.superpowers/
+
+.gemini/
+gha-creds-*.json
+
+*.md
+*.pptx
+*.docx
+*.csv
+*.xlsx
+*.pdf
