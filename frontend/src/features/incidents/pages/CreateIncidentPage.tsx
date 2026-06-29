@@ -150,7 +150,20 @@ export const CreateIncidentPage = () => {
         } catch (error: any) {
             console.error('Failed to create incident', error);
             const responseData = error.response?.data;
-            const errorMsg = responseData?.error || responseData?.message || error.message || 'Failed to create incident';
+            let errorMsg = 'Failed to create incident';
+            if (typeof responseData?.message === 'string') {
+                errorMsg = responseData.message;
+            } else if (typeof responseData?.error === 'string') {
+                errorMsg = responseData.error;
+            } else if (responseData?.error?.code) {
+                errorMsg = responseData.error.code;
+                if (Array.isArray(responseData.error.details)) {
+                    const fieldErrors = responseData.error.details.map((d: any) => `${d.path?.join('.')}: ${d.message}`).join(', ');
+                    errorMsg = fieldErrors || errorMsg;
+                }
+            } else if (typeof error.message === 'string') {
+                errorMsg = error.message;
+            }
             toast.error(errorMsg);
         }
     };
